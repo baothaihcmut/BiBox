@@ -3,6 +3,7 @@ package logger
 import (
 	"context"
 
+	"github.com/baothaihcmut/Storage-app/internal/common/constant"
 	"github.com/sirupsen/logrus"
 )
 
@@ -37,7 +38,7 @@ func (l *logger) Debug(ctx context.Context, args map[string]interface{}, msg str
 	if args == nil {
 		args = make(map[string]interface{})
 	}
-	if requestID := ctx.Value("request_id"); requestID != nil {
+	if requestID := ctx.Value(constant.RequestIdContext); requestID != nil {
 		args["request_id"] = requestID
 	}
 	l.l.WithFields(logrus.Fields(args)).Debug(msg)

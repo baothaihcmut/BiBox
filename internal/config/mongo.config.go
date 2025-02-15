@@ -5,4 +5,5 @@ type MongoConfig struct {
 	MaxPoolSize       int    `mapstructure:"max_pool_size"`
 	MinPoolSize       int    `mapstructure:"min_pool_size"`
 	ConnectionTimeout int    `mapstructure:"connection_time_out"`
+	DatabaseName      string `mapstructure:"database"`
 }

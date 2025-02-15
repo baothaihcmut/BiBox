@@ -1,8 +1,6 @@
 package main
 
 import (
-	"io"
-
 	"github.com/baothaihcmut/Storage-app/internal/config"
 	"github.com/baothaihcmut/Storage-app/internal/server"
 	"github.com/baothaihcmut/Storage-app/internal/server/initialize"
@@ -19,10 +17,6 @@ func main() {
 	//logger
 	logger := initialize.InitializeLogger(&config.Logger)
 
-	//gin
-	gin.SetMode(gin.ReleaseMode)
-	gin.DefaultWriter = io.Discard
-
 	g := gin.Default()
 
 	//mongo
@@ -32,6 +26,9 @@ func main() {
 		panic(err)
 	}
 
-	s := server.NewServer(g, mongo, logger, config)
+	//oauth 2 google
+	oauth2 := initialize.InitializeOauth2(&config.Oauth2)
+
+	s := server.NewServer(g, mongo, oauth2, logger, config)
 	s.Run()
 }

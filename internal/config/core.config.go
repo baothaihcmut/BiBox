@@ -8,6 +8,8 @@ type AppConfig struct {
 	Logger LoggerConfig `mapstructure:"logger"`
 	Server ServerConfig `mapstructure:"server"`
 	Mongo  MongoConfig  `mapstructure:"mongo"`
+	Jwt    JwtConfig    `mapstructure:"jwt"`
+	Oauth2 Oauth2Config `mapstructure:"oauth2"`
 }
 
 func LoadConfig() (*AppConfig, error) {
