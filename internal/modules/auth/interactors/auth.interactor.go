@@ -2,7 +2,6 @@ package interactors
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/baothaihcmut/Storage-app/internal/common/logger"
 	"github.com/baothaihcmut/Storage-app/internal/modules/auth/presenter"
@@ -56,7 +55,6 @@ func (a *AuthInteractorImpl) ExchangeToken(ctx context.Context, input *presenter
 		}, "User created")
 	}
 	//generate system token
-	fmt.Println(a.jwtService)
 	accessToken, err := a.jwtService.GenerateAccessToken(ctx, user.ID.Hex())
 	if err != nil {
 		a.logger.Errorf(ctx, map[string]interface{}{
