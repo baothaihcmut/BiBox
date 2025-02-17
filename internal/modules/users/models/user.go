@@ -3,6 +3,7 @@ package models
 import (
 	"time"
 
+	"github.com/baothaihcmut/Storage-app/internal/common/exception"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -31,4 +32,21 @@ func NewUser(firstName, lastName, email, image string) *User {
 		CurrentStorageSize: 0,
 		LimitStorageSize:   100,
 	}
+}
+
+func (u *User) IncreStorageSize(size int) error {
+	newSize := u.CurrentStorageSize + size
+	if newSize > u.LimitStorageSize {
+		return exception.ErrStorageSizeExceedLimitSize
+	}
+	u.CurrentStorageSize = newSize
+	return nil
+}
+
+func (u *User) DecreStorageSize(size int) error {
+	if size > u.CurrentStorageSize {
+		return exception.ErrStorageSizeLessThanZero
+	}
+	u.CurrentStorageSize = u.CurrentStorageSize - size
+	return nil
 }

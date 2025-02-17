@@ -9,12 +9,18 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/baothaihcmut/Storage-app/internal/common/logger"
 	middleware "github.com/baothaihcmut/Storage-app/internal/common/middlewares"
+	mongoLib "github.com/baothaihcmut/Storage-app/internal/common/mongo"
+	"github.com/baothaihcmut/Storage-app/internal/common/storage"
 	"github.com/baothaihcmut/Storage-app/internal/config"
 	authController "github.com/baothaihcmut/Storage-app/internal/modules/auth/controllers"
 	authInteractors "github.com/baothaihcmut/Storage-app/internal/modules/auth/interactors"
 	authService "github.com/baothaihcmut/Storage-app/internal/modules/auth/services"
+	fileController "github.com/baothaihcmut/Storage-app/internal/modules/files/controllers"
+	fileInteractor "github.com/baothaihcmut/Storage-app/internal/modules/files/interactors"
+	fileRepo "github.com/baothaihcmut/Storage-app/internal/modules/files/repositories"
 	userRepo "github.com/baothaihcmut/Storage-app/internal/modules/users/repositories"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -29,15 +35,17 @@ type Server struct {
 	config *config.AppConfig
 	mongo  *mongo.Client
 	oauth2 *oauth2.Config
+	s3     *s3.Client
 }
 
-func NewServer(g *gin.Engine, mongo *mongo.Client, oauth2 *oauth2.Config, logger *logrus.Logger, cfg *config.AppConfig) *Server {
+func NewServer(g *gin.Engine, mongo *mongo.Client, oauth2 *oauth2.Config, s3 *s3.Client, logger *logrus.Logger, cfg *config.AppConfig) *Server {
 	return &Server{
 		g:      g,
 		logger: logger,
 		config: cfg,
 		mongo:  mongo,
 		oauth2: oauth2,
+		s3:     s3,
 	}
 }
 func (s *Server) initApp() {
@@ -47,15 +55,19 @@ func (s *Server) initApp() {
 
 	//init repository
 	userRepo := userRepo.NewMongoUserRepository(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("users"), logger)
+	fileRepo := fileRepo.NewMongoFileRepo(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("files"), logger)
 	//init service
 	userJwtService := authService.NewUserJwtService(s.config.Jwt, logger)
 	oauth2Service := authService.NewGoogleOauth2Service(s.oauth2, logger)
+	storageService := storage.NewS3StorageService(s.s3, logger)
+	mongoService := mongoLib.NewMongoTransactionService(s.mongo)
 
 	//init interactor
 	authInteractor := authInteractors.NewAuthInteractor(oauth2Service, userRepo, userJwtService, logger)
-
+	fileInteractor := fileInteractor.NewFileInteractor(userRepo, fileRepo, logger, storageService, mongoService)
 	//init controllers
 	authController := authController.NewAuthController(authInteractor, &s.config.Jwt, &s.config.Oauth2)
+	fileController := fileController.NewFileController(fileInteractor, userJwtService, logger)
 
 	//global prefix
 	globalGroup := s.g.Group("/api/v1")
@@ -73,6 +85,7 @@ func (s *Server) initApp() {
 	globalGroup.Use(middleware.ErrorHandler())
 	{
 		authController.Init(globalGroup)
+		fileController.Init(globalGroup)
 	}
 }
 

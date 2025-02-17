@@ -29,6 +29,12 @@ func main() {
 	//oauth 2 google
 	oauth2 := initialize.InitializeOauth2(&config.Oauth2)
 
-	s := server.NewServer(g, mongo, oauth2, logger, config)
+	//s3
+	s3, err := initialize.InitalizeS3(config.S3)
+	if err != nil {
+		logger.Panic(err)
+		panic(err)
+	}
+	s := server.NewServer(g, mongo, oauth2, s3, logger, config)
 	s.Run()
 }

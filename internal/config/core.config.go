@@ -10,6 +10,7 @@ type AppConfig struct {
 	Mongo  MongoConfig  `mapstructure:"mongo"`
 	Jwt    JwtConfig    `mapstructure:"jwt"`
 	Oauth2 Oauth2Config `mapstructure:"oauth2"`
+	S3     S3Config     `mapstructure:"s3"`
 }
 
 func LoadConfig() (*AppConfig, error) {
