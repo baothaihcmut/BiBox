@@ -3,12 +3,13 @@ package presenters
 import (
 	"time"
 
+	"github.com/baothaihcmut/Storage-app/internal/common/enums"
 	"github.com/baothaihcmut/Storage-app/internal/modules/files/models"
 )
 
 type StorageDetailOuput struct {
-	Size int    `json:"file_size"`
-	Type string `json:"file_type"`
+	Size     int            `json:"file_size"`
+	MimeType enums.MimeType `json:"mime_type"`
 }
 type FileOutput struct {
 	ID             string              `json:"id"`
@@ -42,8 +43,8 @@ func MapFileToFileOutput(file *models.File) *FileOutput {
 	var storageDetailOutput *StorageDetailOuput
 	if file.StorageDetail != nil {
 		storageDetailOutput = &StorageDetailOuput{
-			Size: file.StorageDetail.Size,
-			Type: file.StorageDetail.FileType,
+			Size:     file.StorageDetail.Size,
+			MimeType: file.StorageDetail.MimeType,
 		}
 	}
 

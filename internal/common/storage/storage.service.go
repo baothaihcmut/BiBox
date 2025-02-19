@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"io"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -26,6 +27,7 @@ type StorageService interface {
 	GetPresignUrl(context.Context, GetPresignUrlArg) (string, error)
 	GetStorageProviderName() string
 	GetStorageBucket() string
+	GetFile(context.Context, string) (io.ReadCloser, error)
 }
 
 type S3StorageService struct {
@@ -68,6 +70,22 @@ func (s *S3StorageService) GetStorageProviderName() string {
 
 func (s *S3StorageService) GetStorageBucket() string {
 	return s.cfg.Bucket
+}
+
+func (s *S3StorageService) GetFile(ctx context.Context, key string) (io.ReadCloser, error) {
+	resp, err := s.client.GetObject(ctx, &s3.GetObjectInput{
+		Key:    aws.String(key),
+		Bucket: aws.String(s.cfg.Bucket),
+	})
+	if err != nil {
+		s.logger.Errorf(ctx, map[string]interface{}{
+			"key":    key,
+			"bucket": s.cfg.Bucket,
+		}, "Error get object from storage: ", err)
+		return nil, err
+	}
+	return resp.Body, err
+
 }
 func NewS3StorageService(client *s3.Client, logger logger.Logger, cfg *config.S3Config) StorageService {
 	return &S3StorageService{

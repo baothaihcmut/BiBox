@@ -29,7 +29,7 @@ func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
 	internal.POST("", middleware.ValidateMiddleware[presenters.CreateFileInput](false, binding.JSON), f.handleCreateFile)
 	internal.PATCH("/uploaded/:id", middleware.ValidateMiddleware[presenters.UploadedFileInput](true), f.handleUploadedFile)
 	internal.GET("", middleware.ValidateMiddleware[presenters.FindFileOfUserInput](false, binding.Query), f.handleFindFileOfUser)
-
+	internal.GET("/first-page/:id", middleware.ValidateMiddleware[presenters.GetFirstPageInput](true, binding.Query), f.handleGetFirstPage)
 }
 
 // @Sumary Create new file
@@ -97,6 +97,18 @@ func (f *FileControllerImpl) handleFindFileOfUser(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, response.InitResponse(true, "Find file of user success", res))
+}
+
+func (f *FileControllerImpl) handleGetFirstPage(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := f.interactor.GetFirstPageOfFiles(c.Request.Context(), payload.(*presenters.GetFirstPageInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.Writer.Header().Set("Content-Type", string(payload.(*presenters.GetFirstPageInput).OuputType))
+	c.Writer.Write(res.Image.Bytes())
 }
 
 func NewFileController(interactor interactors.FileInteractor, jwtService services.JwtService, logger logger.Logger) FileController {

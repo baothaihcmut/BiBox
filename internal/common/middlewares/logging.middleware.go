@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/baothaihcmut/Storage-app/internal/common/constant"
@@ -15,6 +16,7 @@ func LoggingMiddleware(logger logger.Logger) gin.HandlerFunc {
 		//generate request id for logging
 		requestId := uuid.New()
 		c.Set(string(constant.RequestIdContext), requestId.String())
+		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), constant.RequestIdContext, requestId.String()))
 		logger.Debug(c.Request.Context(), map[string]interface{}{
 			"uri":    c.Request.URL.String(),
 			"method": c.Request.Method,

@@ -48,7 +48,7 @@ func AuthMiddleware(authHandler interface {
 			userContext.Role = enums.UserRole
 		}
 		//set user to context
-		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), string(constant.UserContext), &userContext))
+		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), constant.UserContext, &userContext))
 		c.Set(string(constant.UserContext), &userContext)
 		c.Next()
 	}

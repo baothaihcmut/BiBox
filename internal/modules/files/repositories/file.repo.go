@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/baothaihcmut/Storage-app/internal/common/logger"
 	"github.com/baothaihcmut/Storage-app/internal/modules/files/models"
@@ -79,17 +80,18 @@ func (f *MongoFileRepository) FindAllFileOfUser(ctx context.Context, userId prim
 		"owner_id": userId,
 	}
 	if args.IsFolder != nil {
-		filter["is_folder"] = *&args.IsFolder
+		filter["is_folder"] = *args.IsFolder
 	}
 	if args.IsInFolder != nil {
 		if *args.IsInFolder {
-			filter["parent_folder_id"] = nil
-		} else {
 			filter["parent_folder_id"] = bson.M{
 				"$ne": nil,
 			}
+		} else {
+			filter["parent_folder_id"] = nil
 		}
 	}
+	fmt.Println(filter)
 	sort := bson.D{{Key: args.SortBy}}
 	if args.IsAsc {
 		sort[0].Value = 1

@@ -17,6 +17,8 @@ var (
 	ErrFileIsFolder               = errors.New("folder cannot be uploaded")
 	ErrUnAllowedSortField         = errors.New("unallow sort field")
 	ErrUserNotFound               = errors.New("user not found")
+	ErrUnSupportOutputImageType   = errors.New("unsupport output image type")
+	ErrUserForbiddenFile          = errors.New("user don't have permission access this file")
 )
 var errMap = map[error]int{
 	ErrTokenExpire:                http.StatusUnauthorized,
@@ -29,6 +31,8 @@ var errMap = map[error]int{
 	ErrUserNotFound:               http.StatusNotFound,
 	ErrFileIsFolder:               http.StatusConflict,
 	ErrUnAllowedSortField:         http.StatusForbidden,
+	ErrUnSupportOutputImageType:   http.StatusBadRequest,
+	ErrUserForbiddenFile:          http.StatusForbidden,
 }
 
 func ErrorStatusMapper(err error) int {

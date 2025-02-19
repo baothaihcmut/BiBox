@@ -2,7 +2,6 @@ package interactors
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/baothaihcmut/Storage-app/internal/common/constant"
@@ -14,6 +13,7 @@ import (
 	"github.com/baothaihcmut/Storage-app/internal/modules/files/models"
 	"github.com/baothaihcmut/Storage-app/internal/modules/files/presenters"
 	fileRepo "github.com/baothaihcmut/Storage-app/internal/modules/files/repositories"
+	"github.com/baothaihcmut/Storage-app/internal/modules/files/services"
 	tagRepo "github.com/baothaihcmut/Storage-app/internal/modules/tags/repositories"
 	userModel "github.com/baothaihcmut/Storage-app/internal/modules/users/models"
 	userRepo "github.com/baothaihcmut/Storage-app/internal/modules/users/repositories"
@@ -26,20 +26,22 @@ type FileInteractor interface {
 	CreatFile(context.Context, *presenters.CreateFileInput) (*presenters.CreateFileOutput, error)
 	UploadedFile(context.Context, *presenters.UploadedFileInput) (*presenters.UploadedFileOutput, error)
 	FindAllFileOfUser(ctx context.Context, input *presenters.FindFileOfUserInput) (*presenters.FindFileOfUserOuput, error)
+	GetFirstPageOfFiles(ctx context.Context, input *presenters.GetFirstPageInput) (*presenters.GetFirstPageOutput, error)
 }
 
 type FileInteractorImpl struct {
-	userRepo       userRepo.UserRepository
-	fileRepo       fileRepo.FileRepository
-	tagRepo        tagRepo.TagRepository
-	logger         logger.Logger
-	storageService storage.StorageService
-	mongoService   mongo.MongoService
+	userRepo         userRepo.UserRepository
+	fileRepo         fileRepo.FileRepository
+	tagRepo          tagRepo.TagRepository
+	logger           logger.Logger
+	storageService   storage.StorageService
+	mongoService     mongo.MongoService
+	firstPageService services.FirstPageService
 }
 
 func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.CreateFileInput) (*presenters.CreateFileOutput, error) {
 	//get user context
-	userContext := ctx.Value(string(constant.UserContext)).(*commonModel.UserContext)
+	userContext := ctx.Value(constant.UserContext).(*commonModel.UserContext)
 	//tranform id
 	userId, err := primitive.ObjectIDFromHex(userContext.Id)
 	if err != nil {
@@ -147,6 +149,8 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 	}
 	//wait for all check routine
 	checkWg.Wait()
+	close(userCh)
+	close(checkErr)
 	select {
 	case err = <-checkErr:
 		return nil, err
@@ -161,13 +165,12 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 	if !input.IsFolder {
 		storageArg = &models.FileStorageDetailArg{
 			Size:            input.StorageDetail.Size,
-			FileType:        input.StorageDetail.Type,
+			MimeType:        input.StorageDetail.MimeType,
 			StorageProvider: f.storageService.GetStorageProviderName(),
 			StorageBucket:   f.storageService.GetStorageBucket(),
 		}
 	}
 
-	fmt.Println(input.StorageDetail.Type)
 	file := models.NewFile(
 		user.ID,
 		input.Name,
@@ -233,6 +236,7 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 	}()
 	//update parent file routine
 	wgSave.Wait()
+	close(errSave)
 	select {
 	case err = <-errSave:
 		return nil, err
@@ -294,7 +298,7 @@ func (f *FileInteractorImpl) UploadedFile(ctx context.Context, input *presenters
 
 func (f *FileInteractorImpl) FindAllFileOfUser(ctx context.Context, input *presenters.FindFileOfUserInput) (*presenters.FindFileOfUserOuput, error) {
 	//get user context
-	userContext := ctx.Value(string(constant.UserContext)).(*commonModel.UserContext)
+	userContext := ctx.Value(constant.UserContext).(*commonModel.UserContext)
 	//tranform id
 	userId, err := primitive.ObjectIDFromHex(userContext.Id)
 	if err != nil {
@@ -334,6 +338,37 @@ func (f *FileInteractorImpl) FindAllFileOfUser(ctx context.Context, input *prese
 	}, nil
 }
 
+func (f *FileInteractorImpl) GetFirstPageOfFiles(ctx context.Context, input *presenters.GetFirstPageInput) (*presenters.GetFirstPageOutput, error) {
+	//check file permission
+	userContext := ctx.Value(constant.UserContext).(*commonModel.UserContext)
+
+	//get file by id
+	fileId, err := primitive.ObjectIDFromHex(input.FileId)
+	if err != nil {
+		return nil, err
+	}
+	file, err := f.fileRepo.FindFileById(ctx, fileId, false)
+	if file.OwnerID.Hex() != userContext.Id {
+		return nil, exception.ErrUserForbiddenFile
+	}
+	if file.IsFolder {
+		return nil, exception.ErrFileIsFolder
+	}
+	//get file from storage
+	fileStorage, err := f.storageService.GetFile(ctx, file.StorageDetail.StorageKey)
+	if err != nil {
+		return nil, err
+	}
+	defer fileStorage.Close()
+	//get first page
+	img, err := f.firstPageService.GetFirstPage(ctx, fileStorage, file.StorageDetail.MimeType, input.OuputType)
+	if err != nil {
+		return nil, err
+	}
+	return &presenters.GetFirstPageOutput{Image: img}, nil
+
+}
+
 func NewFileInteractor(
 	userRepo userRepo.UserRepository,
 	tagRepo tagRepo.TagRepository,
@@ -341,13 +376,15 @@ func NewFileInteractor(
 	logger logger.Logger,
 	storageService storage.StorageService,
 	mongoService mongo.MongoService,
+	firstPageService services.FirstPageService,
 ) FileInteractor {
 	return &FileInteractorImpl{
-		userRepo:       userRepo,
-		fileRepo:       fileRepo,
-		tagRepo:        tagRepo,
-		logger:         logger,
-		storageService: storageService,
-		mongoService:   mongoService,
+		userRepo:         userRepo,
+		fileRepo:         fileRepo,
+		tagRepo:          tagRepo,
+		logger:           logger,
+		storageService:   storageService,
+		mongoService:     mongoService,
+		firstPageService: firstPageService,
 	}
 }

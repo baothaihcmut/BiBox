@@ -22,6 +22,7 @@ import (
 	fileController "github.com/baothaihcmut/Storage-app/internal/modules/files/controllers"
 	fileInteractor "github.com/baothaihcmut/Storage-app/internal/modules/files/interactors"
 	fileRepo "github.com/baothaihcmut/Storage-app/internal/modules/files/repositories"
+	"github.com/baothaihcmut/Storage-app/internal/modules/files/services"
 	"github.com/baothaihcmut/Storage-app/internal/modules/tags/repositories"
 	userRepo "github.com/baothaihcmut/Storage-app/internal/modules/users/repositories"
 	"github.com/gin-contrib/cors"
@@ -66,10 +67,11 @@ func (s *Server) initApp() {
 	oauth2Service := authService.NewGoogleOauth2Service(s.oauth2, logger)
 	storageService := storage.NewS3StorageService(s.s3, logger, &s.config.S3)
 	mongoService := mongoLib.NewMongoTransactionService(s.mongo)
+	firstPageService := services.NewFileFirstPageService(logger)
 
 	//init interactor
 	authInteractor := authInteractors.NewAuthInteractor(oauth2Service, userRepo, userJwtService, logger)
-	fileInteractor := fileInteractor.NewFileInteractor(userRepo, tagRepo, fileRepo, logger, storageService, mongoService)
+	fileInteractor := fileInteractor.NewFileInteractor(userRepo, tagRepo, fileRepo, logger, storageService, mongoService, firstPageService)
 	//init controllers
 	authController := authController.NewAuthController(authInteractor, &s.config.Jwt, &s.config.Oauth2)
 	fileController := fileController.NewFileController(fileInteractor, userJwtService, logger)

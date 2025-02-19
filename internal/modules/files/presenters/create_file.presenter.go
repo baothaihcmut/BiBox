@@ -1,5 +1,7 @@
 package presenters
 
+import "github.com/baothaihcmut/Storage-app/internal/common/enums"
+
 type CreateFileInput struct {
 	Name           string   `json:"name" validate:"required"`
 	IsFolder       bool     `json:"is_folder"` // Use *bool to allow nil check
@@ -10,8 +12,8 @@ type CreateFileInput struct {
 	IsSecure       bool     `json:"is_secure"` // Use *bool to allow nil check
 	TagIDs         []string `json:"tags,omitempty"`
 	StorageDetail  *struct {
-		Size int    `json:"size" validate:"required"`      // Required field
-		Type string `json:"file_type" validate:"required"` // Required field
+		Size     int            `json:"size" validate:"required"`      // Required field
+		MimeType enums.MimeType `json:"mime_type" validate:"required"` // Required field
 	} `json:"storage_detail,omitempty"`
 }
 

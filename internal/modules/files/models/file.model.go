@@ -3,12 +3,13 @@ package models
 import (
 	"time"
 
+	"github.com/baothaihcmut/Storage-app/internal/common/enums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type FileStorageDetailArg struct {
 	Size            int
-	FileType        string
+	MimeType        enums.MimeType
 	StorageProvider string
 	StorageBucket   string
 }
@@ -50,7 +51,7 @@ func NewFile(
 	if !isFolder {
 		storage = NewFileStorageDetail(
 			storageDetail.Size,
-			storageDetail.FileType,
+			storageDetail.MimeType,
 			false,
 			storageDetail.StorageProvider,
 			key, storageDetail.StorageBucket)
