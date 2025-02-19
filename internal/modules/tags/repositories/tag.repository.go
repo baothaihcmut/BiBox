@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"errors"
 
 	"github.com/baothaihcmut/Storage-app/internal/common/logger"
 	"github.com/baothaihcmut/Storage-app/internal/modules/tags/models"
@@ -27,7 +28,7 @@ func (m *MongoTagRepository) FindTagById(ctx context.Context, id primitive.Objec
 		"_id": id,
 	}).Decode(&res)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, nil
 		}
 		m.logger.Errorf(ctx, map[string]interface{}{

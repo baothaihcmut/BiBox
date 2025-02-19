@@ -79,6 +79,98 @@ const docTemplate = `{
             }
         },
         "/files": {
+            "get": {
+                "description": "Find file of user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "file is in other folder, if null fetch all file",
+                        "name": "is_in_folder",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "file is folder or not, if null fetch all file and folder",
+                        "name": "is_folder",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "sort field, allow short field: created_at, updated_at, opened_at",
+                        "name": "sort_by",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "sort direction",
+                        "name": "is_asc",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "for pagination",
+                        "name": "offset",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "for pagination",
+                        "name": "limit",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Find file of user sucess",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/presenters.FindFileOfUserOuput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Un allow sort field, lack of query",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Create new file",
                 "consumes": [
@@ -158,6 +250,85 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/files/uploaded": {
+            "patch": {
+                "description": "Uploaded file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "file id",
+                        "name": "file",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Uploaded file sucess",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/presenters.UploadedFileOutput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "file is folder",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "file not found",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -171,18 +342,27 @@ const docTemplate = `{
         },
         "presenters.CreateFileInput": {
             "type": "object",
+            "required": [
+                "name"
+            ],
             "properties": {
                 "description": {
                     "type": "string"
                 },
                 "has_password": {
+                    "description": "Use *bool to allow nil check",
                     "type": "boolean"
                 },
                 "is_folder": {
+                    "description": "Use *bool to allow nil check",
                     "type": "boolean"
                 },
                 "is_secure": {
+                    "description": "Use *bool to allow nil check",
                     "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
                 },
                 "parent_folder_id": {
                     "type": "string"
@@ -192,11 +372,17 @@ const docTemplate = `{
                 },
                 "storage_detail": {
                     "type": "object",
+                    "required": [
+                        "file_type",
+                        "size"
+                    ],
                     "properties": {
                         "file_type": {
+                            "description": "Required field",
                             "type": "string"
                         },
                         "size": {
+                            "description": "Required field",
                             "type": "integer"
                         }
                     }
@@ -215,7 +401,57 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
-                "deleted_at": {
+                "description": {
+                    "type": "string"
+                },
+                "has_password": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_folder": {
+                    "type": "boolean"
+                },
+                "is_secure": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "opened_at": {
+                    "type": "string"
+                },
+                "owner_id": {
+                    "type": "string"
+                },
+                "parent_folder_id": {
+                    "type": "string"
+                },
+                "put_object_url": {
+                    "type": "string"
+                },
+                "storage_detail": {
+                    "$ref": "#/definitions/presenters.StorageDetailOuput"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "url_expiry": {
+                    "type": "integer"
+                }
+            }
+        },
+        "presenters.FileOutput": {
+            "type": "object",
+            "properties": {
+                "created_at": {
                     "type": "string"
                 },
                 "description": {
@@ -227,14 +463,14 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "is_deleted": {
-                    "type": "boolean"
-                },
                 "is_folder": {
                     "type": "boolean"
                 },
                 "is_secure": {
                     "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
                 },
                 "opened_at": {
                     "type": "string"
@@ -254,11 +490,19 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "total_size": {
-                    "type": "integer"
-                },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "presenters.FindFileOfUserOuput": {
+            "type": "object",
+            "properties": {
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/presenters.FileOutput"
+                    }
                 }
             }
         },
@@ -270,12 +514,53 @@ const docTemplate = `{
                 },
                 "file_type": {
                     "type": "string"
-                },
-                "put_object_url": {
+                }
+            }
+        },
+        "presenters.UploadedFileOutput": {
+            "type": "object",
+            "properties": {
+                "created_at": {
                     "type": "string"
                 },
-                "url_expiry": {
-                    "type": "integer"
+                "description": {
+                    "type": "string"
+                },
+                "has_password": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_folder": {
+                    "type": "boolean"
+                },
+                "is_secure": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "opened_at": {
+                    "type": "string"
+                },
+                "owner_id": {
+                    "type": "string"
+                },
+                "parent_folder_id": {
+                    "type": "string"
+                },
+                "storage_detail": {
+                    "$ref": "#/definitions/presenters.StorageDetailOuput"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },

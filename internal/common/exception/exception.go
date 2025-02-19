@@ -16,21 +16,27 @@ var (
 	ErrFileNotFound               = errors.New("file not found")
 	ErrFileIsFolder               = errors.New("folder cannot be uploaded")
 	ErrUnAllowedSortField         = errors.New("unallow sort field")
+	ErrUserNotFound               = errors.New("user not found")
 )
+var errMap = map[error]int{
+	ErrTokenExpire:                http.StatusUnauthorized,
+	ErrInvalidToken:               http.StatusUnauthorized,
+	ErrStorageSizeExceedLimitSize: http.StatusBadRequest,
+	ErrInvalidObjectId:            http.StatusBadRequest,
+	ErrParenFileNotExist:          http.StatusNotFound,
+	ErrTagNotExist:                http.StatusNotFound,
+	ErrFileNotFound:               http.StatusNotFound,
+	ErrUserNotFound:               http.StatusNotFound,
+	ErrFileIsFolder:               http.StatusConflict,
+	ErrUnAllowedSortField:         http.StatusForbidden,
+}
 
 func ErrorStatusMapper(err error) int {
-	switch err {
-	case ErrTokenExpire, ErrInvalidToken:
-		return http.StatusUnauthorized
-	case ErrStorageSizeExceedLimitSize, ErrInvalidObjectId:
-		return http.StatusBadRequest
-	case ErrParenFileNotExist, ErrTagNotExist, ErrFileNotFound:
-		return http.StatusNotFound
-	case ErrFileIsFolder:
-		return http.StatusConflict
-	case ErrUnAllowedSortField:
-		return http.StatusForbidden
-	default:
-		return http.StatusInternalServerError
+	for e, status := range errMap {
+		if errors.Is(err, e) {
+			return status
+		}
 	}
+
+	return http.StatusInternalServerError
 }

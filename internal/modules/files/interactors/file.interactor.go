@@ -13,7 +13,6 @@ import (
 	"github.com/baothaihcmut/Storage-app/internal/common/storage"
 	"github.com/baothaihcmut/Storage-app/internal/modules/files/models"
 	"github.com/baothaihcmut/Storage-app/internal/modules/files/presenters"
-	"github.com/baothaihcmut/Storage-app/internal/modules/files/repositories"
 	fileRepo "github.com/baothaihcmut/Storage-app/internal/modules/files/repositories"
 	tagRepo "github.com/baothaihcmut/Storage-app/internal/modules/tags/repositories"
 	userModel "github.com/baothaihcmut/Storage-app/internal/modules/users/models"
@@ -26,6 +25,7 @@ var ALLOW_FILE_SORT_FIELD = []string{"created_at", "updated_at", "opened_at"}
 type FileInteractor interface {
 	CreatFile(context.Context, *presenters.CreateFileInput) (*presenters.CreateFileOutput, error)
 	UploadedFile(context.Context, *presenters.UploadedFileInput) (*presenters.UploadedFileOutput, error)
+	FindAllFileOfUser(ctx context.Context, input *presenters.FindFileOfUserInput) (*presenters.FindFileOfUserOuput, error)
 }
 
 type FileInteractorImpl struct {
@@ -76,11 +76,18 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 			defer checkWg.Done()
 			user, err := f.userRepo.FindUserById(ctx, userId)
 			if err != nil {
-				if err == context.Canceled {
+				select {
+				case <-ctx.Done():
 					return
+				default:
 				}
 				cancelCheck()
 				checkErr <- err
+				return
+			}
+			if user == nil {
+				cancelCheck()
+				checkErr <- exception.ErrUserNotFound
 				return
 			}
 			err = user.IncreStorageSize(input.StorageDetail.Size)
@@ -101,8 +108,10 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 			defer checkWg.Done()
 			tagExist, err := f.tagRepo.FindTagById(ctx, tagId)
 			if err != nil {
-				if err == context.Canceled {
+				select {
+				case <-ctx.Done():
 					return
+				default:
 				}
 				cancelCheck()
 				checkErr <- err
@@ -278,7 +287,9 @@ func (f *FileInteractorImpl) UploadedFile(ctx context.Context, input *presenters
 	if err != nil {
 		return nil, err
 	}
-	return &presenters.UploadedFileOutput{}, nil
+	return &presenters.UploadedFileOutput{
+		FileOutput: presenters.MapFileToFileOutput(file),
+	}, nil
 }
 
 func (f *FileInteractorImpl) FindAllFileOfUser(ctx context.Context, input *presenters.FindFileOfUserInput) (*presenters.FindFileOfUserOuput, error) {
@@ -290,32 +301,26 @@ func (f *FileInteractorImpl) FindAllFileOfUser(ctx context.Context, input *prese
 		return nil, exception.ErrInvalidObjectId
 	}
 	//check if sort field is allowed
-	args := repositories.FindFileOfUserArg{
+	args := fileRepo.FindFileOfUserArg{
 		IsInFolder: input.IsFolder,
 		IsFolder:   input.IsFolder,
 		Offset:     input.Offset,
 		Limit:      input.Limit,
+		IsAsc:      input.IsAsc,
 	}
-	if input.SortBy != nil {
-		allow := false
-		for _, allowField := range ALLOW_FILE_SORT_FIELD {
-			if allowField == *input.SortBy {
-				allow = true
-				break
-			}
+	//check allow sort field
+	allow := false
+	for _, allowField := range ALLOW_FILE_SORT_FIELD {
+		if allowField == input.SortBy {
+			allow = true
+			break
 		}
-		if !allow {
-			return nil, exception.ErrUnAllowedSortField
-		}
-		args.SortBy = *input.SortBy
-	} else {
-		args.SortBy = "created_at"
 	}
-	if input.IsAsc != nil {
-		args.IsAsc = *input.IsAsc
-	} else {
-		args.IsAsc = true
+	if !allow {
+		return nil, exception.ErrUnAllowedSortField
 	}
+	args.SortBy = input.SortBy
+
 	res, err := f.fileRepo.FindAllFileOfUser(ctx, userId, args)
 	if err != nil {
 		return nil, err

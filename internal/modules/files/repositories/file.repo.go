@@ -61,7 +61,7 @@ func (f *MongoFileRepository) UploadedFile(ctx context.Context, file *models.Fil
 		"_id": file.ID,
 	}, bson.M{
 		"$set": bson.M{
-			"is_uploaded": true,
+			"storage_detail.is_uploaded": true,
 		},
 	})
 	if err != nil {

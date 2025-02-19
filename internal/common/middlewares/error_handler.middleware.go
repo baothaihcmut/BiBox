@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/baothaihcmut/Storage-app/internal/common/exception"
@@ -12,6 +13,7 @@ func ErrorHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 		if len(c.Errors) > 0 {
+			fmt.Println(c.Errors)
 			status := exception.ErrorStatusMapper(c.Errors[0])
 			if status != http.StatusInternalServerError {
 				c.JSON(status, response.InitResponse[any](false, c.Errors[0].Error(), nil))

@@ -28,6 +28,7 @@ func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
 	internal.Use(middleware.AuthMiddleware(f.authHandler, f.logger, false))
 	internal.POST("", middleware.ValidateMiddleware[presenters.CreateFileInput](false, binding.JSON), f.handleCreateFile)
 	internal.PATCH("/uploaded/:id", middleware.ValidateMiddleware[presenters.UploadedFileInput](true), f.handleUploadedFile)
+	internal.GET("", middleware.ValidateMiddleware[presenters.FindFileOfUserInput](false, binding.Query), f.handleFindFileOfUser)
 
 }
 
@@ -52,6 +53,16 @@ func (f *FileControllerImpl) handleCreateFile(c *gin.Context) {
 	c.JSON(http.StatusCreated, response.InitResponse(true, "Create file success", res))
 }
 
+// @Sumary Uploaded file
+// @Description Uploaded file
+// @Tags files
+// @Accept json
+// @Produce json
+// @Param file path string true "file id"
+// @Success 201 {object} response.AppResponse{data=presenters.UploadedFileOutput} "Uploaded file sucess"
+// @Failure 404 {object} response.AppResponse{data=nil} "file not found"
+// @Failure 403 {object} response.AppResponse{data=nil} "file is folder"
+// @Router   /files/uploaded [patch]
 func (f *FileControllerImpl) handleUploadedFile(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
 	res, err := f.interactor.UploadedFile(c.Request.Context(), payload.(*presenters.UploadedFileInput))
@@ -61,6 +72,31 @@ func (f *FileControllerImpl) handleUploadedFile(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, response.InitResponse(true, "Uploaded file success", res))
+}
+
+// @Sumary Find file of user
+// @Description Find file of user
+// @Tags files
+// @Accept json
+// @Produce json
+// @Param is_in_folder query bool false "file is in other folder, if null fetch all file"
+// @Param is_folder query bool false "file is folder or not, if null fetch all file and folder"
+// @Param sort_by query string true "sort field, allow short field: created_at, updated_at, opened_at"
+// @Param is_asc query bool true "sort direction"
+// @Param offset query int true "for pagination"
+// @Param limit query int true "for pagination"
+// @Success 200 {object} response.AppResponse{data=presenters.FindFileOfUserOuput} "Find file of user sucess"
+// @Failure 400 {object} response.AppResponse{data=nil} "Un allow sort field, lack of query"
+// @Router   /files [get]
+func (f *FileControllerImpl) handleFindFileOfUser(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := f.interactor.FindAllFileOfUser(c.Request.Context(), payload.(*presenters.FindFileOfUserInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusCreated, response.InitResponse(true, "Find file of user success", res))
 }
 
 func NewFileController(interactor interactors.FileInteractor, jwtService services.JwtService, logger logger.Logger) FileController {

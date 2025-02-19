@@ -10,11 +10,16 @@ definitions:
       description:
         type: string
       has_password:
+        description: Use *bool to allow nil check
         type: boolean
       is_folder:
+        description: Use *bool to allow nil check
         type: boolean
       is_secure:
+        description: Use *bool to allow nil check
         type: boolean
+      name:
+        type: string
       parent_folder_id:
         type: string
       password:
@@ -22,20 +27,25 @@ definitions:
       storage_detail:
         properties:
           file_type:
+            description: Required field
             type: string
           size:
+            description: Required field
             type: integer
+        required:
+        - file_type
+        - size
         type: object
       tags:
         items:
           type: string
         type: array
+    required:
+    - name
     type: object
   presenters.CreateFileOutput:
     properties:
       created_at:
-        type: string
-      deleted_at:
         type: string
       description:
         type: string
@@ -43,12 +53,47 @@ definitions:
         type: boolean
       id:
         type: string
-      is_deleted:
-        type: boolean
       is_folder:
         type: boolean
       is_secure:
         type: boolean
+      name:
+        type: string
+      opened_at:
+        type: string
+      owner_id:
+        type: string
+      parent_folder_id:
+        type: string
+      put_object_url:
+        type: string
+      storage_detail:
+        $ref: '#/definitions/presenters.StorageDetailOuput'
+      tags:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+      url_expiry:
+        type: integer
+    type: object
+  presenters.FileOutput:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      has_password:
+        type: boolean
+      id:
+        type: string
+      is_folder:
+        type: boolean
+      is_secure:
+        type: boolean
+      name:
+        type: string
       opened_at:
         type: string
       owner_id:
@@ -61,10 +106,15 @@ definitions:
         items:
           type: string
         type: array
-      total_size:
-        type: integer
       updated_at:
         type: string
+    type: object
+  presenters.FindFileOfUserOuput:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/presenters.FileOutput'
+        type: array
     type: object
   presenters.StorageDetailOuput:
     properties:
@@ -72,10 +122,37 @@ definitions:
         type: integer
       file_type:
         type: string
-      put_object_url:
+    type: object
+  presenters.UploadedFileOutput:
+    properties:
+      created_at:
         type: string
-      url_expiry:
-        type: integer
+      description:
+        type: string
+      has_password:
+        type: boolean
+      id:
+        type: string
+      is_folder:
+        type: boolean
+      is_secure:
+        type: boolean
+      name:
+        type: string
+      opened_at:
+        type: string
+      owner_id:
+        type: string
+      parent_folder_id:
+        type: string
+      storage_detail:
+        $ref: '#/definitions/presenters.StorageDetailOuput'
+      tags:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
     type: object
   response.AppResponse:
     properties:
@@ -127,6 +204,62 @@ paths:
       tags:
       - auth
   /files:
+    get:
+      consumes:
+      - application/json
+      description: Find file of user
+      parameters:
+      - description: file is in other folder, if null fetch all file
+        in: query
+        name: is_in_folder
+        type: boolean
+      - description: file is folder or not, if null fetch all file and folder
+        in: query
+        name: is_folder
+        type: boolean
+      - description: 'sort field, allow short field: created_at, updated_at, opened_at'
+        in: query
+        name: sort_by
+        required: true
+        type: string
+      - description: sort direction
+        in: query
+        name: is_asc
+        required: true
+        type: boolean
+      - description: for pagination
+        in: query
+        name: offset
+        required: true
+        type: integer
+      - description: for pagination
+        in: query
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Find file of user sucess
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.FindFileOfUserOuput'
+              type: object
+        "400":
+          description: Un allow sort field, lack of query
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
     post:
       consumes:
       - application/json
@@ -162,6 +295,49 @@ paths:
               type: object
         "404":
           description: Parent folder not found, Tag of file not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/uploaded:
+    patch:
+      consumes:
+      - application/json
+      description: Uploaded file
+      parameters:
+      - description: file id
+        in: path
+        name: file
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Uploaded file sucess
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.UploadedFileOutput'
+              type: object
+        "403":
+          description: file is folder
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: file not found
           schema:
             allOf:
             - $ref: '#/definitions/response.AppResponse'

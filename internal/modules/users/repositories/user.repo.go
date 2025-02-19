@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/baothaihcmut/Storage-app/internal/common/logger"
 	"github.com/baothaihcmut/Storage-app/internal/modules/users/models"
@@ -49,7 +50,7 @@ func (m *MongoUserRepository) FindUserByEmail(ctx context.Context, email string)
 		m.logger.Errorf(ctx, map[string]interface{}{
 			"component":  "repository",
 			"user_email": user.Email,
-		}, "Error find one document from Mongo by email:", err)
+		}, "Error find user document from Mongo by email:", err)
 		return nil, err
 	}
 	return &user, err
@@ -77,6 +78,7 @@ func (m *MongoUserRepository) FindUserById(ctx context.Context, id primitive.Obj
 	err := m.collection.FindOne(ctx, bson.M{
 		"_id": id,
 	}).Decode(&user)
+	fmt.Println(err)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -84,7 +86,7 @@ func (m *MongoUserRepository) FindUserById(ctx context.Context, id primitive.Obj
 		m.logger.Errorf(ctx, map[string]interface{}{
 			"component":  "repository",
 			"user_email": user.Email,
-		}, "Error find one document from Mongo by id:", err)
+		}, "Error find user document from Mongo by id:", err)
 		return nil, err
 	}
 	return &user, err
