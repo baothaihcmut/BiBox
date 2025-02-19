@@ -22,7 +22,7 @@ func InitializeMongo(cfg *config.MongoConfig) (*mongo.Client, error) {
 		return nil, fmt.Errorf("error connect to MongoDb: %v", err)
 	}
 
-	if err := client.Ping(context.Background(), &readpref.ReadPref{}); err != nil {
+	if err := client.Ping(context.Background(), readpref.Primary()); err != nil {
 		return nil, fmt.Errorf("error ping mongodb: %v", err)
 	}
 	return client, nil
