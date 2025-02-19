@@ -2,6 +2,7 @@ package interactors
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/baothaihcmut/Storage-app/internal/common/constant"
@@ -12,18 +13,25 @@ import (
 	"github.com/baothaihcmut/Storage-app/internal/common/storage"
 	"github.com/baothaihcmut/Storage-app/internal/modules/files/models"
 	"github.com/baothaihcmut/Storage-app/internal/modules/files/presenters"
+	"github.com/baothaihcmut/Storage-app/internal/modules/files/repositories"
 	fileRepo "github.com/baothaihcmut/Storage-app/internal/modules/files/repositories"
+	tagRepo "github.com/baothaihcmut/Storage-app/internal/modules/tags/repositories"
+	userModel "github.com/baothaihcmut/Storage-app/internal/modules/users/models"
 	userRepo "github.com/baothaihcmut/Storage-app/internal/modules/users/repositories"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+var ALLOW_FILE_SORT_FIELD = []string{"created_at", "updated_at", "opened_at"}
+
 type FileInteractor interface {
 	CreatFile(context.Context, *presenters.CreateFileInput) (*presenters.CreateFileOutput, error)
+	UploadedFile(context.Context, *presenters.UploadedFileInput) (*presenters.UploadedFileOutput, error)
 }
 
 type FileInteractorImpl struct {
 	userRepo       userRepo.UserRepository
 	fileRepo       fileRepo.FileRepository
+	tagRepo        tagRepo.TagRepository
 	logger         logger.Logger
 	storageService storage.StorageService
 	mongoService   mongo.MongoService
@@ -32,60 +40,139 @@ type FileInteractorImpl struct {
 func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.CreateFileInput) (*presenters.CreateFileOutput, error) {
 	//get user context
 	userContext := ctx.Value(string(constant.UserContext)).(*commonModel.UserContext)
-
-	//check user permission
-
-	//check size of user
+	//tranform id
 	userId, err := primitive.ObjectIDFromHex(userContext.Id)
 	if err != nil {
 		return nil, exception.ErrInvalidObjectId
 	}
-	user, err := f.userRepo.FindUserById(ctx, userId)
-	if err != nil {
-		return nil, err
-	}
-	err = user.IncreStorageSize(input.StorageDetail.Size)
-	if err != nil {
-		return nil, err
-	}
-
-	//check if tag exists
-	var parentFileId primitive.ObjectID
+	var parentFileId *primitive.ObjectID
 	if input.ParentFolderID != nil {
-		parentFileId, err = primitive.ObjectIDFromHex(*input.ParentFolderID)
+		id, err := primitive.ObjectIDFromHex(*input.ParentFolderID)
 		if err != nil {
 			return nil, exception.ErrInvalidObjectId
 		}
-		parentFile, err := f.fileRepo.FindFileById(ctx, parentFileId, false)
+		parentFileId = &id
+	}
+	tagIds := make([]primitive.ObjectID, len(input.TagIDs))
+	for idx, tagId := range input.TagIDs {
+		id, err := primitive.ObjectIDFromHex(tagId)
 		if err != nil {
-			return nil, err
+			return nil, exception.ErrInvalidObjectId
 		}
-		if parentFile == nil {
-			return nil, exception.ErrParenFileNotExist
+		tagIds[idx] = id
+	}
+	//check phase
+	checkWg := sync.WaitGroup{}
+	checkErr := make(chan error, 1)
+	userCh := make(chan *userModel.User, 1)
+	ctx, cancelCheck := context.WithCancel(ctx)
+	defer cancelCheck()
+	//check user permission
+
+	//check size of user
+	if !input.IsFolder {
+		checkWg.Add(1)
+		go func() {
+			defer checkWg.Done()
+			user, err := f.userRepo.FindUserById(ctx, userId)
+			if err != nil {
+				if err == context.Canceled {
+					return
+				}
+				cancelCheck()
+				checkErr <- err
+				return
+			}
+			err = user.IncreStorageSize(input.StorageDetail.Size)
+			if err != nil {
+				cancelCheck()
+				checkErr <- err
+				return
+			}
+			//push user to save phase
+			userCh <- user
+		}()
+	}
+
+	//check if tags exists
+	for _, tagId := range tagIds {
+		checkWg.Add(1)
+		go func() {
+			defer checkWg.Done()
+			tagExist, err := f.tagRepo.FindTagById(ctx, tagId)
+			if err != nil {
+				if err == context.Canceled {
+					return
+				}
+				cancelCheck()
+				checkErr <- err
+				return
+			}
+			if tagExist == nil {
+				cancelCheck()
+				checkErr <- exception.ErrTagNotExist
+				return
+			}
+		}()
+	}
+
+	if parentFileId != nil {
+		checkWg.Add(1)
+		go func() {
+			defer checkWg.Done()
+			parentFile, err := f.fileRepo.FindFileById(ctx, *parentFileId, false)
+			if err != nil {
+				if err == context.Canceled {
+					return
+				}
+				cancelCheck()
+				checkErr <- err
+				return
+			}
+			if parentFile == nil {
+				cancelCheck()
+				checkErr <- exception.ErrParenFileNotExist
+				return
+			}
+		}()
+	}
+	//wait for all check routine
+	checkWg.Wait()
+	select {
+	case err = <-checkErr:
+		return nil, err
+	default:
+	}
+	//get user result
+	user := <-userCh
+
+	//init file object
+	//if file is not folder init storage detail
+	var storageArg *models.FileStorageDetailArg
+	if !input.IsFolder {
+		storageArg = &models.FileStorageDetailArg{
+			Size:            input.StorageDetail.Size,
+			FileType:        input.StorageDetail.Type,
+			StorageProvider: f.storageService.GetStorageProviderName(),
+			StorageBucket:   f.storageService.GetStorageBucket(),
 		}
 	}
-	//init file object
+
+	fmt.Println(input.StorageDetail.Type)
 	file := models.NewFile(
 		user.ID,
-		&parentFileId,
+		input.Name,
+		parentFileId,
 		input.Description,
 		input.Password,
 		input.IsFolder,
 		input.HasPassword,
 		input.IsSecure,
-		[]primitive.ObjectID{},
-		&struct {
-			Size            int
-			FileType        string
-			StorageProvider string
-			StorageBucket   string
-		}{
-			Size:            input.StorageDetail.Size,
-			FileType:        input.StorageDetail.Type,
-			StorageProvider: f.storageService.GetStorageBucket(),
-			StorageBucket:   f.storageService.GetStorageProviderName(),
-		})
+		tagIds,
+		storageArg,
+	)
 
+	//save phase
 	//save to db
 	session, err := f.mongoService.BeginTransaction(ctx)
 	if err != nil {
@@ -103,18 +190,23 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 	//cancel context when have err
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	wgSave.Add(1)
-	go func() {
-		defer wgSave.Done()
-		err = f.userRepo.UpdateUserStorageSize(ctx, user)
-		if err != nil {
-			if err == context.Canceled {
-				return
+	if !file.IsFolder {
+		wgSave.Add(1)
+		go func() {
+			defer wgSave.Done()
+			err = f.userRepo.UpdateUserStorageSize(ctx, user)
+			if err != nil {
+				if err == context.Canceled {
+					return
+				}
+				cancel()
+				errSave <- err
 			}
-			cancel()
-			errSave <- err
-		}
-	}()
+			f.logger.Info(ctx, map[string]interface{}{
+				"user_new_size": user.CurrentStorageSize,
+			}, "User storage size updated")
+		}()
+	}
 	wgSave.Add(1)
 	go func() {
 		defer wgSave.Done()
@@ -126,6 +218,9 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 			cancel()
 			errSave <- err
 		}
+		f.logger.Info(ctx, map[string]interface{}{
+			"file_id": file.ID.Hex(),
+		}, "File created")
 	}()
 	//update parent file routine
 	wgSave.Wait()
@@ -134,7 +229,10 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 		return nil, err
 	default:
 	}
-	var storageOuputDetail *presenters.StorageDetailOuput
+
+	output := &presenters.CreateFileOutput{
+		FileOutput: presenters.MapFileToFileOutput(file),
+	}
 	//get presign url for put object
 	if !file.IsFolder {
 		url, err := f.storageService.GetPresignUrl(ctx, storage.GetPresignUrlArg{
@@ -144,34 +242,96 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 		if err != nil {
 			return nil, err
 		}
-		storageOuputDetail = &presenters.StorageDetailOuput{
-			Size:         file.StorageDetail.Size,
-			Type:         file.StorageDetail.FileType,
-			PutObjectUrl: url,
-			UrlExpiry:    3,
-		}
+		f.logger.Info(ctx, map[string]interface{}{
+			"url":     url,
+			"key":     file.StorageDetail.StorageKey,
+			"bucket":  file.StorageDetail.StorageBucket,
+			"file_id": file.ID,
+		}, "Presign url for put generated")
+		output.PutObjectUrl = url
+		output.UrlExpiry = 3
 	}
-	return &presenters.CreateFileOutput{
-		ID:             file.ID.Hex(),
-		OwnerID:        file.OwnerID.Hex(),
-		IsFolder:       file.IsFolder,
-		ParentFolderID: input.ParentFolderID,
-		CreatedAt:      file.CreatedAt,
-		UpdatedAt:      file.UpdatedAt,
-		DeletedAt:      file.DeletedAt,
-		OpenedAt:       file.OpenedAt,
-		HasPassword:    file.HasPassword,
-		Description:    file.Description,
-		IsSecure:       file.IsSecure,
-		TotalSize:      file.TotalSize,
-		TagIDs:         input.TagIDs,
-		StorageDetails: storageOuputDetail,
-	}, nil
 
+	return output, nil
+
+}
+
+func (f *FileInteractorImpl) UploadedFile(ctx context.Context, input *presenters.UploadedFileInput) (*presenters.UploadedFileOutput, error) {
+	//check file exist
+	fileId, err := primitive.ObjectIDFromHex(input.Id)
+	if err != nil {
+		return nil, exception.ErrInvalidObjectId
+	}
+	file, err := f.fileRepo.FindFileById(ctx, fileId, false)
+	if err != nil {
+		return nil, err
+	}
+	if file == nil {
+		return nil, exception.ErrFileNotFound
+	}
+	if file.IsFolder {
+		return nil, exception.ErrFileIsFolder
+	}
+	file.StorageDetail.IsUploaded = true
+	//update db
+	err = f.fileRepo.UploadedFile(ctx, file)
+	if err != nil {
+		return nil, err
+	}
+	return &presenters.UploadedFileOutput{}, nil
+}
+
+func (f *FileInteractorImpl) FindAllFileOfUser(ctx context.Context, input *presenters.FindFileOfUserInput) (*presenters.FindFileOfUserOuput, error) {
+	//get user context
+	userContext := ctx.Value(string(constant.UserContext)).(*commonModel.UserContext)
+	//tranform id
+	userId, err := primitive.ObjectIDFromHex(userContext.Id)
+	if err != nil {
+		return nil, exception.ErrInvalidObjectId
+	}
+	//check if sort field is allowed
+	args := repositories.FindFileOfUserArg{
+		IsInFolder: input.IsFolder,
+		IsFolder:   input.IsFolder,
+		Offset:     input.Offset,
+		Limit:      input.Limit,
+	}
+	if input.SortBy != nil {
+		allow := false
+		for _, allowField := range ALLOW_FILE_SORT_FIELD {
+			if allowField == *input.SortBy {
+				allow = true
+				break
+			}
+		}
+		if !allow {
+			return nil, exception.ErrUnAllowedSortField
+		}
+		args.SortBy = *input.SortBy
+	} else {
+		args.SortBy = "created_at"
+	}
+	if input.IsAsc != nil {
+		args.IsAsc = *input.IsAsc
+	} else {
+		args.IsAsc = true
+	}
+	res, err := f.fileRepo.FindAllFileOfUser(ctx, userId, args)
+	if err != nil {
+		return nil, err
+	}
+	fileOutput := make([]*presenters.FileOutput, len(res))
+	for idx, file := range res {
+		fileOutput[idx] = presenters.MapFileToFileOutput(file)
+	}
+	return &presenters.FindFileOfUserOuput{
+		Files: fileOutput,
+	}, nil
 }
 
 func NewFileInteractor(
 	userRepo userRepo.UserRepository,
+	tagRepo tagRepo.TagRepository,
 	fileRepo fileRepo.FileRepository,
 	logger logger.Logger,
 	storageService storage.StorageService,
@@ -180,6 +340,7 @@ func NewFileInteractor(
 	return &FileInteractorImpl{
 		userRepo:       userRepo,
 		fileRepo:       fileRepo,
+		tagRepo:        tagRepo,
 		logger:         logger,
 		storageService: storageService,
 		mongoService:   mongoService,

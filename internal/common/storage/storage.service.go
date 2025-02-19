@@ -69,9 +69,10 @@ func (s *S3StorageService) GetStorageProviderName() string {
 func (s *S3StorageService) GetStorageBucket() string {
 	return s.cfg.Bucket
 }
-func NewS3StorageService(client *s3.Client, logger logger.Logger) StorageService {
+func NewS3StorageService(client *s3.Client, logger logger.Logger, cfg *config.S3Config) StorageService {
 	return &S3StorageService{
 		client: client,
 		logger: logger,
+		cfg:    cfg,
 	}
 }

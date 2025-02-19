@@ -11,6 +11,7 @@ import (
 	"github.com/baothaihcmut/Storage-app/internal/modules/auth/interactors"
 	"github.com/baothaihcmut/Storage-app/internal/modules/auth/presenter"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 )
 
 type AuthController interface {
@@ -23,6 +24,16 @@ type AuthControllerImpl struct {
 	oauth2Config   *config.Oauth2Config
 }
 
+// @Sumary Exchange Google token
+// @Description Exchange Google auth code
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param authCode body presenter.ExchangeTokenInput true "auth code from google oauth2 resposne"
+// @Success 201 {object} response.AppResponse{data=nil} "Login success"
+// @Failure 401 {object} response.AppResponse{data=nil} "Wrong auth code"
+//
+//	@Router   /auth/exchange [post]
 func (a *AuthControllerImpl) handleExchangeToken(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
 	res, err := a.authInteractor.ExchangeToken(c.Request.Context(), payload.(*presenter.ExchangeTokenInput))
@@ -34,14 +45,14 @@ func (a *AuthControllerImpl) handleExchangeToken(c *gin.Context) {
 	//set cookie
 	c.SetCookie("access_token", res.AccessToken, a.jwtConfig.AccessToken.Age*60*60, "/", "localhost", false, true)
 	c.SetCookie("refresh_token", res.RefreshToken, a.jwtConfig.RefreshToken.Age*60*60, "/", "localhost", false, true)
-	c.JSON(http.StatusCreated, response.InitResponse(true, "Login sucess", nil))
+	c.JSON(http.StatusCreated, response.InitResponse[any](true, "Login sucess", nil))
 }
 
 func (a *AuthControllerImpl) Init(g *gin.RouterGroup) {
 	external := g.Group("/auth")
 	external.POST(
 		"/exchange",
-		middleware.ValidateMiddleware[presenter.ExchangeTokenInput](),
+		middleware.ValidateMiddleware[presenter.ExchangeTokenInput](false, binding.JSON),
 		a.handleExchangeToken,
 	)
 	external.GET("/callback", func(c *gin.Context) {

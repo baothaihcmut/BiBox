@@ -6,8 +6,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type FileStorageDetailArg struct {
+	Size            int
+	FileType        string
+	StorageProvider string
+	StorageBucket   string
+}
+
 type File struct {
 	ID             primitive.ObjectID   `bson:"_id,omitempty"`
+	Name           string               `bson:"name"`
 	OwnerID        primitive.ObjectID   `bson:"owner_id"`
 	IsFolder       bool                 `bson:"is_folder"`
 	ParentFolderID *primitive.ObjectID  `bson:"parent_folder_id"`
@@ -19,7 +27,6 @@ type File struct {
 	Description    string               `bson:"description"`
 	IsDeleted      bool                 `bson:"is_deleted"`
 	DeletedAt      *time.Time           `bson:"deleted_at"`
-	TotalSize      int                  `bson:"total_size"`
 	IsSecure       bool                 `bson:"is_secure"`
 	TagIDs         []primitive.ObjectID `bson:"tags"` // Store references to Tag IDs
 	StorageDetail  *FileStorageDetail   `bson:"storage_detail"`
@@ -28,36 +35,31 @@ type File struct {
 // Constructor for File with a random ObjectID
 func NewFile(
 	ownerID primitive.ObjectID,
+	name string,
 	parentFolderID *primitive.ObjectID,
 	description string,
 	pasword *string,
 	isFolder, hasPassword, isSecure bool,
 	tags []primitive.ObjectID,
-	storageDetail *struct {
-		Size            int
-		FileType        string
-		StorageProvider string
-		StorageBucket   string
-	}) *File {
+	storageDetail *FileStorageDetailArg) *File {
 	id := primitive.NewObjectID()
 	//key for storage
 	key := time.Now().String() + id.Hex()
 	//intit storage storage
-
-	storage := NewFileStorageDetail(
-		storageDetail.Size,
-		storageDetail.FileType,
-		false,
-		storageDetail.StorageProvider,
-		key, storageDetail.StorageBucket)
-
-	var totalSize = 0
+	var storage *FileStorageDetail
 	if !isFolder {
-		totalSize = storageDetail.Size
+		storage = NewFileStorageDetail(
+			storageDetail.Size,
+			storageDetail.FileType,
+			false,
+			storageDetail.StorageProvider,
+			key, storageDetail.StorageBucket)
 	}
+
 	return &File{
 		ID:             id, // Generate a random ObjectID
 		OwnerID:        ownerID,
+		Name:           name,
 		IsFolder:       isFolder,
 		ParentFolderID: parentFolderID,
 		CreatedAt:      time.Now(), // Set CreatedAt to the current time
@@ -68,7 +70,6 @@ func NewFile(
 		Description:    description,
 		IsDeleted:      false, // Default to not deleted
 		DeletedAt:      nil,   // Optionally set this to a default value
-		TotalSize:      totalSize,
 		IsSecure:       isSecure,
 		TagIDs:         tags, // Pass the provided tags
 		StorageDetail:  storage,

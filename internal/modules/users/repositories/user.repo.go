@@ -59,7 +59,9 @@ func (m *MongoUserRepository) UpdateUserStorageSize(ctx context.Context, user *m
 	_, err := m.collection.UpdateOne(ctx, bson.M{
 		"_id": user.ID,
 	}, bson.M{
-		"current_storage": user.CurrentStorageSize,
+		"$set": bson.M{
+			"current_storage_size": user.CurrentStorageSize,
+		},
 	})
 	if err != nil {
 		m.logger.Errorf(ctx, map[string]interface{}{

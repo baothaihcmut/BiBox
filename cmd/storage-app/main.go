@@ -7,6 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// @title Storage App API
+// @version 1.0
+// @description This is a sample API for file storage
+// @host localhost:8080
+// @BasePath /api/v1
 func main() {
 	//config
 	config, err := config.LoadConfig()

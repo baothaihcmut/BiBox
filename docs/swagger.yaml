@@ -1,0 +1,174 @@
+basePath: /api/v1
+definitions:
+  presenter.ExchangeTokenInput:
+    properties:
+      auth_code:
+        type: string
+    type: object
+  presenters.CreateFileInput:
+    properties:
+      description:
+        type: string
+      has_password:
+        type: boolean
+      is_folder:
+        type: boolean
+      is_secure:
+        type: boolean
+      parent_folder_id:
+        type: string
+      password:
+        type: string
+      storage_detail:
+        properties:
+          file_type:
+            type: string
+          size:
+            type: integer
+        type: object
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
+  presenters.CreateFileOutput:
+    properties:
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      description:
+        type: string
+      has_password:
+        type: boolean
+      id:
+        type: string
+      is_deleted:
+        type: boolean
+      is_folder:
+        type: boolean
+      is_secure:
+        type: boolean
+      opened_at:
+        type: string
+      owner_id:
+        type: string
+      parent_folder_id:
+        type: string
+      storage_detail:
+        $ref: '#/definitions/presenters.StorageDetailOuput'
+      tags:
+        items:
+          type: string
+        type: array
+      total_size:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  presenters.StorageDetailOuput:
+    properties:
+      file_size:
+        type: integer
+      file_type:
+        type: string
+      put_object_url:
+        type: string
+      url_expiry:
+        type: integer
+    type: object
+  response.AppResponse:
+    properties:
+      message:
+        type: string
+      sucess:
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a sample API for file storage
+  title: Storage App API
+  version: "1.0"
+paths:
+  /auth/exchange:
+    post:
+      consumes:
+      - application/json
+      description: Exchange Google auth code
+      parameters:
+      - description: auth code from google oauth2 resposne
+        in: body
+        name: authCode
+        required: true
+        schema:
+          $ref: '#/definitions/presenter.ExchangeTokenInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Login success
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Wrong auth code
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - auth
+  /files:
+    post:
+      consumes:
+      - application/json
+      description: Create new file
+      parameters:
+      - description: file information
+        in: body
+        name: file
+        required: true
+        schema:
+          $ref: '#/definitions/presenters.CreateFileInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Create file sucess, storage_detail.put_object_url is presign
+            url for upload file
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.CreateFileOutput'
+              type: object
+        "403":
+          description: User don't have permission for this file operation
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: Parent folder not found, Tag of file not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+swagger: "2.0"

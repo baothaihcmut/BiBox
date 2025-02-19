@@ -14,10 +14,10 @@ func ErrorHandler() gin.HandlerFunc {
 		if len(c.Errors) > 0 {
 			status := exception.ErrorStatusMapper(c.Errors[0])
 			if status != http.StatusInternalServerError {
-				c.JSON(status, response.InitResponse(false, c.Errors[0].Error(), nil))
+				c.JSON(status, response.InitResponse[any](false, c.Errors[0].Error(), nil))
 				return
 			}
-			c.JSON(http.StatusInternalServerError, response.InitResponse(false, "Internal error", nil))
+			c.JSON(http.StatusInternalServerError, response.InitResponse[any](false, "Internal error", nil))
 		}
 	}
 }
