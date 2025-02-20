@@ -1,8 +1,8 @@
 package enums
 
-type Role string
+type Role int
 
 const (
-	UserRole  Role = "user"
-	AdminRole Role = "admin"
+	UserRole = iota
+	AdminRole
 )
