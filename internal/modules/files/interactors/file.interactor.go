@@ -133,8 +133,10 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 			defer checkWg.Done()
 			parentFile, err := f.fileRepo.FindFileById(ctx, *parentFileId, false)
 			if err != nil {
-				if err == context.Canceled {
+				select {
+				case <-ctx.Done():
 					return
+				default:
 				}
 				cancelCheck()
 				checkErr <- err
@@ -149,8 +151,8 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 	}
 	//wait for all check routine
 	checkWg.Wait()
-	close(userCh)
-	close(checkErr)
+	// close(userCh)
+	// close(checkErr)
 	select {
 	case err = <-checkErr:
 		return nil, err
@@ -158,7 +160,6 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 	}
 	//get user result
 	user := <-userCh
-
 	//init file object
 	//if file is not folder init storage detail
 	var storageArg *models.FileStorageDetailArg
@@ -208,8 +209,10 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 			defer wgSave.Done()
 			err = f.userRepo.UpdateUserStorageSize(ctx, user)
 			if err != nil {
-				if err == context.Canceled {
+				select {
+				case <-ctx.Done():
 					return
+				default:
 				}
 				cancel()
 				errSave <- err
@@ -224,8 +227,10 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 		defer wgSave.Done()
 		err = f.fileRepo.CreateFile(ctx, file)
 		if err != nil {
-			if err == context.Canceled {
+			select {
+			case <-ctx.Done():
 				return
+			default:
 			}
 			cancel()
 			errSave <- err
@@ -236,7 +241,7 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 	}()
 	//update parent file routine
 	wgSave.Wait()
-	close(errSave)
+	// close(errSave)
 	select {
 	case err = <-errSave:
 		return nil, err
