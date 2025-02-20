@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/baothaihcmut/Storage-app/internal/common/enums"
 	"github.com/baothaihcmut/Storage-app/internal/common/logger"
 	"github.com/baothaihcmut/Storage-app/internal/config"
 )
@@ -19,8 +20,9 @@ const (
 )
 
 type GetPresignUrlArg struct {
-	Method PresignUrlMethod
-	Key    string
+	Method      PresignUrlMethod
+	Key         string
+	ContentType enums.MimeType
 }
 
 type StorageService interface {
@@ -40,8 +42,9 @@ func (s *S3StorageService) GetPresignUrl(ctx context.Context, args GetPresignUrl
 	presigner := s3.NewPresignClient(s.client)
 	if args.Method == PresignUrlPutMethod {
 		url, err := presigner.PresignPutObject(ctx, &s3.PutObjectInput{
-			Key:    aws.String(args.Key),
-			Bucket: aws.String(s.cfg.Bucket),
+			Key:         aws.String(args.Key),
+			Bucket:      aws.String(s.cfg.Bucket),
+			ContentType: aws.String(string(args.ContentType)),
 		}, s3.WithPresignExpires(time.Hour*3))
 		if err != nil {
 			s.logger.Errorf(ctx, map[string]interface{}{
@@ -52,8 +55,9 @@ func (s *S3StorageService) GetPresignUrl(ctx context.Context, args GetPresignUrl
 		return url.URL, nil
 	} else {
 		url, err := presigner.PresignGetObject(ctx, &s3.GetObjectInput{
-			Key:    aws.String(args.Key),
-			Bucket: aws.String(s.cfg.Bucket),
+			Key:                 aws.String(args.Key),
+			Bucket:              aws.String(s.cfg.Bucket),
+			ResponseContentType: aws.String(string(args.ContentType)),
 		}, s3.WithPresignExpires(time.Hour*3))
 		if err != nil {
 			s.logger.Errorf(ctx, map[string]interface{}{
