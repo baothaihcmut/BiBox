@@ -8,9 +8,10 @@ import (
 	"io"
 
 	"github.com/baothaihcmut/Storage-app/internal/common/enums"
-	"github.com/baothaihcmut/Storage-app/internal/common/exception"
 	"github.com/baothaihcmut/Storage-app/internal/common/logger"
-	"github.com/gen2brain/go-fitz"
+	"github.com/disintegration/imaging"
+	"github.com/unidoc/unipdf/v3/extractor"
+	"github.com/unidoc/unipdf/v3/model"
 )
 
 type FirstPageService interface {
@@ -34,38 +35,45 @@ func NewFileFirstPageService(logger logger.Logger) FirstPageService {
 }
 
 func (p *FirstPageServiceImpl) getFirstPagePDF(ctx context.Context, reader io.ReadCloser, outputType enums.MimeType) (*bytes.Buffer, error) {
-	doc, err := fitz.NewFromReader(reader)
+	buf := new(bytes.Buffer)
+	_, err := buf.ReadFrom(reader)
 	if err != nil {
-		p.logger.Errorf(ctx, map[string]interface{}{
-			"file_type": "pdf",
-		}, "Error get first page of file:", err)
+		p.logger.Errorf(ctx, nil, "Error read byte from storage object: ", err)
 		return nil, err
 	}
-	img, err := doc.Image(0)
+	pdf, err := model.NewPdfReader(bytes.NewReader(buf.Bytes()))
 	if err != nil {
-		p.logger.Errorf(ctx, map[string]interface{}{
-			"file_type": "pdf",
-		}, "Error get first page of file:", err)
+		p.logger.Errorf(ctx, nil, "Error extract object to pdf: ", err)
 		return nil, err
 	}
-	var imgBuffer bytes.Buffer
+	page, err := pdf.GetPage(1)
+	if err != nil {
+		p.logger.Errorf(ctx, nil, "Error get first page of pdf: ", err)
+	}
+	ex, err := extractor.New(page)
+	if err != nil {
+		return nil, err
+	}
+	imges, err := ex.ExtractPageImages(&extractor.ImageExtractOptions{})
+	if err != nil {
+		return nil, err
+	}
+	goImg, err := imges.Images[0].Image.ToGoImage()
+	if err != nil {
+		p.logger.Errorf(ctx, nil, "Error convert to go image: ", err)
+	}
+	var result bytes.Buffer
 	switch outputType {
-	case enums.MimeJPG:
-		err = jpeg.Encode(&imgBuffer, img, &jpeg.Options{Quality: 10})
-		break
 	case enums.MimePNG:
-		err = png.Encode(&imgBuffer, img)
-		break
-	default:
-		return nil, exception.ErrUnSupportOutputImageType
+		err = png.Encode(&result, imaging.Resize(goImg, 800, 0, imaging.Lanczos))
+	case enums.MimeJPG:
+		err = jpeg.Encode(&result, imaging.Resize(goImg, 800, 0, imaging.Lanczos), &jpeg.Options{Quality: 10})
 	}
 	if err != nil {
-		p.logger.Errorf(ctx, map[string]interface{}{
-			"ouput_type": outputType,
-		}, "Error encode image to output: ", err)
+		p.logger.Errorf(ctx, nil, "Error encode pdf to image: ", err)
 		return nil, err
 	}
-	return &imgBuffer, nil
+	return &result, nil
 }
 
 func (f *FirstPageServiceImpl) GetFirstPage(ctx context.Context, object io.ReadCloser, mimeType enums.MimeType, outputType enums.MimeType) (*bytes.Buffer, error) {
