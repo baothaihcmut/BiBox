@@ -35,22 +35,31 @@ import (
 )
 
 type Server struct {
-	g      *gin.Engine
-	logger *logrus.Logger
-	config *config.AppConfig
-	mongo  *mongo.Client
-	oauth2 *oauth2.Config
-	s3     *s3.Client
+	g              *gin.Engine
+	logger         *logrus.Logger
+	config         *config.AppConfig
+	mongo          *mongo.Client
+	googleOauth2   *oauth2.Config
+	facebookOauth2 *oauth2.Config
+	s3             *s3.Client
 }
 
-func NewServer(g *gin.Engine, mongo *mongo.Client, oauth2 *oauth2.Config, s3 *s3.Client, logger *logrus.Logger, cfg *config.AppConfig) *Server {
+func NewServer(
+	g *gin.Engine,
+	mongo *mongo.Client,
+	googleoauth2 *oauth2.Config,
+	facebookOauth2 *oauth2.Config,
+	s3 *s3.Client,
+	logger *logrus.Logger,
+	cfg *config.AppConfig) *Server {
 	return &Server{
-		g:      g,
-		logger: logger,
-		config: cfg,
-		mongo:  mongo,
-		oauth2: oauth2,
-		s3:     s3,
+		g:              g,
+		logger:         logger,
+		config:         cfg,
+		mongo:          mongo,
+		googleOauth2:   googleoauth2,
+		facebookOauth2: facebookOauth2,
+		s3:             s3,
 	}
 }
 func (s *Server) initApp() {
@@ -64,13 +73,17 @@ func (s *Server) initApp() {
 	tagRepo := repositories.NewMongoTagRepository(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("tags"), logger)
 	//init service
 	userJwtService := authService.NewUserJwtService(s.config.Jwt, logger)
-	oauth2Service := authService.NewGoogleOauth2Service(s.oauth2, logger)
+	googleOauth2Service := authService.NewGoogleOauth2Service(s.googleOauth2, logger)
+	facebookOauth2Service := authService.NewFacebookOauth2Service(s.facebookOauth2)
+	oauth2SerivceFactory := authService.NewOauth2ServiceFactory()
+	oauth2SerivceFactory.Register(authService.GoogleOauth2Token, googleOauth2Service)
+	oauth2SerivceFactory.Register(authService.FacebookOauth2Token, facebookOauth2Service)
 	storageService := storage.NewS3StorageService(s.s3, logger, &s.config.S3)
 	mongoService := mongoLib.NewMongoTransactionService(s.mongo)
 	firstPageService := services.NewFileFirstPageService(logger)
 
 	//init interactor
-	authInteractor := authInteractors.NewAuthInteractor(oauth2Service, userRepo, userJwtService, logger)
+	authInteractor := authInteractors.NewAuthInteractor(oauth2SerivceFactory, userRepo, userJwtService, logger)
 	fileInteractor := fileInteractor.NewFileInteractor(userRepo, tagRepo, fileRepo, logger, storageService, mongoService, firstPageService)
 	//init controllers
 	authController := authController.NewAuthController(authInteractor, &s.config.Jwt, &s.config.Oauth2)

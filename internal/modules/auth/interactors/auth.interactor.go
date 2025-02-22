@@ -15,42 +15,44 @@ type AuthInteractor interface {
 }
 
 type AuthInteractorImpl struct {
-	oauth2Service  services.Oauth2Service
-	jwtService     services.JwtService
-	userRepository repositories.UserRepository
-	logger         logger.Logger
+	oauth2ServiceFactory services.Oauth2ServiceFactory
+	jwtService           services.JwtService
+	userRepository       repositories.UserRepository
+	logger               logger.Logger
 }
 
-func NewAuthInteractor(oauth2 services.Oauth2Service, userRepo repositories.UserRepository, jwtService services.JwtService, logger logger.Logger) AuthInteractor {
+func NewAuthInteractor(oauth2 services.Oauth2ServiceFactory, userRepo repositories.UserRepository, jwtService services.JwtService, logger logger.Logger) AuthInteractor {
 	return &AuthInteractorImpl{
-		userRepository: userRepo,
-		oauth2Service:  oauth2,
-		jwtService:     jwtService,
-		logger:         logger,
+		userRepository:       userRepo,
+		oauth2ServiceFactory: oauth2,
+		jwtService:           jwtService,
+		logger:               logger,
 	}
 }
 func (a *AuthInteractorImpl) ExchangeToken(ctx context.Context, input *presenter.ExchangeTokenInput) (*presenter.ExchangeTokenOutput, error) {
+	//get service
+	oauth2Service := a.oauth2ServiceFactory.GetOauth2Service(services.Oauth2ServiceToken(input.Provider))
 	//get user info
-	userInfo, err := a.oauth2Service.ExchangeToken(ctx, input.AuthCode)
+	userInfo, err := oauth2Service.ExchangeToken(ctx, input.AuthCode)
 	if err != nil {
 		return nil, err
 	}
 	//check if user exist in system
-	user, err := a.userRepository.FindUserByEmail(ctx, userInfo.Email)
+	user, err := a.userRepository.FindUserByEmail(ctx, userInfo.GetEmail())
 	if err != nil {
 		return nil, err
 	}
 	//if user not exist create new user
 	if user == nil {
-		user := models.NewUser(userInfo.FirstName, userInfo.LastName, userInfo.Email, userInfo.Image)
-		err := a.userRepository.CreateUser(ctx, user)
+		user = models.NewUser(userInfo.GetFirstName(), userInfo.GetLastName(), userInfo.GetEmail(), userInfo.GetImage())
+		err = a.userRepository.CreateUser(ctx, user)
 		if err != nil {
 			a.logger.Errorf(ctx, map[string]interface{}{
-				"email": userInfo.Email,
+				"email": userInfo.GetEmail(),
 			}, "Error create new user:", err)
 		}
 		a.logger.Info(ctx, map[string]interface{}{
-			"email":   userInfo.Email,
+			"email":   userInfo.GetEmail(),
 			"user_id": user.ID.Hex(),
 		}, "User created")
 	}
