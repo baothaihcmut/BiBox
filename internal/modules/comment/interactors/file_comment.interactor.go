@@ -1,16 +1,18 @@
 package interactors
 
 import (
-	"storage-app/internal/modules/comment/repositories"
+	"github.com/baothaihcmut/Storage-app/internal/modules/comment/repositories"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type CommentInteractor struct {
 	Repo *repositories.CommentRepository
 }
 
-func NewCommentInteractor() *CommentInteractor {
+// Pass a *mongo.Database instance as a parameter
+func NewCommentInteractor(db *mongo.Database) *CommentInteractor {
 	return &CommentInteractor{
-		Repo: repositories.NewCommentRepository(),
+		Repo: repositories.NewCommentRepository(db),
 	}
 }
 
@@ -19,5 +21,5 @@ func (ci *CommentInteractor) GetAllComments() ([]map[string]interface{}, error) 
 }
 
 func (ci *CommentInteractor) AddComment(fileID, userID, content string) error {
-	return ci.Repo.InsertComment(fileID, userID, content)
+	return ci.Repo.CreateComment(fileID, userID, content)
 }

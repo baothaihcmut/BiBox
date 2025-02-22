@@ -2,21 +2,22 @@ package controllers
 
 import (
 	"net/http"
-	"storage-app/internal/modules/permission/interactors"
 
+	"github.com/baothaihcmut/Storage-app/internal/modules/permission/interactors"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type PermissionController struct {
 	Interactor *interactors.PermissionInteractor
 }
 
-func NewPermissionController() *PermissionController {
+func NewPermissionController(db *mongo.Database) *PermissionController {
 	return &PermissionController{
-		Interactor: interactors.NewPermissionInteractor(),
+		Interactor: interactors.NewPermissionInteractor(db),
 	}
 }
-
 func (pc *PermissionController) GetPermissions(c *gin.Context) {
 	permissions, err := pc.Interactor.GetAllPermissions()
 	if err != nil {
@@ -28,10 +29,10 @@ func (pc *PermissionController) GetPermissions(c *gin.Context) {
 
 func (pc *PermissionController) GrantPermission(c *gin.Context) {
 	var request struct {
-		FileID         string `json:"file_id"`
-		UserID         string `json:"user_id"`
-		PermissionType string `json:"permission_type"`
-		AccessSecure   bool   `json:"access_secure_file"`
+		FileID         primitive.ObjectID `json:"file_id"`
+		UserID         primitive.ObjectID `json:"user_id"`
+		PermissionType int                `json:"permission_type"`
+		AccessSecure   bool               `json:"access_secure_file"`
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {

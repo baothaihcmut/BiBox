@@ -15,6 +15,8 @@ import (
 	authController "github.com/baothaihcmut/Storage-app/internal/modules/auth/controllers"
 	authInteractors "github.com/baothaihcmut/Storage-app/internal/modules/auth/interactors"
 	authService "github.com/baothaihcmut/Storage-app/internal/modules/auth/services"
+	"github.com/baothaihcmut/Storage-app/internal/modules/comment/controllers"
+	permControllers "github.com/baothaihcmut/Storage-app/internal/modules/permission/controllers"
 	userRepo "github.com/baothaihcmut/Storage-app/internal/modules/users/repositories"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -95,4 +97,14 @@ func (s *Server) Run() {
 	ctx, shutdown := context.WithTimeout(context.Background(), 1*time.Second)
 	defer shutdown()
 	<-ctx.Done()
+}
+
+func SetupRoutes(router *gin.Engine, permissionController *permControllers.PermissionController, commentController *controllers.CommentController) { // File permissions routes
+	router.GET("/file/permissions", permissionController.GetPermissions)
+	router.POST("/file/permissions", permissionController.GrantPermission)
+
+	// File comments routes
+	router.GET("/file/comments", commentController.GetComments)
+	router.POST("/file/comments", commentController.AddComment)
+
 }

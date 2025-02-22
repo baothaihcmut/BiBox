@@ -1,16 +1,17 @@
 package services
 
 import (
-	"storage-app/internal/modules/comment/repositories"
+	"github.com/baothaihcmut/Storage-app/internal/modules/comment/repositories"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type CommentService struct {
 	Repo *repositories.CommentRepository
 }
 
-func NewCommentService() *CommentService {
+func NewCommentService(db *mongo.Database) *CommentService {
 	return &CommentService{
-		Repo: repositories.NewCommentRepository(),
+		Repo: repositories.NewCommentRepository(db),
 	}
 }
 
@@ -23,10 +24,10 @@ func (cs *CommentService) AddComment(fileID, userID, content string) error {
 	if fileID == "" || userID == "" || content == "" {
 		return &InvalidInputError{"All fields are required"}
 	}
-	return cs.Repo.InsertComment(fileID, userID, content)
+
+	return cs.Repo.CreateComment(fileID, userID, content)
 }
 
-// Custom error handling
 type InvalidInputError struct {
 	Message string
 }
