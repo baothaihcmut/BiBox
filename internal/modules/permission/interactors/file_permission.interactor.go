@@ -19,7 +19,7 @@ func NewPermissionInteractor(repo *repositories.PermissionRepository) *Permissio
 }
 
 // Update Permission
-func (pi *PermissionInteractor) UpdatePermission(fileID, userID primitive.ObjectID, permissionType int, accessSecure bool) error {
+func (pi *PermissionInteractor) UpdatePermission(fileID primitive.ObjectID, userID primitive.ObjectID, permissionType int, accessSecure bool) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

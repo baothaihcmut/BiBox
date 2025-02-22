@@ -19,7 +19,7 @@ func NewPermissionRepository(db *mongo.Database) *PermissionRepository {
 }
 
 // update permissino
-func (pr *PermissionRepository) UpdatePermission(ctx context.Context, fileID, userID primitive.ObjectID, permissionType int, accessSecure bool) error {
+func (pr *PermissionRepository) UpdatePermission(ctx context.Context, fileID primitive.ObjectID, userID primitive.ObjectID, permissionType int, accessSecure bool) error {
 	filter := bson.M{"file_id": fileID, "user_id": userID}
 	update := bson.M{
 		"$set": bson.M{
