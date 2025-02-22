@@ -9,6 +9,7 @@ import (
 	commentRepo "github.com/baothaihcmut/Storage-app/internal/modules/comment/repositories"
 	permControllers "github.com/baothaihcmut/Storage-app/internal/modules/permission/controllers"
 	permInteractors "github.com/baothaihcmut/Storage-app/internal/modules/permission/interactors"
+	permRepo "github.com/baothaihcmut/Storage-app/internal/modules/permission/repositories"
 	"github.com/baothaihcmut/Storage-app/internal/server"
 	"github.com/baothaihcmut/Storage-app/internal/server/initialize"
 
@@ -44,15 +45,19 @@ func main() {
 	// Create a new server instance
 	s := server.NewServer(g, mongoClient, oauth2, logger, config)
 
-	permissionInteractor := permInteractors.NewPermissionInteractor(mongoDatabase)
+	// Initialize PermissionRepository
+	permissionRepository := permRepo.NewPermissionRepository(mongoDatabase)
+	permissionInteractor := permInteractors.NewPermissionInteractor(permissionRepository)
 	permissionController := permControllers.NewPermissionController(permissionInteractor)
 
+	// Initialize Comment Repository & Interactor
 	commentRepository := commentRepo.NewCommentRepository(mongoDatabase)
 	commentInteractor := commentInteractors.NewCommentInteractor(commentRepository)
 	commentController := commentControllers.NewCommentController(commentInteractor)
 
+	// Set up routes for file permission & comment
 	server.SetupRoutes(g, permissionController, commentController)
 
+	// Start server
 	go s.Run()
-
 }

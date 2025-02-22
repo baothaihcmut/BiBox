@@ -100,8 +100,8 @@ func (s *Server) Run() {
 }
 
 func SetupRoutes(router *gin.Engine, permissionController *permControllers.PermissionController, commentController *controllers.CommentController) { // File permissions routes
-	router.GET("/file/permissions", permissionController.GetPermissions)
-	router.POST("/file/permissions", permissionController.GrantPermission)
+	router.GET("/file/permissions", permissionController.UpdatePermission)
+	router.POST("/file/permissions", permissionController.UpdatePermission)
 
 	// File comments routes
 	router.GET("/file/comments", commentController.GetComments)

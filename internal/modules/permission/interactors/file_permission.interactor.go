@@ -1,26 +1,28 @@
 package interactors
 
 import (
-	"github.com/baothaihcmut/Storage-app/internal/modules/permission/repositories"
+	"context"
+	"time"
 
+	"github.com/baothaihcmut/Storage-app/internal/modules/permission/repositories"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type PermissionInteractor struct {
 	Repo *repositories.PermissionRepository
 }
 
-func NewPermissionInteractor(db *mongo.Database) *PermissionInteractor {
+func NewPermissionInteractor(repo *repositories.PermissionRepository) *PermissionInteractor {
 	return &PermissionInteractor{
-		Repo: repositories.NewPermissionRepository(db),
+		Repo: repo,
 	}
 }
 
-func (pi *PermissionInteractor) GetAllPermissions() ([]map[string]interface{}, error) {
-	return pi.Repo.FetchPermissions()
-}
+// Update Permission
+func (pi *PermissionInteractor) UpdatePermission(fileID, userID primitive.ObjectID, permissionType int, accessSecure bool) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-func (pi *PermissionInteractor) GrantPermission(fileID primitive.ObjectID, userID primitive.ObjectID, permissionType int, accessSecure bool) error {
-	return pi.Repo.CreatePermission(fileID, userID, permissionType, accessSecure)
+	// Call to repo to update Permission
+	return pi.Repo.UpdatePermission(ctx, fileID, userID, permissionType, accessSecure)
 }
