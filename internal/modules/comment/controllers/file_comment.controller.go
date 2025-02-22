@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/baothaihcmut/Storage-app/internal/modules/comment/interactors"
-	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,9 +12,9 @@ type CommentController struct {
 	Interactor *interactors.CommentInteractor
 }
 
-func NewCommentController(db *mongo.Database) *CommentController {
+func NewCommentController(interactor *interactors.CommentInteractor) *CommentController {
 	return &CommentController{
-		Interactor: interactors.NewCommentInteractor(db),
+		Interactor: interactor,
 	}
 }
 
