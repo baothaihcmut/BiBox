@@ -9,20 +9,26 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+type CommentRepository interface {
+	FetchComments() ([]map[string]interface{}, error)
+	CreateComment(fileID, userID, commentText string) error
+	GetCommentsByFile(fileID string) ([]map[string]interface{}, error)
+}
+
 // CommentRepository handles database operations for comments
-type CommentRepository struct {
+type CommentRepositoryImpl struct {
 	collection *mongo.Collection
 }
 
 // NewCommentRepository initializes a new repository
-func NewCommentRepository(db *mongo.Database) *CommentRepository {
-	return &CommentRepository{
+func NewCommentRepository(db *mongo.Database) CommentRepository {
+	return &CommentRepositoryImpl{
 		collection: db.Collection("comments"),
 	}
 }
 
 // FetchComments retrieves all comments from the database
-func (cr *CommentRepository) FetchComments() ([]map[string]interface{}, error) {
+func (cr *CommentRepositoryImpl) FetchComments() ([]map[string]interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -45,7 +51,7 @@ func (cr *CommentRepository) FetchComments() ([]map[string]interface{}, error) {
 }
 
 // CreateComment inserts a new comment into the database
-func (cr *CommentRepository) CreateComment(fileID, userID, commentText string) error {
+func (cr *CommentRepositoryImpl) CreateComment(fileID, userID, commentText string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -65,7 +71,7 @@ func (cr *CommentRepository) CreateComment(fileID, userID, commentText string) e
 }
 
 // GetCommentsByFile retrieves comments for a specific file
-func (cr *CommentRepository) GetCommentsByFile(fileID string) ([]map[string]interface{}, error) {
+func (cr *CommentRepositoryImpl) GetCommentsByFile(fileID string) ([]map[string]interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
