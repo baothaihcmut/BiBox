@@ -1,8 +1,8 @@
 package config
 
 type Oauth2Config struct {
-	Google   Oauth2ConfigInfo `mapstructure:"google"`
-	Facebook Oauth2ConfigInfo `mapstructure:"facebook"`
+	Google Oauth2ConfigInfo `mapstructure:"google"`
+	Github Oauth2ConfigInfo `mapstructure:"github"`
 }
 
 type Oauth2ConfigInfo struct {

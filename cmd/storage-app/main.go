@@ -5,6 +5,8 @@ import (
 	"github.com/baothaihcmut/Storage-app/internal/server"
 	"github.com/baothaihcmut/Storage-app/internal/server/initialize"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/oauth2/github"
+	"golang.org/x/oauth2/google"
 )
 
 // @title Storage App API
@@ -32,8 +34,13 @@ func main() {
 	}
 
 	//oauth 2 google
-	oauth2Google := initialize.InitializeGoogleOauth2(&config.Oauth2)
-	facebookOauth2 := initialize.InitializeFacebookOauth2(&config.Oauth2)
+	oauth2Google := initialize.InitializeOauth2(&config.Oauth2.Google, []string{
+		"https://www.googleapis.com/auth/userinfo.email",
+		"https://www.googleapis.com/auth/userinfo.profile",
+	}, google.Endpoint)
+	oauth2Github := initialize.InitializeOauth2(&config.Oauth2.Github, []string{
+		"read:user", "user:email",
+	}, github.Endpoint)
 
 	//s3
 	s3, err := initialize.InitalizeS3(config.S3)
@@ -41,6 +48,6 @@ func main() {
 		logger.Panic(err)
 		panic(err)
 	}
-	s := server.NewServer(g, mongo, oauth2Google, facebookOauth2, s3, logger, config)
+	s := server.NewServer(g, mongo, oauth2Google, oauth2Github, s3, logger, config)
 	s.Run()
 }

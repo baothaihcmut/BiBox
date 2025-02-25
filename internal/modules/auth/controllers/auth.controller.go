@@ -73,10 +73,10 @@ func (a *AuthControllerImpl) Init(g *gin.RouterGroup) {
 				"https://accounts.google.com/o/oauth2/auth?client_id=%s&redirect_uri=%s&response_type=code&scope=%s&access_type=offline&prompt=consent",
 				a.oauth2Config.Google.ClientId, a.oauth2Config.Google.RedirectURI, "email profile",
 			)
-		case "facebook":
+		case "github":
 			authRedirectURL = fmt.Sprintf(
-				"https://www.facebook.com/v18.0/dialog/oauth?client_id=%s&redirect_uri=%s&state=secure_random_string&scope=,email,public_profile",
-				a.oauth2Config.Facebook.ClientId, a.oauth2Config.Facebook.RedirectURI)
+				"https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s&scope=read:user user:email",
+				a.oauth2Config.Github.ClientId, a.oauth2Config.Github.RedirectURI)
 		}
 
 		// Redirect user to Google OAuth

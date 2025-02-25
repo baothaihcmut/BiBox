@@ -35,31 +35,31 @@ import (
 )
 
 type Server struct {
-	g              *gin.Engine
-	logger         *logrus.Logger
-	config         *config.AppConfig
-	mongo          *mongo.Client
-	googleOauth2   *oauth2.Config
-	facebookOauth2 *oauth2.Config
-	s3             *s3.Client
+	g            *gin.Engine
+	logger       *logrus.Logger
+	config       *config.AppConfig
+	mongo        *mongo.Client
+	googleOauth2 *oauth2.Config
+	githubOauth2 *oauth2.Config
+	s3           *s3.Client
 }
 
 func NewServer(
 	g *gin.Engine,
 	mongo *mongo.Client,
 	googleoauth2 *oauth2.Config,
-	facebookOauth2 *oauth2.Config,
+	githubOauth2 *oauth2.Config,
 	s3 *s3.Client,
 	logger *logrus.Logger,
 	cfg *config.AppConfig) *Server {
 	return &Server{
-		g:              g,
-		logger:         logger,
-		config:         cfg,
-		mongo:          mongo,
-		googleOauth2:   googleoauth2,
-		facebookOauth2: facebookOauth2,
-		s3:             s3,
+		g:            g,
+		logger:       logger,
+		config:       cfg,
+		mongo:        mongo,
+		googleOauth2: googleoauth2,
+		githubOauth2: githubOauth2,
+		s3:           s3,
 	}
 }
 func (s *Server) initApp() {
@@ -74,10 +74,10 @@ func (s *Server) initApp() {
 	//init service
 	userJwtService := authService.NewUserJwtService(s.config.Jwt, logger)
 	googleOauth2Service := authService.NewGoogleOauth2Service(s.googleOauth2, logger)
-	facebookOauth2Service := authService.NewFacebookOauth2Service(s.facebookOauth2)
+	githubOauth2Service := authService.NewGithubOauth2Service(s.githubOauth2, logger)
 	oauth2SerivceFactory := authService.NewOauth2ServiceFactory()
 	oauth2SerivceFactory.Register(authService.GoogleOauth2Token, googleOauth2Service)
-	oauth2SerivceFactory.Register(authService.FacebookOauth2Token, facebookOauth2Service)
+	oauth2SerivceFactory.Register(authService.FacebookOauth2Token, githubOauth2Service)
 	storageService := storage.NewS3StorageService(s.s3, logger, &s.config.S3)
 	mongoService := mongoLib.NewMongoTransactionService(s.mongo)
 	firstPageService := services.NewFileFirstPageService(logger)
