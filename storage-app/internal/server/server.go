@@ -31,6 +31,10 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/oauth2"
+
+	permControllers "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/controllers"
+
+	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_comment/controllers"
 )
 
 type Server struct {
@@ -129,4 +133,14 @@ func (s *Server) Run() {
 	ctx, shutdown := context.WithTimeout(context.Background(), 1*time.Second)
 	defer shutdown()
 	<-ctx.Done()
+}
+
+func SetupRoutes(router *gin.Engine, permissionController *permControllers.PermissionController, commentController *controllers.CommentController) { // File permissions routes
+	router.GET("/file/permissions", permissionController.UpdatePermission)
+	router.POST("/file/permissions", permissionController.UpdatePermission)
+
+	// File comments routes
+	router.GET("/file/comments", commentController.GetComments)
+	router.POST("/file/comments", commentController.AddComment)
+
 }
