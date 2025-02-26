@@ -10,6 +10,7 @@ import (
 )
 
 type GmailService interface {
+	SendMail(_ context.Context, arg SendMailArg) error
 }
 
 type GmailServiceImpl struct {
@@ -17,14 +18,14 @@ type GmailServiceImpl struct {
 	mailConfig *config.EmailConfig
 }
 
-type SendMailArg[T any] struct {
+type SendMailArg struct {
 	Subject  string
 	To       string
 	Template string
-	Data     T
+	Data     any
 }
 
-func (g *GmailServiceImpl) SendMail(_ context.Context, arg SendMailArg[any]) error {
+func (g *GmailServiceImpl) SendMail(_ context.Context, arg SendMailArg) error {
 	tmpl, err := template.ParseFiles("templates/confirm_signup.html")
 	if err != nil {
 		return err
@@ -43,4 +44,10 @@ func (g *GmailServiceImpl) SendMail(_ context.Context, arg SendMailArg[any]) err
 		return err
 	}
 	return nil
+}
+func NewGmailService(dialer *gomail.Dialer, mailConfig *config.EmailConfig) GmailService {
+	return &GmailServiceImpl{
+		dialer:     dialer,
+		mailConfig: mailConfig,
+	}
 }
