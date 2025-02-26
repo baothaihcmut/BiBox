@@ -56,3 +56,11 @@ func (c *Consumer) worker() {
 		fmt.Println(err)
 	}
 }
+func NewConsumer(msgRouter router.MessageRouter, cfg *config.ConsumerConfig) *Consumer {
+	return &Consumer{
+		MsgChan:   make(chan *sarama.ConsumerMessage, cfg.WorkerPoolSize), // Buffered channel for workers
+		Wg:        &sync.WaitGroup{},
+		msgRouter: msgRouter,
+		cfg:       cfg,
+	}
+}
