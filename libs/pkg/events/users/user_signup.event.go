@@ -1,8 +1,8 @@
 package users
 
 type UserSignUpEvent struct {
-	Email            string
-	FirstName        string
-	LastName         string
-	ConfirmationLink string
+	Email            string `json:"email"`
+	FirstName        string `json:"first_name"`
+	LastName         string `json:"last_name"`
+	ConfirmationLink string `json:"confirmation_link"`
 }
