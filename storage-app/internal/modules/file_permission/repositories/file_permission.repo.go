@@ -3,34 +3,31 @@ package repositories
 import (
 	"context"
 
-	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
-	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/models"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type FilePermissionRepository interface {
-	CreateFilePermission(context.Context, *models.FilePermission) (*models.FilePermission, error)
-}
-
-type MongoFilePermissionRepository struct {
+type PermissionRepository struct {
 	collection *mongo.Collection
-	logger     logger.Logger
 }
 
-func NewMongoFilePermissionRepository(collection *mongo.Collection, logger logger.Logger) FilePermissionRepository {
-	return &MongoFilePermissionRepository{
-		collection: collection,
-		logger:     logger,
+func NewPermissionRepository(db *mongo.Database) *PermissionRepository {
+	return &PermissionRepository{
+		collection: db.Collection("permissions"),
 	}
 }
-func (m *MongoFilePermissionRepository) CreateFilePermission(ctx context.Context, filePermission *models.FilePermission) (*models.FilePermission, error) {
-	_, err := m.collection.InsertOne(ctx, filePermission)
-	if err != nil {
-		m.logger.Errorf(ctx, map[string]interface{}{
-			"file_id": filePermission.FileID.Hex(),
-			"user_id": filePermission.UserID.Hex(),
-		}, "Error insert file permission: ", err)
-		return nil, err
+
+// update permissino
+func (pr *PermissionRepository) UpdatePermission(ctx context.Context, fileID primitive.ObjectID, userID primitive.ObjectID, permissionType int, accessSecure bool) error {
+	filter := bson.M{"file_id": fileID, "user_id": userID}
+	update := bson.M{
+		"$set": bson.M{
+			"permission_type":    permissionType,
+			"access_secure_file": accessSecure,
+		},
 	}
-	return filePermission, nil
+
+	_, err := pr.collection.UpdateOne(ctx, filter, update)
+	return err
 }
