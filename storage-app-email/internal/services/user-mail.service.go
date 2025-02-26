@@ -1,9 +1,9 @@
 package services
 
 import (
-	"github.com/baothaihcmut/BiBox/libs/pkg/events"
+	"github.com/baothaihcmut/BiBox/libs/pkg/events/users"
 )
 
 type UserMailService interface {
-	SendMailConfirmSignUp(events.UserSignUpEvent)
+	SendMailConfirmSignUp(users.UserSignUpEvent)
 }

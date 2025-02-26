@@ -27,6 +27,7 @@ require (
 	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/net v0.34.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+	github.com/baothaihcmut/Bibox/libs v1.0.0
 )
 
 replace github.com/baothaihcmut/Bibox/libs => ../libs
