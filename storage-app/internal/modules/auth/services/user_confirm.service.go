@@ -6,9 +6,11 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/baothaihcmut/BiBox/libs/pkg/events/users"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/cache"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/exception"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/common/queue"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/users/models"
 	"github.com/google/uuid"
 )
@@ -27,6 +29,7 @@ type UserConfirmService interface {
 type UserConfirmServiceImpl struct {
 	cacheService cache.CacheService
 	logger       logger.Logger
+	queueService queue.KafkaService
 }
 
 func (u *UserConfirmServiceImpl) StoreUserPending(ctx context.Context, user *models.User) (string, error) {
@@ -70,6 +73,23 @@ func (u *UserConfirmServiceImpl) GetUserPedingConfirm(ctx context.Context, code 
 	return &user, nil
 }
 
-func (u *UserConfirmServiceImpl) SendMailConfirm(ctx context.Context) {
-
+func (u *UserConfirmServiceImpl) SendMailConfirm(ctx context.Context, user *models.User, code string) error {
+	//url for confirm
+	url := fmt.Sprintf("http://localhost8080/api/v1/auth/confirm?code=%s", code)
+	//event
+	e := users.UserSignUpEvent{
+		Email:            user.Email,
+		FirstName:        user.FirstName,
+		LastName:         user.LastName,
+		ConfirmationLink: url,
+	}
+	_, _, err := u.queueService.PublishMessage("user.sign_up", e, map[string]string{
+		"event_id":     uuid.NewString(),
+		"event_type":   "UserSignUp",
+		"event_source": "storage_app",
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
