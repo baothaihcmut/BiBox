@@ -24,12 +24,15 @@ type SendMailConfirmArg struct {
 
 type UserConfirmService interface {
 	StoreUserPending(ctx context.Context, user *models.User) (string, error)
+	IsUserPedingConfirm(ctx context.Context, email string) (bool, error)
+	GetUserPedingConfirm(ctx context.Context, code string) (*models.User, error)
+	SendMailConfirm(ctx context.Context, user *models.User, code string) error
 }
 
 type UserConfirmServiceImpl struct {
 	cacheService cache.CacheService
 	logger       logger.Logger
-	queueService queue.KafkaService
+	queueService queue.QueueService
 }
 
 func (u *UserConfirmServiceImpl) StoreUserPending(ctx context.Context, user *models.User) (string, error) {
@@ -92,4 +95,16 @@ func (u *UserConfirmServiceImpl) SendMailConfirm(ctx context.Context, user *mode
 		return err
 	}
 	return nil
+}
+
+func NewUserConfirmService(
+	cacheService cache.CacheService,
+	queueService queue.QueueService,
+	logger logger.Logger,
+) UserConfirmService {
+	return &UserConfirmServiceImpl{
+		cacheService: cacheService,
+		queueService: queueService,
+		logger:       logger,
+	}
 }
