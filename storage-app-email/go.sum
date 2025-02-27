@@ -1,7 +1,7 @@
 github.com/IBM/sarama v1.45.0 h1:IzeBevTn809IJ/dhNKhP5mpxEXTmELuezO2tgHD9G5E=
 github.com/IBM/sarama v1.45.0/go.mod h1:EEay63m8EZkeumco9TDXf2JT3uDnZsZqFgV46n4yZdY=
-github.com/baothaihcmut/BiBox/libs v1.0.0 h1:wIi1eFXvFmns4OnYFdH55Bo5psT0xGsqYmGFIklaisQ=
-github.com/baothaihcmut/BiBox/libs v1.0.0/go.mod h1:aRMd/LH/bLmJrbz3iSvPiXQXdJHHMKAKaz5OL3rI960=
+github.com/baothaihcmut/BiBox/libs v1.0.1 h1:TA1uv1JzoE3k0liwjC/91fDXVQBNzrbfapg6N/vNFqU=
+github.com/baothaihcmut/BiBox/libs v1.0.1/go.mod h1:aRMd/LH/bLmJrbz3iSvPiXQXdJHHMKAKaz5OL3rI960=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=

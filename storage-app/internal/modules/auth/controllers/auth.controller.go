@@ -43,8 +43,8 @@ func (a *AuthControllerImpl) handleExchangeToken(c *gin.Context) {
 		return
 	}
 	//set cookie
-	c.SetCookie("access_token", res.AccessToken, a.jwtConfig.AccessToken.Age*60*60, "/", "localhost:300", false, true)
-	c.SetCookie("refresh_token", res.RefreshToken, a.jwtConfig.RefreshToken.Age*60*60, "/", "localhost:300", false, true)
+	c.SetCookie("access_token", res.AccessToken, a.jwtConfig.AccessToken.Age*60*60, "/", " spsohcmut.xyz", true, true)
+	c.SetCookie("refresh_token", res.RefreshToken, a.jwtConfig.RefreshToken.Age*60*60, "/", "spsohcmut.xyz", true, true)
 	c.JSON(http.StatusCreated, response.InitResponse[any](true, "Login sucess", nil))
 }
 
