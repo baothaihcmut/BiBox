@@ -35,3 +35,11 @@ func (k *KafkaService) PublishMessage(topic string, value interface{}, headers m
 	}
 	return k.producer.SendMessage(message)
 }
+
+func NewKafkaService(
+	producer sarama.SyncProducer,
+) QueueService {
+	return &KafkaService{
+		producer: producer,
+	}
+}

@@ -11,6 +11,8 @@ type AppConfig struct {
 	Jwt    JwtConfig    `mapstructure:"jwt"`
 	Oauth2 Oauth2Config `mapstructure:"oauth2"`
 	S3     S3Config     `mapstructure:"s3"`
+	Kafka  KafkaConfig  `mapstructure:"kafka"`
+	Redis  RedisConfig  `mapstructure:"redis"`
 }
 
 func LoadConfig() (*AppConfig, error) {

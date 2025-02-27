@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+
 	//cfg
 	cfg, err := config.LoadConfig()
 	if err != nil {

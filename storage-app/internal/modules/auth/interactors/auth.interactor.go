@@ -20,15 +20,23 @@ type AuthInteractorImpl struct {
 	oauth2ServiceFactory services.Oauth2ServiceFactory
 	jwtService           services.JwtService
 	userRepository       repositories.UserRepository
+	userConfirmService   services.UserConfirmService
 	logger               logger.Logger
 }
 
-func NewAuthInteractor(oauth2 services.Oauth2ServiceFactory, userRepo repositories.UserRepository, jwtService services.JwtService, logger logger.Logger) AuthInteractor {
+func NewAuthInteractor(
+	oauth2 services.Oauth2ServiceFactory,
+	userRepo repositories.UserRepository,
+	jwtService services.JwtService,
+	logger logger.Logger,
+	userConfirmService services.UserConfirmService,
+) AuthInteractor {
 	return &AuthInteractorImpl{
 		userRepository:       userRepo,
 		oauth2ServiceFactory: oauth2,
 		jwtService:           jwtService,
 		logger:               logger,
+		userConfirmService:   userConfirmService,
 	}
 }
 func (a *AuthInteractorImpl) ExchangeToken(ctx context.Context, input *presenter.ExchangeTokenInput) (*presenter.ExchangeTokenOutput, error) {
@@ -97,7 +105,7 @@ func (a *AuthInteractorImpl) SignUp(ctx context.Context, input *presenter.SignUp
 	if existUser != nil {
 		return nil, exception.ErrEmailExist
 	}
-	_ = models.NewUser(
+	newUser := models.NewUser(
 		input.FirstName,
 		input.LastName,
 		input.Email,
@@ -105,5 +113,21 @@ func (a *AuthInteractorImpl) SignUp(ctx context.Context, input *presenter.SignUp
 		nil,
 		&input.Password)
 	//store user info to cache
-	return nil, nil
+	code, err := a.userConfirmService.StoreUserPending(ctx, newUser)
+	if err != nil {
+		a.logger.Errorf(ctx, map[string]interface{}{
+			"email":   newUser.Email,
+			"user_id": newUser.ID,
+		}, "Error store user to cache: ", err)
+		return nil, err
+	}
+	err = a.userConfirmService.SendMailConfirm(ctx, newUser, code)
+	if err != nil {
+		a.logger.Errorf(ctx, map[string]interface{}{
+			"email":   newUser.Email,
+			"user_id": newUser.ID,
+		}, "Error send email to user: ", err)
+		return nil, err
+	}
+	return &presenter.SignUpOuput{}, nil
 }
