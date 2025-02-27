@@ -10,24 +10,42 @@ import (
 	"github.com/IBM/sarama"
 	"github.com/baothaihcmut/BiBox/storage-app-email/internal/config"
 	"github.com/baothaihcmut/BiBox/storage-app-email/internal/consumer"
+	"github.com/baothaihcmut/BiBox/storage-app-email/internal/handlers"
+	"github.com/baothaihcmut/BiBox/storage-app-email/internal/middlewares"
 	"github.com/baothaihcmut/BiBox/storage-app-email/internal/router"
+	"github.com/baothaihcmut/BiBox/storage-app-email/internal/services"
+	"gopkg.in/gomail.v2"
 )
 
 type Server struct {
-	consumer *consumer.Consumer
-	router   router.MessageRouter
-	cfg      *config.CoreConfig
+	consumer   *consumer.Consumer
+	router     router.MessageRouter
+	cfg        *config.CoreConfig
+	mailDialer *gomail.Dialer
 }
 
-func NewServer(consumer *consumer.Consumer, router router.MessageRouter) *Server {
+func NewServer(
+	consumer *consumer.Consumer,
+	router router.MessageRouter,
+	mailDialer *gomail.Dialer,
+	cfg *config.CoreConfig) *Server {
 	return &Server{
-		consumer: consumer,
-		router:   router,
+		consumer:   consumer,
+		router:     router,
+		cfg:        cfg,
+		mailDialer: mailDialer,
 	}
 }
 
 func (s *Server) initApp() {
-
+	//init global middleware
+	s.router.RegisterGlobal(middlewares.ExtractEventMiddleware)
+	//init service
+	mailService := services.NewGmailService(s.mailDialer, &s.cfg.Mail)
+	userMailService := services.NewUserMailService(mailService)
+	//init handler
+	userMailHandler := handlers.NewUserHandler(userMailService)
+	userMailHandler.Init(s.router)
 }
 func (s *Server) Run() {
 	s.initApp()

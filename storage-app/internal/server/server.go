@@ -31,6 +31,10 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/oauth2"
+
+	permControllers "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/controllers"
+
+	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_comment/controllers"
 )
 
 type Server struct {
@@ -41,6 +45,7 @@ type Server struct {
 	googleOauth2 *oauth2.Config
 	githubOauth2 *oauth2.Config
 	s3           *s3.Client
+	// kafkaProducer sarama.SyncProducer
 }
 
 func NewServer(
@@ -49,6 +54,7 @@ func NewServer(
 	googleoauth2 *oauth2.Config,
 	githubOauth2 *oauth2.Config,
 	s3 *s3.Client,
+	// kafkProducer
 	logger *logrus.Logger,
 	cfg *config.AppConfig) *Server {
 	return &Server{
@@ -87,23 +93,25 @@ func (s *Server) initApp() {
 	authController := authController.NewAuthController(authInteractor, &s.config.Jwt, &s.config.Oauth2)
 	fileController := fileController.NewFileController(fileInteractor, userJwtService, logger)
 
+	//init global middleware
+	s.g.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"https://storage-app-web.spsohcmut.xyz", "http://localhost:3000"}, // Explicitly allow frontend origin
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           24 * 3600, // Preflight cache duration
+	}))
+
+	// Global middleware
+	s.g.Use(middleware.LoggingMiddleware(logger))
+	s.g.Use(middleware.ErrorHandler())
 	//global prefix
 	globalGroup := s.g.Group("/api/v1")
 
 	//swagger
 	globalGroup.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	docs.SwaggerInfo.BasePath = "/api/v1"
-	//init global middleware
-	globalGroup.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},                                       // Allow all origins
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}, // Allowed HTTP methods
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"}, // Allowed headers
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,      // Allow cookies
-		MaxAge:           24 * 3600, // Preflight cache duration
-	}))
-	globalGroup.Use(middleware.LoggingMiddleware(logger))
-	globalGroup.Use(middleware.ErrorHandler())
 	{
 		authController.Init(globalGroup)
 		fileController.Init(globalGroup)
@@ -129,4 +137,14 @@ func (s *Server) Run() {
 	ctx, shutdown := context.WithTimeout(context.Background(), 1*time.Second)
 	defer shutdown()
 	<-ctx.Done()
+}
+
+func SetupRoutes(router *gin.Engine, permissionController *permControllers.PermissionController, commentController *controllers.CommentController) { // File permissions routes
+	router.GET("/file/permissions", permissionController.UpdatePermission)
+	router.POST("/file/permissions", permissionController.UpdatePermission)
+
+	// File comments routes
+	router.GET("/file/comments", commentController.GetComments)
+	router.POST("/file/comments", commentController.AddComment)
+
 }
