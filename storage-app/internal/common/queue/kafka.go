@@ -11,7 +11,7 @@ type KafkaService struct {
 	producer sarama.SyncProducer
 }
 
-func (k *KafkaService) PublishMessage(topic string, value interface{}, headers map[string]string) (int32, int64, error) {
+func (k *KafkaService) PublishMessage(topic string, value any, headers map[string]string) (int32, int64, error) {
 	//value
 	data, err := json.Marshal(value)
 	if err != nil {
@@ -33,7 +33,11 @@ func (k *KafkaService) PublishMessage(topic string, value interface{}, headers m
 		Headers:   header,
 		Timestamp: time.Now(),
 	}
-	return k.producer.SendMessage(message)
+	partition, offset, err := k.producer.SendMessage(message)
+	if err != nil {
+		return 0, 0, err
+	}
+	return partition, offset, nil
 }
 
 func NewKafkaService(

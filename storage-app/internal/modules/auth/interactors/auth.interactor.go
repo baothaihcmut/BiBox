@@ -5,6 +5,7 @@ import (
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/exception"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/common/mongo"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/presenter"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/services"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/users/models"
@@ -13,7 +14,8 @@ import (
 
 type AuthInteractor interface {
 	ExchangeToken(context.Context, *presenter.ExchangeTokenInput) (*presenter.ExchangeTokenOutput, error)
-	SignUp(context.Context, *presenter.SignUpInput) (*presenter.SignUpOuput, error)
+	SignUp(context.Context, *presenter.SignUpInput) (*presenter.SignUpOutput, error)
+	ConfirmSignUp(context.Context, *presenter.ConfirmSignUpInput) (*presenter.ConfirmSignUpOutput, error)
 }
 
 type AuthInteractorImpl struct {
@@ -22,6 +24,7 @@ type AuthInteractorImpl struct {
 	userRepository       repositories.UserRepository
 	userConfirmService   services.UserConfirmService
 	logger               logger.Logger
+	mongService          mongo.MongoService
 }
 
 func NewAuthInteractor(
@@ -30,6 +33,7 @@ func NewAuthInteractor(
 	jwtService services.JwtService,
 	logger logger.Logger,
 	userConfirmService services.UserConfirmService,
+	mongoService mongo.MongoService,
 ) AuthInteractor {
 	return &AuthInteractorImpl{
 		userRepository:       userRepo,
@@ -37,7 +41,55 @@ func NewAuthInteractor(
 		jwtService:           jwtService,
 		logger:               logger,
 		userConfirmService:   userConfirmService,
+		mongService:          mongoService,
 	}
+}
+
+// ConfirmSignUp implements AuthInteractor.
+func (a *AuthInteractorImpl) ConfirmSignUp(ctx context.Context, input *presenter.ConfirmSignUpInput) (*presenter.ConfirmSignUpOutput, error) {
+	//find user by code
+	user, err := a.userConfirmService.GetUserPedingConfirm(ctx, input.Code)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, exception.ErrInvalidConfirmCode
+	}
+	//store user to db
+	session, err := a.mongService.BeginTransaction(ctx)
+	if err != nil {
+		a.logger.Errorf(ctx, map[string]any{
+			"user_id":    user.ID,
+			"user_email": user.Email,
+		}, "Error start mongo session: ", err)
+		return nil, err
+	}
+	defer func() {
+		if err != nil {
+			a.mongService.RollbackTransaction(ctx, session)
+		}
+		a.mongService.EndTransansaction(ctx, session)
+	}()
+	err = a.userRepository.CreateUser(ctx, user)
+	if err != nil {
+		a.logger.Errorf(ctx, map[string]any{
+			"user_id":    user.ID,
+			"user_email": user.Email,
+		}, "Error save user to db: ", err)
+		return nil, err
+	}
+	//comit transaction
+	err = a.mongService.CommitTransaction(ctx, session)
+	if err != nil {
+		return nil, err
+	}
+	//remove in cache
+	err = a.userConfirmService.ConfirmSignUp(ctx, user, input.Code)
+	if err != nil {
+		return nil, err
+	}
+	return &presenter.ConfirmSignUpOutput{}, nil
+
 }
 func (a *AuthInteractorImpl) ExchangeToken(ctx context.Context, input *presenter.ExchangeTokenInput) (*presenter.ExchangeTokenOutput, error) {
 	//get service
@@ -96,7 +148,16 @@ func (a *AuthInteractorImpl) ExchangeToken(ctx context.Context, input *presenter
 	}, nil
 }
 
-func (a *AuthInteractorImpl) SignUp(ctx context.Context, input *presenter.SignUpInput) (*presenter.SignUpOuput, error) {
+func (a *AuthInteractorImpl) SignUp(ctx context.Context, input *presenter.SignUpInput) (*presenter.SignUpOutput, error) {
+	//check user pending confirm
+	isPendingConfirm, err := a.userConfirmService.IsUserPedingConfirm(ctx, input.Email)
+	if err != nil {
+		return nil, err
+	}
+	if isPendingConfirm {
+		return nil, exception.ErrUserPedingSignUpConfirm
+	}
+
 	//check if email exist
 	existUser, err := a.userRepository.FindUserByEmail(ctx, input.Email)
 	if err != nil {
@@ -129,5 +190,5 @@ func (a *AuthInteractorImpl) SignUp(ctx context.Context, input *presenter.SignUp
 		}, "Error send email to user: ", err)
 		return nil, err
 	}
-	return &presenter.SignUpOuput{}, nil
+	return &presenter.SignUpOutput{}, nil
 }

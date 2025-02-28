@@ -7,4 +7,4 @@ type SignUpInput struct {
 	LastName  string `json:"last_name" binding:"required"`
 }
 
-type SignUpOuput struct{}
+type SignUpOutput struct{}

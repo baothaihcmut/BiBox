@@ -94,7 +94,7 @@ func (s *Server) initApp() {
 	mongoService := mongoLib.NewMongoTransactionService(s.mongo)
 
 	//init interactor
-	authInteractor := authInteractors.NewAuthInteractor(oauth2SerivceFactory, userRepo, userJwtService, logger, userConfirmService)
+	authInteractor := authInteractors.NewAuthInteractor(oauth2SerivceFactory, userRepo, userJwtService, logger, userConfirmService, mongoService)
 	fileInteractor := fileInteractor.NewFileInteractor(userRepo, tagRepo, fileRepo, logger, storageService, mongoService)
 	//init controllers
 	authController := authController.NewAuthController(authInteractor, &s.config.Jwt, &s.config.Oauth2)

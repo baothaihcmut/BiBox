@@ -6,7 +6,6 @@ import (
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/constant"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
-	"github.com/baothaihcmut/Bibox/storage-app/internal/common/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -28,10 +27,8 @@ func LoggingMiddleware(logger logger.Logger) gin.HandlerFunc {
 		}, "Outgoing response")
 		if status == http.StatusInternalServerError {
 			//get user context
-			userContext, _ := c.Get(string(constant.UserContext))
 			logger.Error(c.Request.Context(), map[string]interface{}{
-				"user_id": userContext.(*models.UserContext).Id,
-				"detail":  c.Errors,
+				"detail": c.Errors,
 			}, c.Errors[0].Error())
 		}
 	}
