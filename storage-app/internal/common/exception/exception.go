@@ -22,6 +22,8 @@ var (
 	ErrEmailExist                 = errors.New("email exist")
 	ErrInvalidConfirmCode         = errors.New("invalid confirm code")
 	ErrUserPedingSignUpConfirm    = errors.New("user is pending for sign up confirm")
+	ErrMismatchPassword           = errors.New("password mismatch")
+	ErrWrongPasswordOrEmail       = errors.New("wrong password or email")
 )
 var errMap = map[error]int{
 	ErrTokenExpire:                http.StatusUnauthorized,

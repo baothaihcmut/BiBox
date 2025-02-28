@@ -26,7 +26,7 @@ type MessageRouterImpl struct {
 
 // RegisterGlobal implements MessageRouter.
 func (m *MessageRouterImpl) RegisterGlobal(middlewares ...MiddlewareFunc) {
-	m.globalMiddleware = append(m.globalMiddleware, middlewares...)
+	m.globalMiddleware = append(middlewares, m.globalMiddleware...)
 }
 
 // NewMessageRouter initializes a new MessageRouterImpl.
