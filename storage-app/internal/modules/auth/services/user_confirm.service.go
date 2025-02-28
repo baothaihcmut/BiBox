@@ -27,12 +27,26 @@ type UserConfirmService interface {
 	IsUserPedingConfirm(ctx context.Context, email string) (bool, error)
 	GetUserPedingConfirm(ctx context.Context, code string) (*models.User, error)
 	SendMailConfirm(ctx context.Context, user *models.User, code string) error
+	ConfirmSignUp(ctx context.Context, user *models.User, code string) error
 }
 
 type UserConfirmServiceImpl struct {
 	cacheService cache.CacheService
 	logger       logger.Logger
 	queueService queue.QueueService
+}
+
+func (u *UserConfirmServiceImpl) ConfirmSignUp(ctx context.Context, user *models.User, code string) error {
+	//remove key in cache
+	err := u.cacheService.Remove(ctx, fmt.Sprintf("user_pending_confirm:%s", code))
+	if err != nil {
+		return err
+	}
+	err = u.cacheService.Remove(ctx, fmt.Sprintf("email_pending_confirm:%s", user.Email))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (u *UserConfirmServiceImpl) StoreUserPending(ctx context.Context, user *models.User) (string, error) {

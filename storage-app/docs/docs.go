@@ -15,6 +15,69 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/confirm": {
+            "post": {
+                "description": "Confirm sign up",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "parameters": [
+                    {
+                        "description": "code for confirm",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ConfirmSignUpInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Confirm sign up success",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/presenter.ConfirmSignUpOutput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid confirm code",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/auth/exchange": {
             "post": {
                 "description": "Exchange Google auth code",
@@ -59,6 +122,69 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Wrong auth code",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/sign-up": {
+            "post": {
+                "description": "Sign up",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "parameters": [
+                    {
+                        "description": "information for sign up",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/presenter.SignUpInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Sign up success",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/presenter.SignUpOutput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "409": {
+                        "description": "Email exist, email is pending for cofirm",
                         "schema": {
                             "allOf": [
                                 {
@@ -332,13 +458,145 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "enums.MimeType": {
+            "type": "string",
+            "enum": [
+                "image/jpeg",
+                "image/png",
+                "image/gif",
+                "image/bmp",
+                "image/webp",
+                "image/tiff",
+                "image/svg+xml",
+                "application/pdf",
+                "application/msword",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "application/vnd.ms-excel",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "application/vnd.ms-powerpoint",
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                "text/plain",
+                "text/csv",
+                "application/json",
+                "application/xml",
+                "application/x-yaml",
+                "audio/mpeg",
+                "audio/wav",
+                "audio/ogg",
+                "audio/flac",
+                "audio/aac",
+                "video/mp4",
+                "video/webm",
+                "video/x-msvideo",
+                "video/quicktime",
+                "video/x-matroska",
+                "application/zip",
+                "application/vnd.rar",
+                "application/x-7z-compressed",
+                "application/x-tar",
+                "application/gzip",
+                "text/html",
+                "text/css",
+                "application/javascript",
+                "text/x-go",
+                "text/x-python",
+                "application/x-sh",
+                "application/x-msdownload",
+                "application/octet-stream"
+            ],
+            "x-enum-varnames": [
+                "MimeJPG",
+                "MimePNG",
+                "MimeGIF",
+                "MimeBMP",
+                "MimeWEBP",
+                "MimeTIFF",
+                "MimeSVG",
+                "MimePDF",
+                "MimeDOC",
+                "MimeDOCX",
+                "MimeXLS",
+                "MimeXLSX",
+                "MimePPT",
+                "MimePPTX",
+                "MimeTXT",
+                "MimeCSV",
+                "MimeJSON",
+                "MimeXML",
+                "MimeYAML",
+                "MimeMP3",
+                "MimeWAV",
+                "MimeOGG",
+                "MimeFLAC",
+                "MimeAAC",
+                "MimeMP4",
+                "MimeWebM",
+                "MimeAVI",
+                "MimeMOV",
+                "MimeMKV",
+                "MimeZIP",
+                "MimeRAR",
+                "Mime7z",
+                "MimeTAR",
+                "MimeGZIP",
+                "MimeHTML",
+                "MimeCSS",
+                "MimeJS",
+                "MimeGo",
+                "MimePython",
+                "MimeShell",
+                "MimeEXE",
+                "MimeBIN"
+            ]
+        },
+        "presenter.ConfirmSignUpInput": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                }
+            }
+        },
+        "presenter.ConfirmSignUpOutput": {
+            "type": "object"
+        },
         "presenter.ExchangeTokenInput": {
             "type": "object",
             "properties": {
                 "auth_code": {
                     "type": "string"
+                },
+                "provider": {
+                    "type": "integer",
+                    "maximum": 2,
+                    "minimum": 1
                 }
             }
+        },
+        "presenter.SignUpInput": {
+            "type": "object",
+            "required": [
+                "first_name",
+                "last_name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "presenter.SignUpOutput": {
+            "type": "object"
         },
         "presenters.CreateFileInput": {
             "type": "object",
@@ -373,13 +631,17 @@ const docTemplate = `{
                 "storage_detail": {
                     "type": "object",
                     "required": [
-                        "file_type",
+                        "mime_type",
                         "size"
                     ],
                     "properties": {
-                        "file_type": {
+                        "mime_type": {
                             "description": "Required field",
-                            "type": "string"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/enums.MimeType"
+                                }
+                            ]
                         },
                         "size": {
                             "description": "Required field",
@@ -512,8 +774,8 @@ const docTemplate = `{
                 "file_size": {
                     "type": "integer"
                 },
-                "file_type": {
-                    "type": "string"
+                "mime_type": {
+                    "$ref": "#/definitions/enums.MimeType"
                 }
             }
         },

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/config"
@@ -24,7 +25,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading config:", err)
 	}
-
 	// Initialize logger
 	logger := initialize.InitializeLogger(&config.Logger)
 
@@ -37,7 +37,7 @@ func main() {
 		logger.Panic(err)
 		log.Fatal("Failed to initialize MongoDB:", err)
 	}
-
+	defer mongoClient.Disconnect(context.Background())
 	// Initialize OAuth2 (Google & GitHub)
 	oauth2Google := initialize.InitializeOauth2(&config.Oauth2.Google, []string{
 		"https://www.googleapis.com/auth/userinfo.email",
@@ -54,22 +54,22 @@ func main() {
 		logger.Panic(err)
 		log.Fatal("Failed to initialize S3:", err)
 	}
-
 	//kafka
 	kafka, err := initialize.InitializeKafkaProducer(&config.Kafka)
 	if err != nil {
 		logger.Panic(err)
 		panic(err)
 	}
+	defer kafka.Close()
 	//redis
 	redis, err := initialize.InitializeRedis(&config.Redis)
 	if err != nil {
 		logger.Panic(err)
 		panic(err)
 	}
+	defer redis.Close()
 	// Create a new server instance
 	s := server.NewServer(g, mongoClient, oauth2Google, oauth2Github, s3, kafka, redis, logger, config)
 
-	go s.Run()
-
+	s.Run()
 }

@@ -193,7 +193,7 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 		if err != nil {
 			f.mongoService.RollbackTransaction(ctx, session)
 		}
-		f.mongoService.RollbackTransaction(ctx, session)
+		f.mongoService.EndTransansaction(ctx, session)
 	}()
 	wgSave := sync.WaitGroup{}
 	errSave := make(chan error, 1)
