@@ -52,8 +52,7 @@ func (c *Consumer) worker() {
 	}()
 	for msg := range c.MsgChan {
 		ctx := context.Background()
-		err := c.msgRouter.Route(ctx, msg)
-		fmt.Println(err)
+		_ = c.msgRouter.Route(ctx, msg)
 	}
 }
 func NewConsumer(msgRouter router.MessageRouter, cfg *config.ConsumerConfig) *Consumer {

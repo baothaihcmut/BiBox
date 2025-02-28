@@ -90,6 +90,30 @@ func (a *AuthControllerImpl) handleConfirmSignUp(c *gin.Context) {
 	c.JSON(http.StatusCreated, response.InitResponse(true, "Confirm sign up success, please login again", res))
 }
 
+// @Sumary Log in
+// @Description Log in
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body presenter.LogInInput true "information for log in"
+// @Success 201 {object} response.AppResponse{data=nil} "Login success"
+// @Failure 401 {object} response.AppResponse{data=nil} "Wrong password or email"
+//
+//	@Router   /auth/log-in [post]
+func (a *AuthControllerImpl) handleLogIn(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := a.authInteractor.LogIn(c.Request.Context(), payload.(*presenter.LogInInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.SetCookie("access_token", res.AccessToken, a.jwtConfig.AccessToken.Age*60*60, "/", " spsohcmut.xyz", true, true)
+	c.SetCookie("refresh_token", res.RefreshToken, a.jwtConfig.RefreshToken.Age*60*60, "/", "spsohcmut.xyz", true, true)
+	c.JSON(http.StatusCreated, response.InitResponse[any](true, "Login sucess", nil))
+	c.JSON(http.StatusOK, response.InitResponse[any](true, "Login success", nil))
+}
+
 func (a *AuthControllerImpl) Init(g *gin.RouterGroup) {
 	external := g.Group("/auth")
 	external.POST(
@@ -107,7 +131,11 @@ func (a *AuthControllerImpl) Init(g *gin.RouterGroup) {
 		middleware.ValidateMiddleware[presenter.ConfirmSignUpInput](false, binding.JSON),
 		a.handleConfirmSignUp,
 	)
-
+	external.POST(
+		"/log-in",
+		middleware.ValidateMiddleware[presenter.LogInInput](false, binding.JSON),
+		a.handleLogIn,
+	)
 	external.GET("/callback", func(c *gin.Context) {
 		authCode := c.Query("code")
 		if authCode == "" {

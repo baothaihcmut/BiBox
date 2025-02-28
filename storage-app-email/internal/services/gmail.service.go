@@ -26,7 +26,7 @@ type SendMailArg struct {
 }
 
 func (g *GmailServiceImpl) SendMail(_ context.Context, arg SendMailArg) error {
-	tmpl, err := template.ParseFiles("templates/confirm_signup.html")
+	tmpl, err := template.ParseFiles(arg.Template)
 	if err != nil {
 		return err
 	}

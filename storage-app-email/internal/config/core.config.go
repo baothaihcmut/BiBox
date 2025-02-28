@@ -3,8 +3,8 @@ package config
 import "github.com/spf13/viper"
 
 type CoreConfig struct {
-	Consumer ConsumerConfig
-	Mail     EmailConfig
+	Consumer ConsumerConfig `mapstructure:"consumer"`
+	Mail     EmailConfig    `mapstructure:"mail"`
 }
 
 func LoadConfig() (*CoreConfig, error) {

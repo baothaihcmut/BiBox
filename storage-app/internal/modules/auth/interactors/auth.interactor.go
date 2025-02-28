@@ -16,6 +16,7 @@ type AuthInteractor interface {
 	ExchangeToken(context.Context, *presenter.ExchangeTokenInput) (*presenter.ExchangeTokenOutput, error)
 	SignUp(context.Context, *presenter.SignUpInput) (*presenter.SignUpOutput, error)
 	ConfirmSignUp(context.Context, *presenter.ConfirmSignUpInput) (*presenter.ConfirmSignUpOutput, error)
+	LogIn(context.Context, *presenter.LogInInput) (*presenter.LoginOutput, error)
 }
 
 type AuthInteractorImpl struct {
@@ -25,6 +26,7 @@ type AuthInteractorImpl struct {
 	userConfirmService   services.UserConfirmService
 	logger               logger.Logger
 	mongService          mongo.MongoService
+	passworkService      services.PasswordService
 }
 
 func NewAuthInteractor(
@@ -34,6 +36,7 @@ func NewAuthInteractor(
 	logger logger.Logger,
 	userConfirmService services.UserConfirmService,
 	mongoService mongo.MongoService,
+	passwordService services.PasswordService,
 ) AuthInteractor {
 	return &AuthInteractorImpl{
 		userRepository:       userRepo,
@@ -42,6 +45,7 @@ func NewAuthInteractor(
 		logger:               logger,
 		userConfirmService:   userConfirmService,
 		mongService:          mongoService,
+		passworkService:      passwordService,
 	}
 }
 
@@ -166,13 +170,22 @@ func (a *AuthInteractorImpl) SignUp(ctx context.Context, input *presenter.SignUp
 	if existUser != nil {
 		return nil, exception.ErrEmailExist
 	}
+	//check password match
+	if input.Password != input.RepeatPassword {
+		return nil, exception.ErrMismatchPassword
+	}
+	//hash password
+	hashedPassword, err := a.passworkService.HashPassword(ctx, input.Password)
+	if err != nil {
+		return nil, err
+	}
 	newUser := models.NewUser(
 		input.FirstName,
 		input.LastName,
 		input.Email,
 		"basic",
 		nil,
-		&input.Password)
+		&hashedPassword)
 	//store user info to cache
 	code, err := a.userConfirmService.StoreUserPending(ctx, newUser)
 	if err != nil {
@@ -191,4 +204,33 @@ func (a *AuthInteractorImpl) SignUp(ctx context.Context, input *presenter.SignUp
 		return nil, err
 	}
 	return &presenter.SignUpOutput{}, nil
+}
+func (a *AuthInteractorImpl) LogIn(ctx context.Context, input *presenter.LogInInput) (*presenter.LoginOutput, error) {
+	//find user by email
+	user, err := a.userRepository.FindUserByEmail(ctx, input.Email)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, exception.ErrWrongPasswordOrEmail
+	}
+	//compare password
+	err = a.passworkService.ComparePassword(ctx, *user.Password, input.Password)
+	if err != nil {
+		return nil, exception.ErrWrongPasswordOrEmail
+	}
+	//generate token
+	accessToken, err := a.jwtService.GenerateAccessToken(ctx, user.ID.Hex())
+	if err != nil {
+		return nil, err
+	}
+	refreshToken, err := a.jwtService.GenerateRefreshToken(ctx, user.ID.Hex())
+	if err != nil {
+		return nil, err
+	}
+	return &presenter.LoginOutput{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
+
 }
