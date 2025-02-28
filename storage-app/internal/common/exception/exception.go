@@ -21,6 +21,8 @@ var (
 	ErrUserForbiddenFile          = errors.New("user don't have permission access this file")
 	ErrEmailExist                 = errors.New("email exist")
 	ErrInvalidConfirmCode         = errors.New("invalid confirm code")
+	ErrUnauthorized               = errors.New("unauthorized access")
+	ErrPermissionDenied           = errors.New("permission denied")
 )
 var errMap = map[error]int{
 	ErrTokenExpire:                http.StatusUnauthorized,

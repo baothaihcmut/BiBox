@@ -146,5 +146,6 @@ func SetupRoutes(router *gin.Engine, permissionController *permControllers.Permi
 	// File comments routes
 	router.GET("/file/comments", commentController.GetComments)
 	router.POST("/file/comments", commentController.AddComment)
+	router.POST("/file/permission", permissionController.CreateFilePermission)
 
 }
