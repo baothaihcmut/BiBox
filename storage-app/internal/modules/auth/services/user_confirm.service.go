@@ -53,7 +53,7 @@ func (u *UserConfirmServiceImpl) StoreUserPending(ctx context.Context, user *mod
 	//generate code
 	code := uuid.New().String()
 	//store user info to cache
-	err := u.cacheService.SetValue(ctx, fmt.Sprintf("user_pending_confirm:%s", code), user, 30*time.Minute)
+	err := u.cacheService.SetValue(ctx, fmt.Sprintf("user_pending_confirm:%s", code), user, 1*time.Minute)
 	if err != nil {
 		u.logger.Errorf(ctx, map[string]interface{}{
 			"email": user.Email,
@@ -61,7 +61,7 @@ func (u *UserConfirmServiceImpl) StoreUserPending(ctx context.Context, user *mod
 		return "", err
 	}
 	//store email for block user register when pendin
-	err = u.cacheService.SetString(ctx, fmt.Sprintf("email_pending_confirm:%s", user.Email), "1", 30*time.Minute)
+	err = u.cacheService.SetString(ctx, fmt.Sprintf("email_pending_confirm:%s", user.Email), "1", 1*time.Minute)
 	if err != nil {
 		u.logger.Errorf(ctx, map[string]interface{}{
 			"email": user.Email,
@@ -92,7 +92,7 @@ func (u *UserConfirmServiceImpl) GetUserPedingConfirm(ctx context.Context, code 
 
 func (u *UserConfirmServiceImpl) SendMailConfirm(ctx context.Context, user *models.User, code string) error {
 	//url for confirm
-	url := fmt.Sprintf("http://localhost8080/api/v1/auth/confirm?code=%s", code)
+	url := fmt.Sprintf("http://localhost:3000/landing-page?code=%s", code)
 	//event
 	e := users.UserSignUpEvent{
 		Email:            user.Email,

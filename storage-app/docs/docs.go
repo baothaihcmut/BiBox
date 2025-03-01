@@ -141,6 +141,69 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/log-in": {
+            "post": {
+                "description": "Log in",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "parameters": [
+                    {
+                        "description": "information for log in",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/presenter.LogInInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Login success",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Wrong password or email",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/auth/sign-up": {
             "post": {
                 "description": "Sign up",
@@ -573,12 +636,28 @@ const docTemplate = `{
                 }
             }
         },
+        "presenter.LogInInput": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
         "presenter.SignUpInput": {
             "type": "object",
             "required": [
                 "first_name",
                 "last_name",
-                "password"
+                "password",
+                "repeat_password"
             ],
             "properties": {
                 "email": {
@@ -591,6 +670,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "repeat_password": {
                     "type": "string"
                 }
             }

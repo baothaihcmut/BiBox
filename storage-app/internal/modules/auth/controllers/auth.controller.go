@@ -111,7 +111,6 @@ func (a *AuthControllerImpl) handleLogIn(c *gin.Context) {
 	c.SetCookie("access_token", res.AccessToken, a.jwtConfig.AccessToken.Age*60*60, "/", " spsohcmut.xyz", true, true)
 	c.SetCookie("refresh_token", res.RefreshToken, a.jwtConfig.RefreshToken.Age*60*60, "/", "spsohcmut.xyz", true, true)
 	c.JSON(http.StatusCreated, response.InitResponse[any](true, "Login sucess", nil))
-	c.JSON(http.StatusOK, response.InitResponse[any](true, "Login success", nil))
 }
 
 func (a *AuthControllerImpl) Init(g *gin.RouterGroup) {

@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 
+	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -29,5 +30,30 @@ func (pr *PermissionRepository) UpdatePermission(ctx context.Context, fileID pri
 	}
 
 	_, err := pr.collection.UpdateOne(ctx, filter, update)
+	return err
+}
+
+// get file by ID to check ownership
+func (pr *PermissionRepository) GetFileByID(ctx context.Context, fileID primitive.ObjectID) (*models.FilePermission, error) {
+	var file models.FilePermission
+	err := pr.collection.FindOne(ctx, bson.M{"file_id": fileID}).Decode(&file)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil // File not found
+		}
+		return nil, err
+	}
+	return &file, nil
+}
+
+// insert file permission into DB
+func (pr *PermissionRepository) CreateFilePermission(ctx context.Context, fileID primitive.ObjectID, ownerUserID string, canShare bool) error {
+	permission := bson.M{
+		"file_id":       fileID,
+		"owner_user_id": ownerUserID,
+		"can_share":     canShare,
+	}
+
+	_, err := pr.collection.InsertOne(ctx, permission)
 	return err
 }
