@@ -2,26 +2,49 @@ package services
 
 import (
 	"context"
-	"time"
 
+	"github.com/baothaihcmut/Bibox/storage-app/internal/common/enums"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/models"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/repositories"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type PermissionService struct {
-	Repo *repositories.PermissionRepository
+type CreatePermssionArgs struct {
+	FileID      primitive.ObjectID
+	UserID      primitive.ObjectID
+	Permssion   enums.FilePermissionType
+	AcessSecure bool
+	CanShare    bool
 }
 
-func NewPermissionService(repo *repositories.PermissionRepository) *PermissionService {
-	return &PermissionService{
-		Repo: repo,
+type PermissionService interface {
+	CheckPermission(ctx context.Context, fileID, userId primitive.ObjectID, permssion enums.FilePermissionType) (bool, error)
+	CreatePermssion(ctx context.Context, args CreatePermssionArgs) error
+}
+
+type PermissionServiceImpl struct {
+	repo repositories.FilePermissionRepository
+}
+
+func NewPermissionService(repo repositories.FilePermissionRepository) PermissionService {
+	return &PermissionServiceImpl{
+		repo: repo,
 	}
 }
 
-func (ps *PermissionService) UpdatePermission(fileID, userID primitive.ObjectID, permissionType int, accessSecure bool) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) //  Create context with timeout
-	defer cancel()
+func (ps *PermissionServiceImpl) CreatePermssion(ctx context.Context, args CreatePermssionArgs) error {
+	filePermssion := models.NewFilePermission(args.FileID, args.UserID, args.Permssion, args.AcessSecure, args.CanShare)
+	return ps.repo.CreateFilePermission(ctx, filePermssion)
+}
 
-	return ps.Repo.UpdatePermission(ctx, fileID, userID, permissionType, accessSecure)
+func (ps *PermissionServiceImpl) CheckPermission(ctx context.Context, fileID, userId primitive.ObjectID, permssion enums.FilePermissionType) (bool, error) {
+	filePermssion, err := ps.repo.GetFilePermission(ctx, fileID, userId, repositories.FilterPermssionType{
+		Option: repositories.PermssionGreaterThan,
+		Value:  []enums.FilePermissionType{permssion},
+	})
+	if err != nil {
+		return false, err
+	}
+	return filePermssion != nil, nil
 }

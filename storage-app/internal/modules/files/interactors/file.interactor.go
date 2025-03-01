@@ -5,11 +5,13 @@ import (
 	"sync"
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/constant"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/common/enums"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/exception"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
 	commonModel "github.com/baothaihcmut/Bibox/storage-app/internal/common/models"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/mongo"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/storage"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/services"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/models"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/presenters"
 	fileRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/repositories"
@@ -34,6 +36,7 @@ type FileInteractorImpl struct {
 	logger         logger.Logger
 	storageService storage.StorageService
 	mongoService   mongo.MongoService
+	filePermission services.PermissionService
 }
 
 func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.CreateFileInput) (*presenters.CreateFileOutput, error) {
@@ -144,6 +147,24 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 				checkErr <- exception.ErrParenFileNotExist
 				return
 			}
+
+			//check user permssion in this folder
+			permission, err := f.filePermission.CheckPermission(ctx, *parentFileId, userId, enums.EditPermission)
+			if err != nil {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
+				cancelCheck()
+				checkErr <- err
+				return
+			}
+			if !permission {
+				cancelCheck()
+				checkErr <- exception.ErrPermissionDenied
+				return
+			}
 		}()
 	}
 	//wait for all check routine
@@ -236,15 +257,43 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 			"file_id": file.ID.Hex(),
 		}, "File created")
 	}()
+	//create owner permission
+	wgSave.Add(1)
+	go func() {
+		defer wgSave.Done()
+		err = f.filePermission.CreatePermssion(
+			ctx,
+			services.CreatePermssionArgs{
+				FileID:      file.ID,
+				UserID:      user.ID,
+				Permssion:   enums.OwnerPermission,
+				AcessSecure: true,
+				CanShare:    true,
+			},
+		)
+		if err != nil {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+			cancel()
+			errSave <- err
+		}
+	}()
+
 	//update parent file routine
 	wgSave.Wait()
-	// close(errSave)
 	select {
 	case err = <-errSave:
 		return nil, err
 	default:
 	}
-
+	err = f.mongoService.CommitTransaction(ctx, session)
+	if err != nil {
+		f.logger.Errorf(ctx, nil, "Error commit transaction mongo:", err)
+		return nil, err
+	}
 	output := &presenters.CreateFileOutput{
 		FileOutput: presenters.MapFileToFileOutput(file),
 	}
@@ -344,6 +393,7 @@ func NewFileInteractor(
 	userRepo userRepo.UserRepository,
 	tagRepo tagRepo.TagRepository,
 	fileRepo fileRepo.FileRepository,
+	filePermission services.PermissionService,
 	logger logger.Logger,
 	storageService storage.StorageService,
 	mongoService mongo.MongoService,
@@ -355,5 +405,6 @@ func NewFileInteractor(
 		logger:         logger,
 		storageService: storageService,
 		mongoService:   mongoService,
+		filePermission: filePermission,
 	}
 }
