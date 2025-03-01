@@ -9,12 +9,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// CommentRepository handles database operations for comments
+// CommentRepo
 type CommentRepository struct {
 	collection *mongo.Collection
 }
 
-// NewCommentRepository initializes a new repository
+// NewCommentRepos
 func NewCommentRepository(db *mongo.Database) *CommentRepository {
 	return &CommentRepository{
 		collection: db.Collection("comments"),
