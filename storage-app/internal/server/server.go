@@ -22,10 +22,12 @@ import (
 	authController "github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/controllers"
 	authInteractors "github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/interactors"
 	authService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/services"
+	filePermssionRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/repositories"
+	filePermissionService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/services"
 	fileController "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/controllers"
 	fileInteractor "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/interactors"
 	fileRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/repositories"
-	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/tags/repositories"
+	tagRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/tags/repositories"
 	userRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/users/repositories"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -82,7 +84,9 @@ func (s *Server) initApp() {
 	//init repository
 	userRepo := userRepo.NewMongoUserRepository(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("users"), logger)
 	fileRepo := fileRepo.NewMongoFileRepo(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("files"), logger)
-	tagRepo := repositories.NewMongoTagRepository(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("tags"), logger)
+	tagRepo := tagRepo.NewMongoTagRepository(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("tags"), logger)
+	filePermssionRepo := filePermssionRepo.NewPermissionRepository(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("file_permissions"), logger)
+
 	//init service
 	userJwtService := authService.NewUserJwtService(s.config.Jwt, logger)
 	googleOauth2Service := authService.NewGoogleOauth2Service(s.googleOauth2, logger)
@@ -93,10 +97,11 @@ func (s *Server) initApp() {
 	storageService := storage.NewS3StorageService(s.s3, logger, &s.config.S3)
 	mongoService := mongoLib.NewMongoTransactionService(s.mongo)
 	passwordService := authService.NewPasswordService()
+	filePermssionService := filePermissionService.NewPermissionService(filePermssionRepo)
 
 	//init interactor
 	authInteractor := authInteractors.NewAuthInteractor(oauth2SerivceFactory, userRepo, userJwtService, logger, userConfirmService, mongoService, passwordService)
-	fileInteractor := fileInteractor.NewFileInteractor(userRepo, tagRepo, fileRepo, logger, storageService, mongoService)
+	fileInteractor := fileInteractor.NewFileInteractor(userRepo, tagRepo, fileRepo, filePermssionService, logger, storageService, mongoService)
 	//init controllers
 	authController := authController.NewAuthController(authInteractor, &s.config.Jwt, &s.config.Oauth2)
 	fileController := fileController.NewFileController(fileInteractor, userJwtService, logger)
