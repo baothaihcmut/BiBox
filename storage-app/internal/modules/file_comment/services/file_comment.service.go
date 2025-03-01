@@ -20,7 +20,6 @@ func (cs *CommentService) GetAllComments() ([]map[string]interface{}, error) {
 }
 
 func (cs *CommentService) AddComment(fileID, userID, content string) error {
-	// Business logic, validation, etc.
 	if fileID == "" || userID == "" || content == "" {
 		return &InvalidInputError{"All fields are required"}
 	}
