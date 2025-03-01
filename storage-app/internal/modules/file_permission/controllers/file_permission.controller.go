@@ -54,4 +54,26 @@ func (pc *PermissionController) UpdatePermission(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Permission updated successfully"})
+
+}
+
+// API to create file permission
+func (pc *PermissionController) CreateFilePermission(c *gin.Context) {
+	var request struct {
+		FileID   string `json:"file_id"`
+		CanShare bool   `json:"can_share"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	err := pc.Interactor.CreateFilePermission(c.Request.Context(), request.FileID, request.CanShare)
+	if err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "File permission created successfully"})
 }

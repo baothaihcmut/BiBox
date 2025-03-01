@@ -104,6 +104,16 @@ definitions:
         minimum: 1
         type: integer
     type: object
+  presenter.LogInInput:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
   presenter.SignUpInput:
     properties:
       email:
@@ -114,10 +124,13 @@ definitions:
         type: string
       password:
         type: string
+      repeat_password:
+        type: string
     required:
     - first_name
     - last_name
     - password
+    - repeat_password
     type: object
   presenter.SignUpOutput:
     type: object
@@ -346,6 +359,41 @@ paths:
               type: object
         "401":
           description: Wrong auth code
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - auth
+  /auth/log-in:
+    post:
+      consumes:
+      - application/json
+      description: Log in
+      parameters:
+      - description: information for log in
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presenter.LogInInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Login success
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Wrong password or email
           schema:
             allOf:
             - $ref: '#/definitions/response.AppResponse'
