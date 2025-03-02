@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -44,11 +45,8 @@ func (cr *CommentRepository) FetchComments() ([]map[string]interface{}, error) {
 	return comments, nil
 }
 
-// CreateComment inserts a new comment into the database
-func (cr *CommentRepository) CreateComment(fileID, userID, commentText string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+// Fix: CreateComment now accepts `primitive.ObjectID` for fileID and userID
+func (cr *CommentRepository) CreateComment(ctx context.Context, fileID, userID primitive.ObjectID, commentText string) error {
 	_, err := cr.collection.InsertOne(ctx, bson.M{
 		"file_id":    fileID,
 		"user_id":    userID,
@@ -60,16 +58,22 @@ func (cr *CommentRepository) CreateComment(fileID, userID, commentText string) e
 		return err
 	}
 
-	log.Printf("Inserted comment: fileID=%s, userID=%s, comment=%s", fileID, userID, commentText)
+	log.Printf("Inserted comment: fileID=%s, userID=%s, comment=%s", fileID.Hex(), userID.Hex(), commentText)
 	return nil
 }
 
-// GetCommentsByFile retrieves comments for a specific file
+// Fix: Convert fileID from string to `primitive.ObjectID`
 func (cr *CommentRepository) GetCommentsByFile(fileID string) ([]map[string]interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	cursor, err := cr.collection.Find(ctx, bson.M{"file_id": fileID})
+	// Convert fileID from string to ObjectID
+	fileObjectID, err := primitive.ObjectIDFromHex(fileID)
+	if err != nil {
+		return nil, err // Invalid fileID format
+	}
+
+	cursor, err := cr.collection.Find(ctx, bson.M{"file_id": fileObjectID})
 	if err != nil {
 		return nil, err
 	}
