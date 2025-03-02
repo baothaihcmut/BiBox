@@ -127,3 +127,17 @@ func (pr *FilePermissionRepositoryImpl) GetFilePermission(ctx context.Context, f
 	}
 	return &file, nil
 }
+func (pr *PermissionRepository) CheckUserPermission(ctx context.Context, fileID, userID primitive.ObjectID, allowedPermissions []int) (bool, error) {
+	filter := bson.M{
+		"file_id":         fileID,
+		"user_id":         userID,
+		"permission_type": bson.M{"$in": allowedPermissions},
+	}
+
+	count, err := pr.collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
