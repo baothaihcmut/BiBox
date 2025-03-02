@@ -39,11 +39,15 @@ func (cc *CommentController) AddComment(c *gin.Context) {
 		return
 	}
 
-	err := cc.Interactor.AddComment(request.FileID, request.UserID, request.Content)
+	err := cc.Interactor.AddComment(c.Request.Context(), request.FileID, request.Content)
 	if err != nil {
+		if err == interactors.ErrPermissionDenied {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Permission denied"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add comment"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Comment added"})
+	c.JSON(http.StatusOK, gin.H{"message": "Comment added successfully"})
 }
