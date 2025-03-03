@@ -1,0 +1,14 @@
+[
+    {
+        "file_id": "64f5e7a1b852e40d98f6c001",
+        "user_id": "64f5e7a1b852e40d98f6c002",
+        "content": "This is a test comment",
+        "created_at": {"$date": "2024-03-19T10:00:00Z"}
+    },
+    {
+        "file_id": "64f5e7a1b852e40d98f6c001",
+        "user_id": "64f5e7a1b852e40d98f6c003",
+        "content": "Another test comment",
+        "created_at": {"$date": "2024-03-19T10:30:00Z"}
+    }
+] 
