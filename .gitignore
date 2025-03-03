@@ -1,5 +1,5 @@
-# /storage-app/config/config.yaml
-# /storage-app-email/config/config.yaml
-# /storage-app/bin/*
-# /storage-app-email/bin/*
+/storage-app/config/config.yaml
+/storage-app-email/config/config.yaml
+/storage-app/bin/*
+/storage-app-email/bin/*
 
