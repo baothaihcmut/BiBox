@@ -29,7 +29,7 @@ func AuthMiddleware(authHandler interface {
 		}
 		if accessToken == "" {
 			userContext := models.UserContext{
-				Id:   "67c32b8d44ea7250fee726a5",
+				Id:   "67c58727090e489cf6796a8f",
 				Role: enums.UserRole,
 			}
 			c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), constant.UserContext, &userContext))
