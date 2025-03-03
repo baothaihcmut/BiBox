@@ -6,7 +6,7 @@ import (
 )
 
 type FileWithPermission struct {
-	File
+	File        `bson:"inline"`
 	Permissions []struct {
 		UserID         primitive.ObjectID       `bson:"user_id"`
 		PermissionType enums.FilePermissionType `bson:"permission_type"`
