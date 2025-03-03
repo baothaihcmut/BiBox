@@ -15,6 +15,7 @@ type TagRepository interface {
 	CreateTag(context.Context, *models.Tag) error
 	BulkCreateTag(context.Context, []*models.Tag) error
 	FindTagById(context.Context, primitive.ObjectID) (*models.Tag, error)
+	FindAllTagInList(context.Context, []primitive.ObjectID) ([]*models.Tag, error)
 }
 
 type MongoTagRepository struct {
@@ -31,7 +32,7 @@ func (m *MongoTagRepository) FindTagById(ctx context.Context, id primitive.Objec
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, nil
 		}
-		m.logger.Errorf(ctx, map[string]interface{}{
+		m.logger.Errorf(ctx, map[string]any{
 			"tag_id": id.Hex(),
 		}, "Error find tag by id:", err)
 		return nil, err
@@ -42,7 +43,7 @@ func (m *MongoTagRepository) FindTagById(ctx context.Context, id primitive.Objec
 func (m *MongoTagRepository) CreateTag(ctx context.Context, tag *models.Tag) error {
 	_, err := m.collection.InsertOne(ctx, tag)
 	if err != nil {
-		m.logger.Errorf(ctx, map[string]interface{}{
+		m.logger.Errorf(ctx, map[string]any{
 			"tag_id": tag.ID,
 		}, "Error insert into tag collection: ", err)
 		return err
@@ -60,6 +61,28 @@ func (m *MongoTagRepository) BulkCreateTag(ctx context.Context, tags []*models.T
 		return err
 	}
 	return nil
+}
+
+func (m *MongoTagRepository) FindAllTagInList(ctx context.Context, tagIds []primitive.ObjectID) ([]*models.Tag, error) {
+	cursor, err := m.collection.Find(ctx, bson.D{{
+		Key: "_id", Value: bson.D{{
+			Key:   "$in",
+			Value: tagIds,
+		}},
+	}})
+	if err != nil {
+		m.logger.Errorf(ctx, map[string]any{
+			"tag_ids": tagIds,
+		}, "Error find all tag in list: ", err)
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var tags []*models.Tag
+	if err := cursor.All(ctx, &tags); err != nil {
+		return nil, err
+	}
+	return tags, err
+
 }
 
 func NewMongoTagRepository(collection *mongo.Collection, logger logger.Logger) TagRepository {

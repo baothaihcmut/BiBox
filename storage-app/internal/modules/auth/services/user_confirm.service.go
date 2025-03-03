@@ -55,7 +55,7 @@ func (u *UserConfirmServiceImpl) StoreUserPending(ctx context.Context, user *mod
 	//store user info to cache
 	err := u.cacheService.SetValue(ctx, fmt.Sprintf("user_pending_confirm:%s", code), user, 1*time.Minute)
 	if err != nil {
-		u.logger.Errorf(ctx, map[string]interface{}{
+		u.logger.Errorf(ctx, map[string]any{
 			"email": user.Email,
 		}, "Error store user info pending confirm to cache: ", err)
 		return "", err
@@ -63,7 +63,7 @@ func (u *UserConfirmServiceImpl) StoreUserPending(ctx context.Context, user *mod
 	//store email for block user register when pendin
 	err = u.cacheService.SetString(ctx, fmt.Sprintf("email_pending_confirm:%s", user.Email), "1", 1*time.Minute)
 	if err != nil {
-		u.logger.Errorf(ctx, map[string]interface{}{
+		u.logger.Errorf(ctx, map[string]any{
 			"email": user.Email,
 		}, "Error store user  email pending confirm to cache: ", err)
 		return "", err

@@ -22,7 +22,7 @@ func NewCommentRepository(db *mongo.Database) *CommentRepository {
 }
 
 // FetchComments retrieves all comments from the database
-func (cr *CommentRepository) FetchComments() ([]map[string]interface{}, error) {
+func (cr *CommentRepository) FetchComments() ([]map[string]any, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -32,7 +32,7 @@ func (cr *CommentRepository) FetchComments() ([]map[string]interface{}, error) {
 	}
 	defer cursor.Close(ctx)
 
-	var comments []map[string]interface{}
+	var comments []map[string]any
 	for cursor.Next(ctx) {
 		var comment bson.M
 		if err := cursor.Decode(&comment); err != nil {
@@ -65,7 +65,7 @@ func (cr *CommentRepository) CreateComment(fileID, userID, commentText string) e
 }
 
 // GetCommentsByFile retrieves comments for a specific file
-func (cr *CommentRepository) GetCommentsByFile(fileID string) ([]map[string]interface{}, error) {
+func (cr *CommentRepository) GetCommentsByFile(fileID string) ([]map[string]any, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -75,7 +75,7 @@ func (cr *CommentRepository) GetCommentsByFile(fileID string) ([]map[string]inte
 	}
 	defer cursor.Close(ctx)
 
-	var comments []map[string]interface{}
+	var comments []map[string]any
 	for cursor.Next(ctx) {
 		var comment bson.M
 		if err := cursor.Decode(&comment); err != nil {

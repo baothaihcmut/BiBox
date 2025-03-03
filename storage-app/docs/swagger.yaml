@@ -1,5 +1,17 @@
 basePath: /api/v1
 definitions:
+  enums.FilePermissionType:
+    enum:
+    - 1
+    - 2
+    - 3
+    - 4
+    type: integer
+    x-enum-varnames:
+    - ViewPermission
+    - CommentPermission
+    - EditPermission
+    - OwnerPermission
   enums.MimeType:
     enum:
     - image/jpeg
@@ -156,9 +168,8 @@ definitions:
       storage_detail:
         properties:
           mime_type:
-            allOf:
-            - $ref: '#/definitions/enums.MimeType'
             description: Required field
+            type: string
           size:
             description: Required field
             type: integer
@@ -208,7 +219,7 @@ definitions:
       url_expiry:
         type: integer
     type: object
-  presenters.FileOutput:
+  presenters.FileWithPermissionOutput:
     properties:
       created_at:
         type: string
@@ -230,6 +241,10 @@ definitions:
         type: string
       parent_folder_id:
         type: string
+      permissions:
+        items:
+          $ref: '#/definitions/presenters.PermissionOfFileOuput'
+        type: array
       storage_detail:
         $ref: '#/definitions/presenters.StorageDetailOuput'
       tags:
@@ -241,10 +256,21 @@ definitions:
     type: object
   presenters.FindFileOfUserOuput:
     properties:
-      files:
+      data:
         items:
-          $ref: '#/definitions/presenters.FileOutput'
+          $ref: '#/definitions/presenters.FileWithPermissionOutput'
         type: array
+      pagination:
+        $ref: '#/definitions/response.PaginationResponse'
+    type: object
+  presenters.PermissionOfFileOuput:
+    properties:
+      permission_type:
+        $ref: '#/definitions/enums.FilePermissionType'
+      user_id:
+        type: string
+      user_image:
+        type: string
     type: object
   presenters.StorageDetailOuput:
     properties:
@@ -290,6 +316,23 @@ definitions:
         type: string
       sucess:
         type: boolean
+    type: object
+  response.PaginationResponse:
+    properties:
+      has_next:
+        type: boolean
+      has_prev:
+        type: boolean
+      limit:
+        type: integer
+      next_offset:
+        type: integer
+      offset:
+        type: integer
+      prev_offset:
+        type: integer
+      total:
+        type: integer
     type: object
 host: localhost:8080
 info:
@@ -472,6 +515,10 @@ paths:
         name: limit
         required: true
         type: integer
+      - description: mime type of file, if is_folder is true not pass mime_type
+        in: query
+        name: mime_type
+        type: string
       produces:
       - application/json
       responses:
@@ -495,6 +542,50 @@ paths:
               type: object
       tags:
       - files
+  /files/:id/uploaded:
+    patch:
+      consumes:
+      - application/json
+      description: Uploaded file
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Uploaded file sucess
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.UploadedFileOutput'
+              type: object
+        "403":
+          description: file is folder
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: file not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/add:
     post:
       consumes:
       - application/json
@@ -530,49 +621,6 @@ paths:
               type: object
         "404":
           description: Parent folder not found, Tag of file not found
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.AppResponse'
-            - properties:
-                data:
-                  type: object
-              type: object
-      tags:
-      - files
-  /files/uploaded:
-    patch:
-      consumes:
-      - application/json
-      description: Uploaded file
-      parameters:
-      - description: file id
-        in: path
-        name: file
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Uploaded file sucess
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.AppResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/presenters.UploadedFileOutput'
-              type: object
-        "403":
-          description: file is folder
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.AppResponse'
-            - properties:
-                data:
-                  type: object
-              type: object
-        "404":
-          description: file not found
           schema:
             allOf:
             - $ref: '#/definitions/response.AppResponse'

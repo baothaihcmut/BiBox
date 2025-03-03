@@ -46,6 +46,7 @@ var errMap = map[error]int{
 	ErrUserPedingSignUpConfirm:    http.StatusConflict,
 	ErrPermissionDenied:           http.StatusForbidden,
 	ErrMismatchPassword:           http.StatusConflict,
+	ErrWrongPasswordOrEmail:       http.StatusUnauthorized,
 }
 
 func ErrorStatusMapper(err error) int {

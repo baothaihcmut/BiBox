@@ -13,7 +13,7 @@ func NewCommentInteractor(repo *repositories.CommentRepository) *CommentInteract
 		Repo: repo,
 	}
 }
-func (ci *CommentInteractor) GetAllComments() ([]map[string]interface{}, error) {
+func (ci *CommentInteractor) GetAllComments() ([]map[string]any, error) {
 	return ci.Repo.FetchComments()
 }
 
