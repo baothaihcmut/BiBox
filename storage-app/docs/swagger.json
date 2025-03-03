@@ -313,6 +313,12 @@
                         "name": "limit",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "mime type of file, if is_folder is true not pass mime_type",
+                        "name": "mime_type",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -353,7 +359,88 @@
                         }
                     }
                 }
-            },
+            }
+        },
+        "/files/:id/uploaded": {
+            "patch": {
+                "description": "Uploaded file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "file id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Uploaded file sucess",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/presenters.UploadedFileOutput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "file is folder",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "file not found",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/files/add": {
             "post": {
                 "description": "Create new file",
                 "consumes": [
@@ -433,88 +520,24 @@
                     }
                 }
             }
-        },
-        "/files/uploaded": {
-            "patch": {
-                "description": "Uploaded file",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "files"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "file id",
-                        "name": "file",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Uploaded file sucess",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/presenters.UploadedFileOutput"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "403": {
-                        "description": "file is folder",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "404": {
-                        "description": "file not found",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
+        "enums.FilePermissionType": {
+            "type": "integer",
+            "enum": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "x-enum-varnames": [
+                "ViewPermission",
+                "CommentPermission",
+                "EditPermission",
+                "OwnerPermission"
+            ]
+        },
         "enums.MimeType": {
             "type": "string",
             "enum": [
@@ -713,11 +736,7 @@
                     "properties": {
                         "mime_type": {
                             "description": "Required field",
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/enums.MimeType"
-                                }
-                            ]
+                            "type": "string"
                         },
                         "size": {
                             "description": "Required field",
@@ -786,7 +805,7 @@
                 }
             }
         },
-        "presenters.FileOutput": {
+        "presenters.FileWithPermissionOutput": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -819,6 +838,12 @@
                 "parent_folder_id": {
                     "type": "string"
                 },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/presenters.PermissionOfFileOuput"
+                    }
+                },
                 "storage_detail": {
                     "$ref": "#/definitions/presenters.StorageDetailOuput"
                 },
@@ -836,11 +861,28 @@
         "presenters.FindFileOfUserOuput": {
             "type": "object",
             "properties": {
-                "files": {
+                "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/presenters.FileOutput"
+                        "$ref": "#/definitions/presenters.FileWithPermissionOutput"
                     }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/response.PaginationResponse"
+                }
+            }
+        },
+        "presenters.PermissionOfFileOuput": {
+            "type": "object",
+            "properties": {
+                "permission_type": {
+                    "$ref": "#/definitions/enums.FilePermissionType"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "user_image": {
+                    "type": "string"
                 }
             }
         },
@@ -910,6 +952,32 @@
                 },
                 "sucess": {
                     "type": "boolean"
+                }
+            }
+        },
+        "response.PaginationResponse": {
+            "type": "object",
+            "properties": {
+                "has_next": {
+                    "type": "boolean"
+                },
+                "has_prev": {
+                    "type": "boolean"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "next_offset": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "prev_offset": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         }

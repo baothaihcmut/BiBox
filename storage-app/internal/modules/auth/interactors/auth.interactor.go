@@ -120,11 +120,11 @@ func (a *AuthInteractorImpl) ExchangeToken(ctx context.Context, input *presenter
 			nil)
 		err = a.userRepository.CreateUser(ctx, user)
 		if err != nil {
-			a.logger.Errorf(ctx, map[string]interface{}{
+			a.logger.Errorf(ctx, map[string]any{
 				"email": userInfo.GetEmail(),
 			}, "Error create new user:", err)
 		}
-		a.logger.Info(ctx, map[string]interface{}{
+		a.logger.Info(ctx, map[string]any{
 			"email":   userInfo.GetEmail(),
 			"user_id": user.ID.Hex(),
 		}, "User created")
@@ -132,7 +132,7 @@ func (a *AuthInteractorImpl) ExchangeToken(ctx context.Context, input *presenter
 	//generate system token
 	accessToken, err := a.jwtService.GenerateAccessToken(ctx, user.ID.Hex())
 	if err != nil {
-		a.logger.Errorf(ctx, map[string]interface{}{
+		a.logger.Errorf(ctx, map[string]any{
 			"user_id": user.ID,
 			"email":   user.Email,
 		}, "Error generate token: ", err)
@@ -140,7 +140,7 @@ func (a *AuthInteractorImpl) ExchangeToken(ctx context.Context, input *presenter
 	}
 	refreshToken, err := a.jwtService.GenerateRefreshToken(ctx, user.ID.Hex())
 	if err != nil {
-		a.logger.Errorf(ctx, map[string]interface{}{
+		a.logger.Errorf(ctx, map[string]any{
 			"user_id": user.ID,
 			"email":   user.Email,
 		}, "Error generate token: ", err)
@@ -189,7 +189,7 @@ func (a *AuthInteractorImpl) SignUp(ctx context.Context, input *presenter.SignUp
 	//store user info to cache
 	code, err := a.userConfirmService.StoreUserPending(ctx, newUser)
 	if err != nil {
-		a.logger.Errorf(ctx, map[string]interface{}{
+		a.logger.Errorf(ctx, map[string]any{
 			"email":   newUser.Email,
 			"user_id": newUser.ID,
 		}, "Error store user to cache: ", err)
@@ -197,7 +197,7 @@ func (a *AuthInteractorImpl) SignUp(ctx context.Context, input *presenter.SignUp
 	}
 	err = a.userConfirmService.SendMailConfirm(ctx, newUser, code)
 	if err != nil {
-		a.logger.Errorf(ctx, map[string]interface{}{
+		a.logger.Errorf(ctx, map[string]any{
 			"email":   newUser.Email,
 			"user_id": newUser.ID,
 		}, "Error send email to user: ", err)

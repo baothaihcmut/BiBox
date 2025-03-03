@@ -15,7 +15,7 @@ func NewCommentService(db *mongo.Database) *CommentService {
 	}
 }
 
-func (cs *CommentService) GetAllComments() ([]map[string]interface{}, error) {
+func (cs *CommentService) GetAllComments() ([]map[string]any, error) {
 	return cs.Repo.FetchComments()
 }
 

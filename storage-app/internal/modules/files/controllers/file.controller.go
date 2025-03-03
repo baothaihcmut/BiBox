@@ -26,9 +26,12 @@ type FileControllerImpl struct {
 func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
 	internal := g.Group("/files")
 	internal.Use(middleware.AuthMiddleware(f.authHandler, f.logger, false))
-	internal.POST("", middleware.ValidateMiddleware[presenters.CreateFileInput](false, binding.JSON), f.handleCreateFile)
-	internal.PATCH("/uploaded/:id", middleware.ValidateMiddleware[presenters.UploadedFileInput](true), f.handleUploadedFile)
+	internal.POST("/add", middleware.ValidateMiddleware[presenters.CreateFileInput](false, binding.JSON), f.handleCreateFile)
+	internal.PATCH("/:id/uploaded", middleware.ValidateMiddleware[presenters.UploadedFileInput](true), f.handleUploadedFile)
 	internal.GET("", middleware.ValidateMiddleware[presenters.FindFileOfUserInput](false, binding.Query), f.handleFindFileOfUser)
+	internal.GET("/:id/tags", middleware.ValidateMiddleware[presenters.GetFileTagsInput](true), f.handleGetTagOfFile)
+	internal.GET("/:id/permissions", middleware.ValidateMiddleware[presenters.GetFilePermissionInput](true), f.handleGetPermissionOfFile)
+	internal.GET("/:id/metadata", middleware.ValidateMiddleware[presenters.GetFileMetaDataInput](true), f.handleGetFileMetadata)
 }
 
 // @Sumary Create new file
@@ -40,7 +43,7 @@ func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
 // @Success 201 {object} response.AppResponse{data=presenters.CreateFileOutput} "Create file sucess, storage_detail.put_object_url is presign url for upload file"
 // @Failure 403 {object} response.AppResponse{data=nil} "User don't have permission for this file operation"
 // @Failure 404 {object} response.AppResponse{data=nil} "Parent folder not found, Tag of file not found"
-// @Router   /files [post]
+// @Router   /files/add [post]
 func (f *FileControllerImpl) handleCreateFile(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
 	res, err := f.interactor.CreatFile(c.Request.Context(), payload.(*presenters.CreateFileInput))
@@ -57,11 +60,11 @@ func (f *FileControllerImpl) handleCreateFile(c *gin.Context) {
 // @Tags files
 // @Accept json
 // @Produce json
-// @Param file path string true "file id"
+// @Param id path string true "file id"
 // @Success 201 {object} response.AppResponse{data=presenters.UploadedFileOutput} "Uploaded file sucess"
 // @Failure 404 {object} response.AppResponse{data=nil} "file not found"
 // @Failure 403 {object} response.AppResponse{data=nil} "file is folder"
-// @Router   /files/uploaded [patch]
+// @Router   /files/:id/uploaded [patch]
 func (f *FileControllerImpl) handleUploadedFile(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
 	res, err := f.interactor.UploadedFile(c.Request.Context(), payload.(*presenters.UploadedFileInput))
@@ -84,6 +87,7 @@ func (f *FileControllerImpl) handleUploadedFile(c *gin.Context) {
 // @Param is_asc query bool true "sort direction"
 // @Param offset query int true "for pagination"
 // @Param limit query int true "for pagination"
+// @Param mime_type query string false "mime type of file, if is_folder is true not pass mime_type"
 // @Success 200 {object} response.AppResponse{data=presenters.FindFileOfUserOuput} "Find file of user sucess"
 // @Failure 400 {object} response.AppResponse{data=nil} "Un allow sort field, lack of query"
 // @Router   /files [get]
@@ -95,7 +99,40 @@ func (f *FileControllerImpl) handleFindFileOfUser(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	c.JSON(http.StatusCreated, response.InitResponse(true, "Find file of user success", res))
+	c.JSON(http.StatusOK, response.InitResponse(true, "Find file of user success", res))
+}
+
+func (f *FileControllerImpl) handleGetTagOfFile(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := f.interactor.GetFileTags(c.Request.Context(), payload.(*presenters.GetFileTagsInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusOK, response.InitResponse(true, "Find tags of file success", res))
+}
+
+func (f *FileControllerImpl) handleGetPermissionOfFile(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := f.interactor.GetFilePermissions(c.Request.Context(), payload.(*presenters.GetFilePermissionInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusOK, response.InitResponse(true, "Find permissions of file success", res))
+}
+
+func (f *FileControllerImpl) handleGetFileMetadata(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := f.interactor.GetFileMetaData(c.Request.Context(), payload.(*presenters.GetFileMetaDataInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusOK, response.InitResponse(true, "Find metadata of file success", res))
 }
 
 func NewFileController(interactor interactors.FileInteractor, jwtService services.JwtService, logger logger.Logger) FileController {

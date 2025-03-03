@@ -51,7 +51,7 @@ func TestFileInteractor_CreatFile(t *testing.T) {
 		nil,
 	)
 	mockUserRepo.EXPECT().UpdateUserStorageSize(gomock.Any(), gomock.Any()).Return(nil)
-	mockTageRepo := mocks.NewMockTagRepository(ctrl)
+	// mockTageRepo := mocks.NewMockTagRepository(ctrl)
 	mockFileRepo := mocks.NewMockFileRepository(ctrl)
 	mockFileRepo.EXPECT().FindFileById(gomock.Any(), gomock.Any(), false).Return(
 		&models.File{
@@ -78,14 +78,14 @@ func TestFileInteractor_CreatFile(t *testing.T) {
 	mockMongoService.EXPECT().EndTransansaction(gomock.Any(), gomock.Any())
 	interactor := interactors.NewFileInteractor(
 		mockUserRepo,
-		mockTageRepo,
-		mockFileRepo,
+		nil,
+		nil,
 		mockFilePermissionService,
+		nil,
 		mockLogger,
 		mockStorageService,
 		mockMongoService,
 	)
-	parentFolderIdInput := parentFileId.Hex()
 	ouput, err := interactor.CreatFile(
 		context.WithValue(context.Background(), constant.UserContext, &commonModel.UserContext{
 			Id:   file.OwnerID.Hex(),
@@ -93,19 +93,19 @@ func TestFileInteractor_CreatFile(t *testing.T) {
 		}),
 		&presenters.CreateFileInput{
 			Name:           file.Name,
-			ParentFolderID: &parentFolderIdInput,
-			TagIDs:         []string{},
+			ParentFolderID: file.ParentFolderID,
+			TagIDs:         file.TagIDs,
 			IsFolder:       file.IsFolder,
 			HasPassword:    file.HasPassword,
 			Password:       file.Password,
 			Description:    file.Description,
 			IsSecure:       file.IsSecure,
 			StorageDetail: &struct {
-				Size     int            "json:\"size\" validate:\"required\""
-				MimeType enums.MimeType "json:\"mime_type\" validate:\"required\""
+				Size     int    "json:\"size\" validate:\"required\""
+				MimeType string "json:\"mime_type\" validate:\"required\""
 			}{
 				Size:     file.StorageDetail.Size,
-				MimeType: file.StorageDetail.MimeType,
+				MimeType: string(file.StorageDetail.MimeType),
 			},
 		},
 	)
@@ -114,7 +114,7 @@ func TestFileInteractor_CreatFile(t *testing.T) {
 	assert.Equal(t, file.Name, ouput.Name)
 	assert.Equal(t, file.OwnerID.Hex(), ouput.OwnerID)
 	assert.Equal(t, file.IsFolder, ouput.IsFolder)
-	assert.Equal(t, &parentFolderIdInput, ouput.ParentFolderID)
+	assert.Equal(t, file.ParentFolderID, ouput.ParentFolderID)
 	assert.Equal(t, file.HasPassword, ouput.HasPassword)
 	assert.Equal(t, file.IsSecure, ouput.IsSecure)
 	assert.Equal(t, file.StorageDetail.Size, ouput.StorageDetails.Size)
