@@ -5,7 +5,7 @@ logger:
   format: "json"
   output: "stdout"
 mongo:
-  uri: "mongodb://localhost:27017/"
+  uri: "mongodb+srv://thaibao22042k4:<db_password>@ecommerce-go.xbph8.mongodb.net/?retryWrites=true&w=majority&appName=ecommerce-go"
   min_pool_size: 10
   connection_time_out: 30
   database: "storage-app"

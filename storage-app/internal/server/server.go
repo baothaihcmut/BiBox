@@ -9,43 +9,48 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/IBM/sarama"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/baothaihcmut/Bibox/storage-app/docs"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/common/cache"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
 	middleware "github.com/baothaihcmut/Bibox/storage-app/internal/common/middlewares"
 	mongoLib "github.com/baothaihcmut/Bibox/storage-app/internal/common/mongo"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/common/queue"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/storage"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/config"
 	authController "github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/controllers"
 	authInteractors "github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/interactors"
 	authService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/services"
+	fileCommentRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_comment/repositories"
+	fileCommentService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_comment/services"
+	filePermssionRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/repositories"
+	filePermissionService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/services"
 	fileController "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/controllers"
 	fileInteractor "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/interactors"
 	fileRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/repositories"
-	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/tags/repositories"
+	tagRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/tags/repositories"
 	userRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/users/repositories"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/oauth2"
-
-	permControllers "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/controllers"
-
-	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_comment/controllers"
 )
 
 type Server struct {
-	g            *gin.Engine
-	logger       *logrus.Logger
-	config       *config.AppConfig
-	mongo        *mongo.Client
-	googleOauth2 *oauth2.Config
-	githubOauth2 *oauth2.Config
-	s3           *s3.Client
-	// kafkaProducer sarama.SyncProducer
+	g             *gin.Engine
+	logger        *logrus.Logger
+	config        *config.AppConfig
+	mongo         *mongo.Client
+	googleOauth2  *oauth2.Config
+	githubOauth2  *oauth2.Config
+	s3            *s3.Client
+	kafkaProducer sarama.SyncProducer
+	redis         *redis.Client
 }
 
 func NewServer(
@@ -54,28 +59,38 @@ func NewServer(
 	googleoauth2 *oauth2.Config,
 	githubOauth2 *oauth2.Config,
 	s3 *s3.Client,
-	// kafkProducer
+	kafkaProducer sarama.SyncProducer,
+	redis *redis.Client,
 	logger *logrus.Logger,
 	cfg *config.AppConfig) *Server {
 	return &Server{
-		g:            g,
-		logger:       logger,
-		config:       cfg,
-		mongo:        mongo,
-		googleOauth2: googleoauth2,
-		githubOauth2: githubOauth2,
-		s3:           s3,
+		g:             g,
+		logger:        logger,
+		config:        cfg,
+		mongo:         mongo,
+		googleOauth2:  googleoauth2,
+		githubOauth2:  githubOauth2,
+		kafkaProducer: kafkaProducer,
+		redis:         redis,
+		s3:            s3,
 	}
 }
+
 func (s *Server) initApp() {
 	//init cors
 
 	logger := logger.NewLogger(s.logger)
-
+	//init external service
+	kafkaService := queue.NewKafkaService(s.kafkaProducer)
+	redisService := cache.NewRedisService(s.redis)
+	userConfirmService := authService.NewUserConfirmService(redisService, kafkaService, logger)
 	//init repository
 	userRepo := userRepo.NewMongoUserRepository(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("users"), logger)
 	fileRepo := fileRepo.NewMongoFileRepo(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("files"), logger)
-	tagRepo := repositories.NewMongoTagRepository(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("tags"), logger)
+	tagRepo := tagRepo.NewMongoTagRepository(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("tags"), logger)
+	filePermssionRepo := filePermssionRepo.NewPermissionRepository(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("file_permissions"), logger)
+	fileCommentRepo := fileCommentRepo.NewCommentRepository(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("file_comments"), logger)
+
 	//init service
 	userJwtService := authService.NewUserJwtService(s.config.Jwt, logger)
 	googleOauth2Service := authService.NewGoogleOauth2Service(s.googleOauth2, logger)
@@ -85,10 +100,13 @@ func (s *Server) initApp() {
 	oauth2SerivceFactory.Register(authService.GithubOauth2Token, githubOauth2Service)
 	storageService := storage.NewS3StorageService(s.s3, logger, &s.config.S3)
 	mongoService := mongoLib.NewMongoTransactionService(s.mongo)
+	passwordService := authService.NewPasswordService()
+	filePermssionService := filePermissionService.NewPermissionService(filePermssionRepo)
+	fileCommentService := fileCommentService.NewCommentService(fileCommentRepo)
 
 	//init interactor
-	authInteractor := authInteractors.NewAuthInteractor(oauth2SerivceFactory, userRepo, userJwtService, logger)
-	fileInteractor := fileInteractor.NewFileInteractor(userRepo, tagRepo, fileRepo, logger, storageService, mongoService)
+	authInteractor := authInteractors.NewAuthInteractor(oauth2SerivceFactory, userRepo, userJwtService, logger, userConfirmService, mongoService, passwordService)
+	fileInteractor := fileInteractor.NewFileInteractor(userRepo, tagRepo, fileRepo, filePermssionService, filePermssionRepo, logger, storageService, mongoService)
 	//init controllers
 	authController := authController.NewAuthController(authInteractor, &s.config.Jwt, &s.config.Oauth2)
 	fileController := fileController.NewFileController(fileInteractor, userJwtService, logger)
@@ -137,15 +155,4 @@ func (s *Server) Run() {
 	ctx, shutdown := context.WithTimeout(context.Background(), 1*time.Second)
 	defer shutdown()
 	<-ctx.Done()
-}
-
-func SetupRoutes(router *gin.Engine, permissionController *permControllers.PermissionController, commentController *controllers.CommentController) { // File permissions routes
-	router.GET("/file/permissions", permissionController.UpdatePermission)
-	router.POST("/file/permissions", permissionController.UpdatePermission)
-
-	// File comments routes
-	router.GET("/file/comments", commentController.GetComments)
-	router.POST("/file/comments", commentController.AddComment)
-	router.POST("/file/permission", permissionController.CreateFilePermission)
-
 }

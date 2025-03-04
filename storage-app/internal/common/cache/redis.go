@@ -12,6 +12,15 @@ type RedisService struct {
 	client *redis.Client
 }
 
+// Remove implements CacheService.
+func (r *RedisService) Remove(ctx context.Context, key string) error {
+	err := r.client.Del(ctx, key).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *RedisService) SetValue(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
 	val, err := json.Marshal(value)
 	if err != nil {
@@ -50,7 +59,7 @@ func (r *RedisService) GetString(ctx context.Context, key string) (*string, erro
 	res, err := r.client.Get(ctx, key).Result()
 	if err != nil {
 		if err == redis.Nil {
-			return nil, err
+			return nil, nil
 		}
 		return nil, err
 	}

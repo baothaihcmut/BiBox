@@ -10,12 +10,12 @@ import (
 )
 
 type PermissionRepository struct {
-	collection *mongo.Collection
+	Collection *mongo.Collection
 }
 
 func NewPermissionRepository(db *mongo.Database) *PermissionRepository {
 	return &PermissionRepository{
-		collection: db.Collection("permissions"),
+		Collection: db.Collection("permissions"),
 	}
 }
 
@@ -29,14 +29,14 @@ func (pr *PermissionRepository) UpdatePermission(ctx context.Context, fileID pri
 		},
 	}
 
-	_, err := pr.collection.UpdateOne(ctx, filter, update)
+	_, err := pr.Collection.UpdateOne(ctx, filter, update)
 	return err
 }
 
 // get file by ID to check ownership
 func (pr *PermissionRepository) GetFileByID(ctx context.Context, fileID primitive.ObjectID) (*models.FilePermission, error) {
 	var file models.FilePermission
-	err := pr.collection.FindOne(ctx, bson.M{"file_id": fileID}).Decode(&file)
+	err := pr.Collection.FindOne(ctx, bson.M{"file_id": fileID}).Decode(&file)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil // File not found
@@ -54,7 +54,7 @@ func (pr *PermissionRepository) CreateFilePermission(ctx context.Context, fileID
 		"can_share":     canShare,
 	}
 
-	_, err := pr.collection.InsertOne(ctx, permission)
+	_, err := pr.Collection.InsertOne(ctx, permission)
 	return err
 }
 func (pr *PermissionRepository) CheckUserPermission(ctx context.Context, fileID, userID primitive.ObjectID, allowedPermissions []int) (bool, error) {
@@ -64,7 +64,7 @@ func (pr *PermissionRepository) CheckUserPermission(ctx context.Context, fileID,
 		"permission_type": bson.M{"$in": allowedPermissions},
 	}
 
-	count, err := pr.collection.CountDocuments(ctx, filter)
+	count, err := pr.Collection.CountDocuments(ctx, filter)
 	if err != nil {
 		return false, err
 	}

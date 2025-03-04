@@ -12,13 +12,13 @@ import (
 
 // CommentRepository
 type CommentRepository struct {
-	collection *mongo.Collection
+	Collection *mongo.Collection
 }
 
 // NewCommentRepository
 func NewCommentRepository(db *mongo.Database) *CommentRepository {
 	return &CommentRepository{
-		collection: db.Collection("comments"),
+		Collection: db.Collection("file_comments"),
 	}
 }
 
@@ -27,7 +27,7 @@ func (cr *CommentRepository) FetchComments() ([]map[string]interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	cursor, err := cr.collection.Find(ctx, bson.M{})
+	cursor, err := cr.Collection.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (cr *CommentRepository) FetchComments() ([]map[string]interface{}, error) {
 
 // CreateComment inserts a new comment into the database
 func (cr *CommentRepository) CreateComment(ctx context.Context, fileID, userID primitive.ObjectID, commentText string) error {
-	_, err := cr.collection.InsertOne(ctx, bson.M{
+	_, err := cr.Collection.InsertOne(ctx, bson.M{
 		"file_id":    fileID,
 		"user_id":    userID,
 		"comment":    commentText,
@@ -73,7 +73,7 @@ func (cr *CommentRepository) GetCommentsByFile(fileID string) ([]map[string]inte
 		return nil, err
 	}
 
-	cursor, err := cr.collection.Find(ctx, bson.M{"file_id": fileObjectID})
+	cursor, err := cr.Collection.Find(ctx, bson.M{"file_id": fileObjectID})
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func (cr *CommentRepository) AnswerComment(ctx context.Context, commentID, userI
 		},
 	}
 
-	result, err := cr.collection.UpdateOne(ctx, filter, update)
+	result, err := cr.Collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		log.Println("Error updating comment with answer:", err)
 		return err

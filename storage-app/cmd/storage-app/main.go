@@ -1,16 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/config"
-	commentControllers "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_comment/controllers"
 
-	commentInteractors "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_comment/interactors"
-	commentRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_comment/repositories"
-	permControllers "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/controllers"
-	permInteractors "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/interactors"
-	permRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/repositories"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/server"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/server/initialize"
 
@@ -30,7 +25,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading config:", err)
 	}
-
 	// Initialize logger
 	logger := initialize.InitializeLogger(&config.Logger)
 
@@ -43,10 +37,7 @@ func main() {
 		logger.Panic(err)
 		log.Fatal("Failed to initialize MongoDB:", err)
 	}
-
-	// Select the database
-	mongoDatabase := mongoClient.Database(config.Mongo.DatabaseName)
-
+	defer mongoClient.Disconnect(context.Background())
 	// Initialize OAuth2 (Google & GitHub)
 	oauth2Google := initialize.InitializeOauth2(&config.Oauth2.Google, []string{
 		"https://www.googleapis.com/auth/userinfo.email",
@@ -63,24 +54,22 @@ func main() {
 		logger.Panic(err)
 		log.Fatal("Failed to initialize S3:", err)
 	}
-
+	//kafka
+	kafka, err := initialize.InitializeKafkaProducer(&config.Kafka)
+	if err != nil {
+		logger.Panic(err)
+		panic(err)
+	}
+	defer kafka.Close()
+	//redis
+	redis, err := initialize.InitializeRedis(&config.Redis)
+	if err != nil {
+		logger.Panic(err)
+		panic(err)
+	}
+	defer redis.Close()
 	// Create a new server instance
-	s := server.NewServer(g, mongoClient, oauth2Google, oauth2Github, s3, logger, config)
+	s := server.NewServer(g, mongoClient, oauth2Google, oauth2Github, s3, kafka, redis, logger, config)
 
-	// Initialize PermissionRepository & Interactor
-	permissionRepository := permRepo.NewPermissionRepository(mongoDatabase)
-	permissionInteractor := permInteractors.NewPermissionInteractor(permissionRepository)
-	permissionController := permControllers.NewPermissionController(permissionInteractor)
-
-	//  Initialize Comment Repository & Interactor
-	commentRepository := commentRepo.NewCommentRepository(mongoDatabase)
-	commentInteractor := commentInteractors.NewCommentInteractor(commentRepository, permissionRepository)
-	commentController := commentControllers.NewCommentController(commentInteractor)
-
-	//  Set up routes for file permission & comment
-	server.SetupRoutes(g, permissionController, commentController)
-
-	// Run the server
-	go s.Run()
-
+	s.Run()
 }

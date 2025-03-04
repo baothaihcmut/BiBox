@@ -10,4 +10,5 @@ type CacheService interface {
 	GetValue(ctx context.Context, key string, output interface{}) error
 	SetString(ctx context.Context, key string, val string, ttl time.Duration) error
 	GetString(ctx context.Context, key string) (*string, error)
+	Remove(ctx context.Context, key string) error
 }
