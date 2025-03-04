@@ -14,7 +14,7 @@ var (
 	ErrParenFileNotExist          = errors.New("parent file not exist")
 	ErrTagNotExist                = errors.New("tag not exist")
 	ErrFileNotFound               = errors.New("file not found")
-	ErrFileIsFolder               = errors.New("folder cannot be uploaded")
+	ErrFileIsFolder               = errors.New("file is folder")
 	ErrUnAllowedSortField         = errors.New("unallow sort field")
 	ErrUserNotFound               = errors.New("user not found")
 	ErrUnSupportOutputImageType   = errors.New("unsupport output image type")

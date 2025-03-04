@@ -3,6 +3,7 @@ package interactors
 import (
 	"context"
 	"sync"
+	"time"
 
 	"slices"
 
@@ -41,6 +42,7 @@ type FileInteractor interface {
 	GetFileMetaData(context.Context, *presenters.GetFileMetaDataInput) (*presenters.GetFileMetaDataOuput, error)
 	GetFileTags(context.Context, *presenters.GetFileTagsInput) (*presenters.GetFileTagsOutput, error)
 	GetFilePermissions(context.Context, *presenters.GetFilePermissionInput) (*presenters.GetFilePermissionOuput, error)
+	GetFileDownloadUrl(context.Context, *presenters.GetFileDownloadUrlInput) (*presenters.GetFileDownloadUrlOutput, error)
 }
 
 type FileInteractorImpl struct {
@@ -108,6 +110,38 @@ func (f *FileInteractorImpl) checkFilePermission(ctx context.Context, fileId pri
 	default:
 		return <-fileCh, nil
 	}
+}
+
+// GetFileDownloadUrl implements FileInteractor.
+func (f *FileInteractorImpl) GetFileDownloadUrl(ctx context.Context, input *presenters.GetFileDownloadUrlInput) (*presenters.GetFileDownloadUrlOutput, error) {
+	//check permission and file find
+	userCtx := ctx.Value(constant.UserContext).(*commonModel.UserContext)
+	userId, _ := primitive.ObjectIDFromHex(userCtx.Id)
+	fileId, _ := primitive.ObjectIDFromHex(input.Id)
+	file, err := f.checkFilePermission(ctx, fileId, userId)
+	if err != nil {
+		return nil, err
+	}
+	//check if file is folder
+	if file.IsFolder {
+		return nil, exception.ErrFileIsFolder
+	}
+	//get url
+	url, err := f.storageService.GetPresignUrl(ctx, storage.GetPresignUrlArg{
+		Method:      storage.PresignUrlGetMethod,
+		Key:         file.StorageDetail.StorageKey,
+		ContentType: file.StorageDetail.MimeType,
+		Expiry:      3 * time.Hour,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &presenters.GetFileDownloadUrlOutput{
+		Url:         url,
+		Expiry:      1,
+		Method:      "GET",
+		ContentType: file.StorageDetail.MimeType,
+	}, nil
 }
 
 // GetFilePermissions implements FileInteractor.

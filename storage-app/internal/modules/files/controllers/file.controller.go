@@ -32,6 +32,7 @@ func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
 	internal.GET("/:id/tags", middleware.ValidateMiddleware[presenters.GetFileTagsInput](true), f.handleGetTagOfFile)
 	internal.GET("/:id/permissions", middleware.ValidateMiddleware[presenters.GetFilePermissionInput](true), f.handleGetPermissionOfFile)
 	internal.GET("/:id/metadata", middleware.ValidateMiddleware[presenters.GetFileMetaDataInput](true), f.handleGetFileMetadata)
+	internal.GET("/:id/download-url", middleware.ValidateMiddleware[presenters.GetFileDownloadUrlInput](true), f.handleGetFileDownloadUrl)
 }
 
 // @Sumary Create new file
@@ -102,6 +103,17 @@ func (f *FileControllerImpl) handleFindFileOfUser(c *gin.Context) {
 	c.JSON(http.StatusOK, response.InitResponse(true, "Find file of user success", res))
 }
 
+// @Sumary Get tag of file
+// @Description Get tag of file
+// @Tags files
+// @Accept json
+// @Produce json
+// @Param id path string true "file id"
+// @Success 200 {object} response.AppResponse{data=presenters.GetFileTagsOutput} "Find tags of file sucess"
+// @Failure 400 {object} response.AppResponse{data=nil} "miss id"
+// @Failure 404 {object} response.AppResponse{data=nil} "file not found"
+// @Failure 403 {object} response.AppResponse{data=nil} "permission denied"
+// @Router   /files/:id/tags [get]
 func (f *FileControllerImpl) handleGetTagOfFile(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
 	res, err := f.interactor.GetFileTags(c.Request.Context(), payload.(*presenters.GetFileTagsInput))
@@ -113,6 +125,17 @@ func (f *FileControllerImpl) handleGetTagOfFile(c *gin.Context) {
 	c.JSON(http.StatusOK, response.InitResponse(true, "Find tags of file success", res))
 }
 
+// @Sumary Get permission of file
+// @Description Get permission of file
+// @Tags files
+// @Accept json
+// @Produce json
+// @Param id path string true "file id"
+// @Success 200 {object} response.AppResponse{data=presenters.GetFilePermissionOuput} "Find tags of file sucess"
+// @Failure 400 {object} response.AppResponse{data=nil} "miss id"
+// @Failure 404 {object} response.AppResponse{data=nil} "file not found"
+// @Failure 403 {object} response.AppResponse{data=nil} "permission denied"
+// @Router   /files/:id/permissions [get]
 func (f *FileControllerImpl) handleGetPermissionOfFile(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
 	res, err := f.interactor.GetFilePermissions(c.Request.Context(), payload.(*presenters.GetFilePermissionInput))
@@ -124,6 +147,17 @@ func (f *FileControllerImpl) handleGetPermissionOfFile(c *gin.Context) {
 	c.JSON(http.StatusOK, response.InitResponse(true, "Find permissions of file success", res))
 }
 
+// @Sumary Get metadata of file
+// @Description Get metadata of file
+// @Tags files
+// @Accept json
+// @Produce json
+// @Param id path string true "file id"
+// @Success 200 {object} response.AppResponse{data=presenters.GetFileMetaDataOuput} "Find tags of file sucess"
+// @Failure 400 {object} response.AppResponse{data=nil} "miss id"
+// @Failure 404 {object} response.AppResponse{data=nil} "file not found"
+// @Failure 403 {object} response.AppResponse{data=nil} "permission denied"
+// @Router   /files/:id/metadata [get]
 func (f *FileControllerImpl) handleGetFileMetadata(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
 	res, err := f.interactor.GetFileMetaData(c.Request.Context(), payload.(*presenters.GetFileMetaDataInput))
@@ -133,6 +167,30 @@ func (f *FileControllerImpl) handleGetFileMetadata(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, response.InitResponse(true, "Find metadata of file success", res))
+}
+
+// @Sumary Get download url of file
+// @Description Get download url of file
+// @Tags files
+// @Accept json
+// @Produce json
+// @Param id path string true "file id"
+// @Success 200 {object} response.AppResponse{data=presenters.GetFileDownloadUrlOutput} "Find tags of file sucess"
+// @Failure 400 {object} response.AppResponse{data=nil} "miss id"
+// @Failure 404 {object} response.AppResponse{data=nil} "file not found"
+// @Failure 409 {object} response.AppResponse{data=nil} "file is folder"
+// @Failure 403 {object} response.AppResponse{data=nil} "permission denied"
+// @Router   /files/:id/download-url [get]
+func (f *FileControllerImpl) handleGetFileDownloadUrl(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := f.interactor.GetFileDownloadUrl(c.Request.Context(), payload.(*presenters.GetFileDownloadUrlInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusOK, response.InitResponse(true, "Get file download url success", res))
+
 }
 
 func NewFileController(interactor interactors.FileInteractor, jwtService services.JwtService, logger logger.Logger) FileController {

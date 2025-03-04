@@ -148,7 +148,7 @@ func (pr *FilePermissionRepositoryImpl) GetPermissionOfFile(ctx context.Context,
 		bson.D{{Key: "$unwind", Value: "$user"}},
 		//projection stage
 		bson.D{
-			{Key: "$projection", Value: bson.D{
+			{Key: "$project", Value: bson.D{
 				{Key: "file_id", Value: 1},
 				{Key: "user_id", Value: 1},
 				{Key: "permission_type", Value: 1},

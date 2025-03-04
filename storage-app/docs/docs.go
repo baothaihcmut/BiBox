@@ -367,6 +367,412 @@ const docTemplate = `{
                 }
             }
         },
+        "/files/:id/download-url": {
+            "get": {
+                "description": "Get download url of file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "file id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Find tags of file sucess",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/presenters.GetFileDownloadUrlOutput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "miss id",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "permission denied",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "file not found",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "409": {
+                        "description": "file is folder",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/files/:id/metadata": {
+            "get": {
+                "description": "Get metadata of file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "file id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Find tags of file sucess",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/presenters.GetFileMetaDataOuput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "miss id",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "permission denied",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "file not found",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/files/:id/permissions": {
+            "get": {
+                "description": "Get permission of file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "file id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Find tags of file sucess",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/presenters.GetFilePermissionOuput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "miss id",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "permission denied",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "file not found",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/files/:id/tags": {
+            "get": {
+                "description": "Get tag of file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "file id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Find tags of file sucess",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/presenters.GetFileTagsOutput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "miss id",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "permission denied",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "file not found",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/files/:id/uploaded": {
             "patch": {
                 "description": "Uploaded file",
@@ -811,6 +1217,46 @@ const docTemplate = `{
                 }
             }
         },
+        "presenters.FilePermissionUserInfo": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "presenters.FilePermssionWithUserOutput": {
+            "type": "object",
+            "properties": {
+                "access_secure_file": {
+                    "type": "boolean"
+                },
+                "can_share": {
+                    "type": "boolean"
+                },
+                "file_id": {
+                    "type": "string"
+                },
+                "permission_type": {
+                    "$ref": "#/definitions/enums.FilePermissionType"
+                },
+                "user": {
+                    "$ref": "#/definitions/presenters.FilePermissionUserInfo"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "presenters.FileWithPermissionOutput": {
             "type": "object",
             "properties": {
@@ -878,6 +1324,92 @@ const docTemplate = `{
                 }
             }
         },
+        "presenters.GetFileDownloadUrlOutput": {
+            "type": "object",
+            "properties": {
+                "content_type": {
+                    "$ref": "#/definitions/enums.MimeType"
+                },
+                "expiry": {
+                    "type": "integer"
+                },
+                "method": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "presenters.GetFileMetaDataOuput": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "has_password": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_folder": {
+                    "type": "boolean"
+                },
+                "is_secure": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "opened_at": {
+                    "type": "string"
+                },
+                "owner_id": {
+                    "type": "string"
+                },
+                "parent_folder_id": {
+                    "type": "string"
+                },
+                "storage_detail": {
+                    "$ref": "#/definitions/presenters.StorageDetailOuput"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "presenters.GetFilePermissionOuput": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/presenters.FilePermssionWithUserOutput"
+                    }
+                }
+            }
+        },
+        "presenters.GetFileTagsOutput": {
+            "type": "object",
+            "properties": {
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/presenters.TagOutput"
+                    }
+                }
+            }
+        },
         "presenters.PermissionOfFileOuput": {
             "type": "object",
             "properties": {
@@ -900,6 +1432,17 @@ const docTemplate = `{
                 },
                 "mime_type": {
                     "$ref": "#/definitions/enums.MimeType"
+                }
+            }
+        },
+        "presenters.TagOutput": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
