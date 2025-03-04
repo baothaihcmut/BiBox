@@ -2,7 +2,6 @@ package interactors
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"slices"
@@ -506,7 +505,6 @@ func (f *FileInteractorImpl) FindAllFileOfUser(ctx context.Context, input *prese
 		return nil, err
 	}
 	fileOutputs := make([]*presenters.FileWithPermissionOutput, len(data))
-	fmt.Println(fileOutputs[0])
 	for idx, file := range data {
 		permissionOfFile := make([]*presenters.PermissionOfFileOuput, len(file.Permissions))
 		for j, permission := range file.Permissions {

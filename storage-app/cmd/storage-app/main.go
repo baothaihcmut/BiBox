@@ -26,6 +26,7 @@ func main() {
 		log.Fatal("Error loading config:", err)
 	}
 	// Initialize logger
+
 	logger := initialize.InitializeLogger(&config.Logger)
 
 	// Initialize Gin engine
