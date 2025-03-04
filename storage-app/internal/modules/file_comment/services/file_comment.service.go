@@ -47,10 +47,42 @@ func (cs *CommentService) AddComment(fileID, userID, content string) error {
 	return cs.Repo.CreateComment(ctx, fileObjectID, userObjectID, content)
 }
 
+func (cs *CommentService) AnswerComment(commentID, userID, content string) error {
+	if commentID == "" || userID == "" || content == "" {
+		return &InvalidInputError{"All fields are required"}
+	}
+
+	// Convert commentID and userID to primitive.ObjectID
+	commentObjectID, err := primitive.ObjectIDFromHex(commentID)
+	if err != nil {
+		return &InvalidInputError{"Invalid comment ID format"}
+	}
+
+	userObjectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return &InvalidInputError{"Invalid user ID format"}
+	}
+
+	// Create a context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Call repository to answer the comment
+	return cs.Repo.AnswerComment(ctx, commentObjectID, userObjectID, content)
+}
+
 type InvalidInputError struct {
 	Message string
 }
 
 func (e *InvalidInputError) Error() string {
+	return e.Message
+}
+
+type PermissionError struct {
+	Message string
+}
+
+func (e *PermissionError) Error() string {
 	return e.Message
 }

@@ -10,12 +10,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// CommentRepo
+// CommentRepository
 type CommentRepository struct {
 	collection *mongo.Collection
 }
 
-// NewCommentRepos
+// NewCommentRepository
 func NewCommentRepository(db *mongo.Database) *CommentRepository {
 	return &CommentRepository{
 		collection: db.Collection("comments"),
@@ -45,7 +45,7 @@ func (cr *CommentRepository) FetchComments() ([]map[string]interface{}, error) {
 	return comments, nil
 }
 
-// Fix: CreateComment now accepts `primitive.ObjectID` for fileID and userID
+// CreateComment inserts a new comment into the database
 func (cr *CommentRepository) CreateComment(ctx context.Context, fileID, userID primitive.ObjectID, commentText string) error {
 	_, err := cr.collection.InsertOne(ctx, bson.M{
 		"file_id":    fileID,
@@ -62,7 +62,7 @@ func (cr *CommentRepository) CreateComment(ctx context.Context, fileID, userID p
 	return nil
 }
 
-// Fix: Convert fileID from string to `primitive.ObjectID`
+// GetCommentsByFile retrieves comments by file ID
 func (cr *CommentRepository) GetCommentsByFile(fileID string) ([]map[string]interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -70,7 +70,7 @@ func (cr *CommentRepository) GetCommentsByFile(fileID string) ([]map[string]inte
 	// Convert fileID from string to ObjectID
 	fileObjectID, err := primitive.ObjectIDFromHex(fileID)
 	if err != nil {
-		return nil, err // Invalid fileID format
+		return nil, err
 	}
 
 	cursor, err := cr.collection.Find(ctx, bson.M{"file_id": fileObjectID})
@@ -89,4 +89,29 @@ func (cr *CommentRepository) GetCommentsByFile(fileID string) ([]map[string]inte
 		comments = append(comments, comment)
 	}
 	return comments, nil
+}
+
+// AnswerComment
+func (cr *CommentRepository) AnswerComment(ctx context.Context, commentID, userID primitive.ObjectID, content string) error {
+	filter := bson.M{"_id": commentID}
+	update := bson.M{
+		"$set": bson.M{
+			"answer":      content,
+			"answered_by": userID,
+			"answered_at": time.Now(),
+		},
+	}
+
+	result, err := cr.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		log.Println("Error updating comment with answer:", err)
+		return err
+	}
+
+	if result.MatchedCount == 0 {
+		return mongo.ErrNoDocuments
+	}
+
+	log.Printf("Answered comment: commentID=%s, userID=%s, answer=%s", commentID.Hex(), userID.Hex(), content)
+	return nil
 }
