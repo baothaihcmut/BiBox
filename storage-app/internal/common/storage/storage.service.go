@@ -23,6 +23,7 @@ type GetPresignUrlArg struct {
 	Method      PresignUrlMethod
 	Key         string
 	ContentType enums.MimeType
+	Expiry      time.Duration
 }
 
 type StorageService interface {
@@ -45,7 +46,7 @@ func (s *S3StorageService) GetPresignUrl(ctx context.Context, args GetPresignUrl
 			Key:         aws.String(args.Key),
 			Bucket:      aws.String(s.cfg.Bucket),
 			ContentType: aws.String(string(args.ContentType)),
-		}, s3.WithPresignExpires(time.Hour*3))
+		}, s3.WithPresignExpires(args.Expiry))
 		if err != nil {
 			s.logger.Errorf(ctx, map[string]any{
 				"key":    args.Key,
@@ -58,7 +59,7 @@ func (s *S3StorageService) GetPresignUrl(ctx context.Context, args GetPresignUrl
 			Key:                 aws.String(args.Key),
 			Bucket:              aws.String(s.cfg.Bucket),
 			ResponseContentType: aws.String(string(args.ContentType)),
-		}, s3.WithPresignExpires(time.Hour*3))
+		}, s3.WithPresignExpires(args.Expiry))
 		if err != nil {
 			s.logger.Errorf(ctx, map[string]any{
 				"key":    args.Key,

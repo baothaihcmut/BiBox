@@ -219,6 +219,32 @@ definitions:
       url_expiry:
         type: integer
     type: object
+  presenters.FilePermissionUserInfo:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      image:
+        type: string
+      last_name:
+        type: string
+    type: object
+  presenters.FilePermssionWithUserOutput:
+    properties:
+      access_secure_file:
+        type: boolean
+      can_share:
+        type: boolean
+      file_id:
+        type: string
+      permission_type:
+        $ref: '#/definitions/enums.FilePermissionType'
+      user:
+        $ref: '#/definitions/presenters.FilePermissionUserInfo'
+      user_id:
+        type: string
+    type: object
   presenters.FileWithPermissionOutput:
     properties:
       created_at:
@@ -263,6 +289,62 @@ definitions:
       pagination:
         $ref: '#/definitions/response.PaginationResponse'
     type: object
+  presenters.GetFileDownloadUrlOutput:
+    properties:
+      content_type:
+        $ref: '#/definitions/enums.MimeType'
+      expiry:
+        type: integer
+      method:
+        type: string
+      url:
+        type: string
+    type: object
+  presenters.GetFileMetaDataOuput:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      has_password:
+        type: boolean
+      id:
+        type: string
+      is_folder:
+        type: boolean
+      is_secure:
+        type: boolean
+      name:
+        type: string
+      opened_at:
+        type: string
+      owner_id:
+        type: string
+      parent_folder_id:
+        type: string
+      storage_detail:
+        $ref: '#/definitions/presenters.StorageDetailOuput'
+      tags:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+    type: object
+  presenters.GetFilePermissionOuput:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/presenters.FilePermssionWithUserOutput'
+        type: array
+    type: object
+  presenters.GetFileTagsOutput:
+    properties:
+      tags:
+        items:
+          $ref: '#/definitions/presenters.TagOutput'
+        type: array
+    type: object
   presenters.PermissionOfFileOuput:
     properties:
       permission_type:
@@ -278,6 +360,13 @@ definitions:
         type: integer
       mime_type:
         $ref: '#/definitions/enums.MimeType'
+    type: object
+  presenters.TagOutput:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
     type: object
   presenters.UploadedFileOutput:
     properties:
@@ -533,6 +622,223 @@ paths:
               type: object
         "400":
           description: Un allow sort field, lack of query
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/:id/download-url:
+    get:
+      consumes:
+      - application/json
+      description: Get download url of file
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Find tags of file sucess
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.GetFileDownloadUrlOutput'
+              type: object
+        "400":
+          description: miss id
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "403":
+          description: permission denied
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: file not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "409":
+          description: file is folder
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/:id/metadata:
+    get:
+      consumes:
+      - application/json
+      description: Get metadata of file
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Find tags of file sucess
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.GetFileMetaDataOuput'
+              type: object
+        "400":
+          description: miss id
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "403":
+          description: permission denied
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: file not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/:id/permissions:
+    get:
+      consumes:
+      - application/json
+      description: Get permission of file
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Find tags of file sucess
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.GetFilePermissionOuput'
+              type: object
+        "400":
+          description: miss id
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "403":
+          description: permission denied
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: file not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/:id/tags:
+    get:
+      consumes:
+      - application/json
+      description: Get tag of file
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Find tags of file sucess
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.GetFileTagsOutput'
+              type: object
+        "400":
+          description: miss id
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "403":
+          description: permission denied
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: file not found
           schema:
             allOf:
             - $ref: '#/definitions/response.AppResponse'
