@@ -115,3 +115,6 @@ func (cr *CommentRepository) AnswerComment(ctx context.Context, commentID, userI
 	log.Printf("Answered comment: commentID=%s, userID=%s, answer=%s", commentID.Hex(), userID.Hex(), content)
 	return nil
 }
+
+//moi comment co 1 mang ID cua answer, mang answerID string thanh primitive.objectID
+// mang phan tu co noi dung cau tra loi, userID, answerd at, bo email
