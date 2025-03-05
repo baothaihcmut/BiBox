@@ -15,6 +15,69 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/confirm": {
+            "post": {
+                "description": "Confirm sign up",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "parameters": [
+                    {
+                        "description": "code for confirm",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ConfirmSignUpInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Confirm sign up success",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/presenter.ConfirmSignUpOutput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid confirm code",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/auth/exchange": {
             "post": {
                 "description": "Exchange Google auth code",
@@ -59,6 +122,132 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Wrong auth code",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/log-in": {
+            "post": {
+                "description": "Log in",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "parameters": [
+                    {
+                        "description": "information for log in",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/presenter.LogInInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Login success",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Wrong password or email",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/sign-up": {
+            "post": {
+                "description": "Sign up",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "parameters": [
+                    {
+                        "description": "information for sign up",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/presenter.SignUpInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Sign up success",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/presenter.SignUpOutput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "409": {
+                        "description": "Email exist, email is pending for cofirm",
                         "schema": {
                             "allOf": [
                                 {
@@ -130,6 +319,12 @@ const docTemplate = `{
                         "name": "limit",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "mime type of file, if is_folder is true not pass mime_type",
+                        "name": "mime_type",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -170,7 +365,88 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/files/:id/uploaded": {
+            "patch": {
+                "description": "Uploaded file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "file id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Uploaded file sucess",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/presenters.UploadedFileOutput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "file is folder",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "file not found",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/files/add": {
             "post": {
                 "description": "Create new file",
                 "consumes": [
@@ -250,95 +526,182 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/files/uploaded": {
-            "patch": {
-                "description": "Uploaded file",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "files"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "file id",
-                        "name": "file",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Uploaded file sucess",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/presenters.UploadedFileOutput"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "403": {
-                        "description": "file is folder",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "404": {
-                        "description": "file not found",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
+        "enums.FilePermissionType": {
+            "type": "integer",
+            "enum": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "x-enum-varnames": [
+                "ViewPermission",
+                "CommentPermission",
+                "EditPermission",
+                "OwnerPermission"
+            ]
+        },
+        "enums.MimeType": {
+            "type": "string",
+            "enum": [
+                "image/jpeg",
+                "image/png",
+                "image/gif",
+                "image/bmp",
+                "image/webp",
+                "image/tiff",
+                "image/svg+xml",
+                "application/pdf",
+                "application/msword",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "application/vnd.ms-excel",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "application/vnd.ms-powerpoint",
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                "text/plain",
+                "text/csv",
+                "application/json",
+                "application/xml",
+                "application/x-yaml",
+                "audio/mpeg",
+                "audio/wav",
+                "audio/ogg",
+                "audio/flac",
+                "audio/aac",
+                "video/mp4",
+                "video/webm",
+                "video/x-msvideo",
+                "video/quicktime",
+                "video/x-matroska",
+                "application/zip",
+                "application/vnd.rar",
+                "application/x-7z-compressed",
+                "application/x-tar",
+                "application/gzip",
+                "text/html",
+                "text/css",
+                "application/javascript",
+                "text/x-go",
+                "text/x-python",
+                "application/x-sh",
+                "application/x-msdownload",
+                "application/octet-stream"
+            ],
+            "x-enum-varnames": [
+                "MimeJPG",
+                "MimePNG",
+                "MimeGIF",
+                "MimeBMP",
+                "MimeWEBP",
+                "MimeTIFF",
+                "MimeSVG",
+                "MimePDF",
+                "MimeDOC",
+                "MimeDOCX",
+                "MimeXLS",
+                "MimeXLSX",
+                "MimePPT",
+                "MimePPTX",
+                "MimeTXT",
+                "MimeCSV",
+                "MimeJSON",
+                "MimeXML",
+                "MimeYAML",
+                "MimeMP3",
+                "MimeWAV",
+                "MimeOGG",
+                "MimeFLAC",
+                "MimeAAC",
+                "MimeMP4",
+                "MimeWebM",
+                "MimeAVI",
+                "MimeMOV",
+                "MimeMKV",
+                "MimeZIP",
+                "MimeRAR",
+                "Mime7z",
+                "MimeTAR",
+                "MimeGZIP",
+                "MimeHTML",
+                "MimeCSS",
+                "MimeJS",
+                "MimeGo",
+                "MimePython",
+                "MimeShell",
+                "MimeEXE",
+                "MimeBIN"
+            ]
+        },
+        "presenter.ConfirmSignUpInput": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                }
+            }
+        },
+        "presenter.ConfirmSignUpOutput": {
+            "type": "object"
+        },
         "presenter.ExchangeTokenInput": {
             "type": "object",
             "properties": {
                 "auth_code": {
                     "type": "string"
+                },
+                "provider": {
+                    "type": "integer",
+                    "maximum": 2,
+                    "minimum": 1
                 }
             }
+        },
+        "presenter.LogInInput": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "presenter.SignUpInput": {
+            "type": "object",
+            "required": [
+                "first_name",
+                "last_name",
+                "password",
+                "repeat_password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "repeat_password": {
+                    "type": "string"
+                }
+            }
+        },
+        "presenter.SignUpOutput": {
+            "type": "object"
         },
         "presenters.CreateFileInput": {
             "type": "object",
@@ -373,11 +736,11 @@ const docTemplate = `{
                 "storage_detail": {
                     "type": "object",
                     "required": [
-                        "file_type",
+                        "mime_type",
                         "size"
                     ],
                     "properties": {
-                        "file_type": {
+                        "mime_type": {
                             "description": "Required field",
                             "type": "string"
                         },
@@ -448,7 +811,7 @@ const docTemplate = `{
                 }
             }
         },
-        "presenters.FileOutput": {
+        "presenters.FileWithPermissionOutput": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -481,6 +844,12 @@ const docTemplate = `{
                 "parent_folder_id": {
                     "type": "string"
                 },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/presenters.PermissionOfFileOuput"
+                    }
+                },
                 "storage_detail": {
                     "$ref": "#/definitions/presenters.StorageDetailOuput"
                 },
@@ -498,11 +867,28 @@ const docTemplate = `{
         "presenters.FindFileOfUserOuput": {
             "type": "object",
             "properties": {
-                "files": {
+                "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/presenters.FileOutput"
+                        "$ref": "#/definitions/presenters.FileWithPermissionOutput"
                     }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/response.PaginationResponse"
+                }
+            }
+        },
+        "presenters.PermissionOfFileOuput": {
+            "type": "object",
+            "properties": {
+                "permission_type": {
+                    "$ref": "#/definitions/enums.FilePermissionType"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "user_image": {
+                    "type": "string"
                 }
             }
         },
@@ -512,8 +898,8 @@ const docTemplate = `{
                 "file_size": {
                     "type": "integer"
                 },
-                "file_type": {
-                    "type": "string"
+                "mime_type": {
+                    "$ref": "#/definitions/enums.MimeType"
                 }
             }
         },
@@ -572,6 +958,32 @@ const docTemplate = `{
                 },
                 "sucess": {
                     "type": "boolean"
+                }
+            }
+        },
+        "response.PaginationResponse": {
+            "type": "object",
+            "properties": {
+                "has_next": {
+                    "type": "boolean"
+                },
+                "has_prev": {
+                    "type": "boolean"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "next_offset": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "prev_offset": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         }

@@ -1,9 +1,150 @@
 basePath: /api/v1
 definitions:
+  enums.FilePermissionType:
+    enum:
+    - 1
+    - 2
+    - 3
+    - 4
+    type: integer
+    x-enum-varnames:
+    - ViewPermission
+    - CommentPermission
+    - EditPermission
+    - OwnerPermission
+  enums.MimeType:
+    enum:
+    - image/jpeg
+    - image/png
+    - image/gif
+    - image/bmp
+    - image/webp
+    - image/tiff
+    - image/svg+xml
+    - application/pdf
+    - application/msword
+    - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    - application/vnd.ms-excel
+    - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+    - application/vnd.ms-powerpoint
+    - application/vnd.openxmlformats-officedocument.presentationml.presentation
+    - text/plain
+    - text/csv
+    - application/json
+    - application/xml
+    - application/x-yaml
+    - audio/mpeg
+    - audio/wav
+    - audio/ogg
+    - audio/flac
+    - audio/aac
+    - video/mp4
+    - video/webm
+    - video/x-msvideo
+    - video/quicktime
+    - video/x-matroska
+    - application/zip
+    - application/vnd.rar
+    - application/x-7z-compressed
+    - application/x-tar
+    - application/gzip
+    - text/html
+    - text/css
+    - application/javascript
+    - text/x-go
+    - text/x-python
+    - application/x-sh
+    - application/x-msdownload
+    - application/octet-stream
+    type: string
+    x-enum-varnames:
+    - MimeJPG
+    - MimePNG
+    - MimeGIF
+    - MimeBMP
+    - MimeWEBP
+    - MimeTIFF
+    - MimeSVG
+    - MimePDF
+    - MimeDOC
+    - MimeDOCX
+    - MimeXLS
+    - MimeXLSX
+    - MimePPT
+    - MimePPTX
+    - MimeTXT
+    - MimeCSV
+    - MimeJSON
+    - MimeXML
+    - MimeYAML
+    - MimeMP3
+    - MimeWAV
+    - MimeOGG
+    - MimeFLAC
+    - MimeAAC
+    - MimeMP4
+    - MimeWebM
+    - MimeAVI
+    - MimeMOV
+    - MimeMKV
+    - MimeZIP
+    - MimeRAR
+    - Mime7z
+    - MimeTAR
+    - MimeGZIP
+    - MimeHTML
+    - MimeCSS
+    - MimeJS
+    - MimeGo
+    - MimePython
+    - MimeShell
+    - MimeEXE
+    - MimeBIN
+  presenter.ConfirmSignUpInput:
+    properties:
+      code:
+        type: string
+    type: object
+  presenter.ConfirmSignUpOutput:
+    type: object
   presenter.ExchangeTokenInput:
     properties:
       auth_code:
         type: string
+      provider:
+        maximum: 2
+        minimum: 1
+        type: integer
+    type: object
+  presenter.LogInInput:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  presenter.SignUpInput:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+      repeat_password:
+        type: string
+    required:
+    - first_name
+    - last_name
+    - password
+    - repeat_password
+    type: object
+  presenter.SignUpOutput:
     type: object
   presenters.CreateFileInput:
     properties:
@@ -26,14 +167,14 @@ definitions:
         type: string
       storage_detail:
         properties:
-          file_type:
+          mime_type:
             description: Required field
             type: string
           size:
             description: Required field
             type: integer
         required:
-        - file_type
+        - mime_type
         - size
         type: object
       tags:
@@ -78,7 +219,7 @@ definitions:
       url_expiry:
         type: integer
     type: object
-  presenters.FileOutput:
+  presenters.FileWithPermissionOutput:
     properties:
       created_at:
         type: string
@@ -100,6 +241,10 @@ definitions:
         type: string
       parent_folder_id:
         type: string
+      permissions:
+        items:
+          $ref: '#/definitions/presenters.PermissionOfFileOuput'
+        type: array
       storage_detail:
         $ref: '#/definitions/presenters.StorageDetailOuput'
       tags:
@@ -111,17 +256,28 @@ definitions:
     type: object
   presenters.FindFileOfUserOuput:
     properties:
-      files:
+      data:
         items:
-          $ref: '#/definitions/presenters.FileOutput'
+          $ref: '#/definitions/presenters.FileWithPermissionOutput'
         type: array
+      pagination:
+        $ref: '#/definitions/response.PaginationResponse'
+    type: object
+  presenters.PermissionOfFileOuput:
+    properties:
+      permission_type:
+        $ref: '#/definitions/enums.FilePermissionType'
+      user_id:
+        type: string
+      user_image:
+        type: string
     type: object
   presenters.StorageDetailOuput:
     properties:
       file_size:
         type: integer
-      file_type:
-        type: string
+      mime_type:
+        $ref: '#/definitions/enums.MimeType'
     type: object
   presenters.UploadedFileOutput:
     properties:
@@ -161,6 +317,23 @@ definitions:
       sucess:
         type: boolean
     type: object
+  response.PaginationResponse:
+    properties:
+      has_next:
+        type: boolean
+      has_prev:
+        type: boolean
+      limit:
+        type: integer
+      next_offset:
+        type: integer
+      offset:
+        type: integer
+      prev_offset:
+        type: integer
+      total:
+        type: integer
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -168,6 +341,41 @@ info:
   title: Storage App API
   version: "1.0"
 paths:
+  /auth/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Confirm sign up
+      parameters:
+      - description: code for confirm
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presenter.ConfirmSignUpInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Confirm sign up success
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenter.ConfirmSignUpOutput'
+              type: object
+        "401":
+          description: Invalid confirm code
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - auth
   /auth/exchange:
     post:
       consumes:
@@ -194,6 +402,76 @@ paths:
               type: object
         "401":
           description: Wrong auth code
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - auth
+  /auth/log-in:
+    post:
+      consumes:
+      - application/json
+      description: Log in
+      parameters:
+      - description: information for log in
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presenter.LogInInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Login success
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Wrong password or email
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - auth
+  /auth/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: Sign up
+      parameters:
+      - description: information for sign up
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presenter.SignUpInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Sign up success
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenter.SignUpOutput'
+              type: object
+        "409":
+          description: Email exist, email is pending for cofirm
           schema:
             allOf:
             - $ref: '#/definitions/response.AppResponse'
@@ -237,6 +515,10 @@ paths:
         name: limit
         required: true
         type: integer
+      - description: mime type of file, if is_folder is true not pass mime_type
+        in: query
+        name: mime_type
+        type: string
       produces:
       - application/json
       responses:
@@ -260,6 +542,50 @@ paths:
               type: object
       tags:
       - files
+  /files/:id/uploaded:
+    patch:
+      consumes:
+      - application/json
+      description: Uploaded file
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Uploaded file sucess
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.UploadedFileOutput'
+              type: object
+        "403":
+          description: file is folder
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: file not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/add:
     post:
       consumes:
       - application/json
@@ -295,49 +621,6 @@ paths:
               type: object
         "404":
           description: Parent folder not found, Tag of file not found
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.AppResponse'
-            - properties:
-                data:
-                  type: object
-              type: object
-      tags:
-      - files
-  /files/uploaded:
-    patch:
-      consumes:
-      - application/json
-      description: Uploaded file
-      parameters:
-      - description: file id
-        in: path
-        name: file
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Uploaded file sucess
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.AppResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/presenters.UploadedFileOutput'
-              type: object
-        "403":
-          description: file is folder
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.AppResponse'
-            - properties:
-                data:
-                  type: object
-              type: object
-        "404":
-          description: file not found
           schema:
             allOf:
             - $ref: '#/definitions/response.AppResponse'

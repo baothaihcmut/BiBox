@@ -39,7 +39,8 @@ func NewServer(
 
 func (s *Server) initApp() {
 	//init global middleware
-	s.router.RegisterGlobal(middlewares.ExtractEventMiddleware)
+	s.router.RegisterGlobal(middlewares.ExtractHeaderMiddleware)
+	s.router.RegisterGlobal(middlewares.LoggingMiddleware)
 	//init service
 	mailService := services.NewGmailService(s.mailDialer, &s.cfg.Mail)
 	userMailService := services.NewUserMailService(mailService)

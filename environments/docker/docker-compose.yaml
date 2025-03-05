@@ -29,6 +29,12 @@ services:
     networks:
       - app-network
       - reverse-proxy
+  email-service:
+    image: baothaihcmut/storage-app-email-service
+    volumes:
+      - ./config-email-service/config.yaml:/app/config/config.yaml
+    networks:
+      - app-network
 networks:
   app-network:
   reverse-proxy:

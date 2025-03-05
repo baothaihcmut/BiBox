@@ -1,5 +1,10 @@
 package enums
 
+import (
+	"mime"
+	"path/filepath"
+)
+
 // MimeType represents supported MIME types as an enum
 type MimeType string
 
@@ -61,6 +66,57 @@ const (
 	MimeBIN MimeType = "application/octet-stream"
 )
 
+var MimeTypeMap = map[string]MimeType{
+	"image/jpeg":    MimeJPG,
+	"image/png":     MimePNG,
+	"image/gif":     MimeGIF,
+	"image/bmp":     MimeBMP,
+	"image/webp":    MimeWEBP,
+	"image/tiff":    MimeTIFF,
+	"image/svg+xml": MimeSVG,
+
+	"application/pdf":    MimePDF,
+	"application/msword": MimeDOC,
+	"application/vnd.openxmlformats-officedocument.wordprocessingml.document": MimeDOCX,
+	"application/vnd.ms-excel": MimeXLS,
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":         MimeXLSX,
+	"application/vnd.ms-powerpoint":                                             MimePPT,
+	"application/vnd.openxmlformats-officedocument.presentationml.presentation": MimePPTX,
+	"text/plain":         MimeTXT,
+	"text/csv":           MimeCSV,
+	"application/json":   MimeJSON,
+	"application/xml":    MimeXML,
+	"application/x-yaml": MimeYAML,
+
+	"audio/mpeg": MimeMP3,
+	"audio/wav":  MimeWAV,
+	"audio/ogg":  MimeOGG,
+	"audio/flac": MimeFLAC,
+	"audio/aac":  MimeAAC,
+
+	"video/mp4":        MimeMP4,
+	"video/webm":       MimeWebM,
+	"video/x-msvideo":  MimeAVI,
+	"video/quicktime":  MimeMOV,
+	"video/x-matroska": MimeMKV,
+
+	"application/zip":             MimeZIP,
+	"application/vnd.rar":         MimeRAR,
+	"application/x-7z-compressed": Mime7z,
+	"application/x-tar":           MimeTAR,
+	"application/gzip":            MimeGZIP,
+
+	"text/html":              MimeHTML,
+	"text/css":               MimeCSS,
+	"application/javascript": MimeJS,
+	"text/x-go":              MimeGo,
+	"text/x-python":          MimePython,
+	"application/x-sh":       MimeShell,
+
+	"application/x-msdownload": MimeEXE,
+	"application/octet-stream": MimeBIN,
+}
+
 // Function to check if a MIME type is allowed
 func IsAllowedMimeType(mimeType MimeType) bool {
 	allowedMimeTypes := map[MimeType]bool{
@@ -75,4 +131,17 @@ func IsAllowedMimeType(mimeType MimeType) bool {
 		MimeZIP:  true,
 	}
 	return allowedMimeTypes[mimeType]
+}
+
+func MapToMimeType(fileName, fallback string) MimeType {
+	ext := filepath.Ext(fileName)
+	mimeStr := mime.TypeByExtension(ext)
+	if mimeStr == "" {
+		mimeStr = fallback
+	}
+	if mimeType, exist := MimeTypeMap[mimeStr]; exist {
+		return mimeType
+	} else {
+		return MimeBIN
+	}
 }

@@ -53,13 +53,13 @@ func (g *GitHubUserInfo) GetAuthProvider() string {
 func (o *GithubOauth2Service) ExchangeToken(ctx context.Context, authCode string) (UserInfo, error) {
 	token, err := o.oauth2Config.Exchange(ctx, authCode)
 	if err != nil {
-		o.logger.Errorf(ctx, map[string]interface{}{
+		o.logger.Errorf(ctx, map[string]any{
 			"authCode": authCode,
 		}, "Error exchanging GitHub token:", err)
 		return nil, err
 	}
 
-	o.logger.Debug(ctx, map[string]interface{}{
+	o.logger.Debug(ctx, map[string]any{
 		"token": token.AccessToken,
 	}, "Exchange token success")
 
@@ -106,7 +106,7 @@ func (o *GithubOauth2Service) ExchangeToken(ctx context.Context, authCode string
 		}
 	}
 
-	o.logger.Debug(ctx, map[string]interface{}{
+	o.logger.Debug(ctx, map[string]any{
 		"email": user.Email,
 	}, "Get GitHub user info success")
 

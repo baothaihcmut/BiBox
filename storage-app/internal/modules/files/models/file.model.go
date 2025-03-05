@@ -29,7 +29,7 @@ type File struct {
 	IsDeleted      bool                 `bson:"is_deleted"`
 	DeletedAt      *time.Time           `bson:"deleted_at"`
 	IsSecure       bool                 `bson:"is_secure"`
-	TagIDs         []primitive.ObjectID `bson:"tags"` // Store references to Tag IDs
+	TagIDs         []primitive.ObjectID `bson:"tag_ids"`
 	StorageDetail  *FileStorageDetail   `bson:"storage_detail"`
 }
 

@@ -21,8 +21,12 @@ var (
 	ErrUserForbiddenFile          = errors.New("user don't have permission access this file")
 	ErrEmailExist                 = errors.New("email exist")
 	ErrInvalidConfirmCode         = errors.New("invalid confirm code")
-	ErrUnauthorized               = errors.New("unauthorized access")
-	ErrPermissionDenied           = errors.New("permission denied")
+	ErrUserPedingSignUpConfirm    = errors.New("user is pending for sign up confirm")
+	ErrMismatchPassword           = errors.New("password mismatch")
+	ErrWrongPasswordOrEmail       = errors.New("wrong password or email")
+
+	ErrUnauthorized     = errors.New("unauthorized access")
+	ErrPermissionDenied = errors.New("permission denied")
 )
 var errMap = map[error]int{
 	ErrTokenExpire:                http.StatusUnauthorized,
@@ -38,7 +42,11 @@ var errMap = map[error]int{
 	ErrUnSupportOutputImageType:   http.StatusBadRequest,
 	ErrUserForbiddenFile:          http.StatusForbidden,
 	ErrEmailExist:                 http.StatusNotFound,
-	ErrInvalidConfirmCode:         http.StatusNotFound,
+	ErrInvalidConfirmCode:         http.StatusUnauthorized,
+	ErrUserPedingSignUpConfirm:    http.StatusConflict,
+	ErrPermissionDenied:           http.StatusForbidden,
+	ErrMismatchPassword:           http.StatusConflict,
+	ErrWrongPasswordOrEmail:       http.StatusUnauthorized,
 }
 
 func ErrorStatusMapper(err error) int {

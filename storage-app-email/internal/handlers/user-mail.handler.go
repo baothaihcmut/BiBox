@@ -7,6 +7,7 @@ import (
 	"github.com/IBM/sarama"
 	"github.com/baothaihcmut/BiBox/libs/pkg/events/users"
 	"github.com/baothaihcmut/BiBox/storage-app-email/internal/constant"
+	"github.com/baothaihcmut/BiBox/storage-app-email/internal/middlewares"
 	"github.com/baothaihcmut/BiBox/storage-app-email/internal/router"
 	"github.com/baothaihcmut/BiBox/storage-app-email/internal/services"
 )
@@ -32,7 +33,7 @@ func (u *UserHandlerImpl) handleConfirmSignUp(ctx context.Context, msg *sarama.C
 	return nil
 }
 func (u *UserHandlerImpl) Init(r router.MessageRouter) {
-	r.Register("user.sign_up", u.handleConfirmSignUp)
+	r.Register("user.sign_up", u.handleConfirmSignUp, middlewares.ExtractEventMiddleware[users.UserSignUpEvent]())
 }
 func NewUserHandler(service services.UserMailService) UserHandler {
 	return &UserHandlerImpl{

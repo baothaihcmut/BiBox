@@ -47,7 +47,7 @@ func (s *S3StorageService) GetPresignUrl(ctx context.Context, args GetPresignUrl
 			ContentType: aws.String(string(args.ContentType)),
 		}, s3.WithPresignExpires(time.Hour*3))
 		if err != nil {
-			s.logger.Errorf(ctx, map[string]interface{}{
+			s.logger.Errorf(ctx, map[string]any{
 				"key":    args.Key,
 				"bucket": s.cfg.Bucket,
 			}, "Error get presign url for put object:", err)
@@ -60,7 +60,7 @@ func (s *S3StorageService) GetPresignUrl(ctx context.Context, args GetPresignUrl
 			ResponseContentType: aws.String(string(args.ContentType)),
 		}, s3.WithPresignExpires(time.Hour*3))
 		if err != nil {
-			s.logger.Errorf(ctx, map[string]interface{}{
+			s.logger.Errorf(ctx, map[string]any{
 				"key":    args.Key,
 				"bucket": s.cfg.Bucket,
 			}, "Error get presign url for get object:", err)
@@ -82,7 +82,7 @@ func (s *S3StorageService) GetFile(ctx context.Context, key string) (io.ReadClos
 		Bucket: aws.String(s.cfg.Bucket),
 	})
 	if err != nil {
-		s.logger.Errorf(ctx, map[string]interface{}{
+		s.logger.Errorf(ctx, map[string]any{
 			"key":    key,
 			"bucket": s.cfg.Bucket,
 		}, "Error get object from storage: ", err)

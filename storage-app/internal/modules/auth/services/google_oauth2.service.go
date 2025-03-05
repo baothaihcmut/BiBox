@@ -39,12 +39,12 @@ type GoogleOauth2Service struct {
 func (o *GoogleOauth2Service) ExchangeToken(ctx context.Context, authCode string) (UserInfo, error) {
 	token, err := o.oauth2Config.Exchange(ctx, authCode)
 	if err != nil {
-		o.logger.Errorf(ctx, map[string]interface{}{
+		o.logger.Errorf(ctx, map[string]any{
 			"authCode": authCode,
 		}, "Error exchange google token:", err)
 		return nil, err
 	}
-	o.logger.Debug(ctx, map[string]interface{}{
+	o.logger.Debug(ctx, map[string]any{
 		"token": token,
 	}, "Exchange token success")
 	client := o.oauth2Config.Client(ctx, token)
@@ -58,7 +58,7 @@ func (o *GoogleOauth2Service) ExchangeToken(ctx context.Context, authCode string
 	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
 		o.logger.Errorf(ctx, nil, "Error decode user info:", err)
 	}
-	o.logger.Debug(ctx, map[string]interface{}{
+	o.logger.Debug(ctx, map[string]any{
 		"email": userInfo.Email,
 	}, "Get user info success")
 

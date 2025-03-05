@@ -6,7 +6,6 @@ import (
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/constant"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
-	"github.com/baothaihcmut/Bibox/storage-app/internal/common/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -17,21 +16,19 @@ func LoggingMiddleware(logger logger.Logger) gin.HandlerFunc {
 		requestId := uuid.New()
 		c.Set(string(constant.RequestIdContext), requestId.String())
 		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), constant.RequestIdContext, requestId.String()))
-		logger.Debug(c.Request.Context(), map[string]interface{}{
+		logger.Debug(c.Request.Context(), map[string]any{
 			"uri":    c.Request.URL.String(),
 			"method": c.Request.Method,
 		}, "Incoming request")
 		c.Next()
 		status := c.Writer.Status()
-		logger.Debug(c.Request.Context(), map[string]interface{}{
+		logger.Debug(c.Request.Context(), map[string]any{
 			"status": status,
 		}, "Outgoing response")
 		if status == http.StatusInternalServerError {
 			//get user context
-			userContext, _ := c.Get(string(constant.UserContext))
-			logger.Error(c.Request.Context(), map[string]interface{}{
-				"user_id": userContext.(*models.UserContext).Id,
-				"detail":  c.Errors,
+			logger.Error(c.Request.Context(), map[string]any{
+				"detail": c.Errors,
 			}, c.Errors[0].Error())
 		}
 	}

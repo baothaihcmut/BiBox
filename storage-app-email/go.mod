@@ -4,7 +4,7 @@ go 1.23.2
 
 require (
 	github.com/IBM/sarama v1.45.0
-	github.com/baothaihcmut/BiBox/libs v1.0.0
+	github.com/baothaihcmut/BiBox/libs v1.0.1
 	github.com/spf13/viper v1.19.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )

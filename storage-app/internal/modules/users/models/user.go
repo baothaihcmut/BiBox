@@ -34,7 +34,7 @@ func NewUser(firstName, lastName, email, authProvider string, image, password *s
 		UpdatedAt:          primitive.NewDateTimeFromTime(time.Now()),
 		AuthProvider:       authProvider,
 		CurrentStorageSize: 0,
-		LimitStorageSize:   100,
+		LimitStorageSize:   100 * (1024 ^ 3),
 	}
 }
 

@@ -29,7 +29,7 @@ func NewMongoUserRepository(collection *mongo.Collection, logger logger.Logger) 
 func (m *MongoUserRepository) CreateUser(ctx context.Context, user *models.User) error {
 	_, err := m.collection.InsertOne(ctx, user)
 	if err != nil {
-		m.logger.Errorf(ctx, map[string]interface{}{
+		m.logger.Errorf(ctx, map[string]any{
 			"component":  "repository",
 			"user_email": user.Email,
 		}, "Error insert document to Mongo:", err)
@@ -47,7 +47,7 @@ func (m *MongoUserRepository) FindUserByEmail(ctx context.Context, email string)
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
 		}
-		m.logger.Errorf(ctx, map[string]interface{}{
+		m.logger.Errorf(ctx, map[string]any{
 			"component":  "repository",
 			"user_email": user.Email,
 		}, "Error find user document from Mongo by email:", err)
@@ -65,7 +65,7 @@ func (m *MongoUserRepository) UpdateUserStorageSize(ctx context.Context, user *m
 		},
 	})
 	if err != nil {
-		m.logger.Errorf(ctx, map[string]interface{}{
+		m.logger.Errorf(ctx, map[string]any{
 			"storage_size": user.CurrentStorageSize,
 			"user_id":      user.ID.Hex(),
 		}, "Error update user storage size in mongo : ", err)
@@ -83,7 +83,7 @@ func (m *MongoUserRepository) FindUserById(ctx context.Context, id primitive.Obj
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
 		}
-		m.logger.Errorf(ctx, map[string]interface{}{
+		m.logger.Errorf(ctx, map[string]any{
 			"component":  "repository",
 			"user_email": user.Email,
 		}, "Error find user document from Mongo by id:", err)

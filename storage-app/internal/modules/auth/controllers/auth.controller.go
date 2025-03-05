@@ -43,8 +43,73 @@ func (a *AuthControllerImpl) handleExchangeToken(c *gin.Context) {
 		return
 	}
 	//set cookie
-	c.SetCookie("access_token", res.AccessToken, a.jwtConfig.AccessToken.Age*60*60, "/", "localhost:300", false, true)
-	c.SetCookie("refresh_token", res.RefreshToken, a.jwtConfig.RefreshToken.Age*60*60, "/", "localhost:300", false, true)
+	c.SetCookie("access_token", res.AccessToken, a.jwtConfig.AccessToken.Age*60*60, "/", " spsohcmut.xyz", true, true)
+	c.SetCookie("refresh_token", res.RefreshToken, a.jwtConfig.RefreshToken.Age*60*60, "/", "spsohcmut.xyz", true, true)
+	c.JSON(http.StatusCreated, response.InitResponse[any](true, "Login sucess", nil))
+}
+
+// @Sumary Sign up
+// @Description Sign up
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body presenter.SignUpInput true "information for sign up"
+// @Success 201 {object} response.AppResponse{data=presenter.SignUpOutput} "Sign up success"
+// @Failure 409 {object} response.AppResponse{data=nil} "Email exist, email is pending for cofirm"
+//
+//	@Router   /auth/sign-up [post]
+func (a *AuthControllerImpl) handleSignUp(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := a.authInteractor.SignUp(c.Request.Context(), payload.(*presenter.SignUpInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusCreated, response.InitResponse(true, "Sign up sucess, please check your email for confirmation", res))
+}
+
+// @Sumary Confirm sign up
+// @Description Confirm sign up
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body presenter.ConfirmSignUpInput true "code for confirm"
+// @Success 201 {object} response.AppResponse{data=presenter.ConfirmSignUpOutput} "Confirm sign up success"
+// @Failure 401 {object} response.AppResponse{data=nil} "Invalid confirm code"
+//
+//	@Router   /auth/confirm [post]
+func (a *AuthControllerImpl) handleConfirmSignUp(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := a.authInteractor.ConfirmSignUp(c.Request.Context(), payload.(*presenter.ConfirmSignUpInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusCreated, response.InitResponse(true, "Confirm sign up success, please login again", res))
+}
+
+// @Sumary Log in
+// @Description Log in
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body presenter.LogInInput true "information for log in"
+// @Success 201 {object} response.AppResponse{data=nil} "Login success"
+// @Failure 401 {object} response.AppResponse{data=nil} "Wrong password or email"
+//
+//	@Router   /auth/log-in [post]
+func (a *AuthControllerImpl) handleLogIn(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := a.authInteractor.LogIn(c.Request.Context(), payload.(*presenter.LogInInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.SetCookie("access_token", res.AccessToken, a.jwtConfig.AccessToken.Age*60*60, "/", " spsohcmut.xyz", true, true)
+	c.SetCookie("refresh_token", res.RefreshToken, a.jwtConfig.RefreshToken.Age*60*60, "/", "spsohcmut.xyz", true, true)
 	c.JSON(http.StatusCreated, response.InitResponse[any](true, "Login sucess", nil))
 }
 
@@ -54,6 +119,21 @@ func (a *AuthControllerImpl) Init(g *gin.RouterGroup) {
 		"/exchange",
 		middleware.ValidateMiddleware[presenter.ExchangeTokenInput](false, binding.JSON),
 		a.handleExchangeToken,
+	)
+	external.POST(
+		"/sign-up",
+		middleware.ValidateMiddleware[presenter.SignUpInput](false, binding.JSON),
+		a.handleSignUp,
+	)
+	external.POST(
+		"/confirm",
+		middleware.ValidateMiddleware[presenter.ConfirmSignUpInput](false, binding.JSON),
+		a.handleConfirmSignUp,
+	)
+	external.POST(
+		"/log-in",
+		middleware.ValidateMiddleware[presenter.LogInInput](false, binding.JSON),
+		a.handleLogIn,
 	)
 	external.GET("/callback", func(c *gin.Context) {
 		authCode := c.Query("code")

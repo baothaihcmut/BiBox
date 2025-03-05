@@ -21,6 +21,15 @@ func (r *RedisService) Remove(ctx context.Context, key string) error {
 	return nil
 }
 
+// Remove implements CacheService.
+func (r *RedisService) Remove(ctx context.Context, key string) error {
+	err := r.client.Del(ctx, key).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *RedisService) SetValue(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
 	val, err := json.Marshal(value)
 	if err != nil {

@@ -22,8 +22,6 @@ import (
 	authController "github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/controllers"
 	authInteractors "github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/interactors"
 	authService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/services"
-	fileCommentRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_comment/repositories"
-	fileCommentService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_comment/services"
 	filePermssionRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/repositories"
 	filePermissionService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/services"
 	fileController "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/controllers"
@@ -75,7 +73,6 @@ func NewServer(
 		s3:            s3,
 	}
 }
-
 func (s *Server) initApp() {
 	//init cors
 
@@ -89,7 +86,6 @@ func (s *Server) initApp() {
 	fileRepo := fileRepo.NewMongoFileRepo(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("files"), logger)
 	tagRepo := tagRepo.NewMongoTagRepository(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("tags"), logger)
 	filePermssionRepo := filePermssionRepo.NewPermissionRepository(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("file_permissions"), logger)
-	fileCommentRepo := fileCommentRepo.NewCommentRepository(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("file_comments"), logger)
 
 	//init service
 	userJwtService := authService.NewUserJwtService(s.config.Jwt, logger)
@@ -102,7 +98,6 @@ func (s *Server) initApp() {
 	mongoService := mongoLib.NewMongoTransactionService(s.mongo)
 	passwordService := authService.NewPasswordService()
 	filePermssionService := filePermissionService.NewPermissionService(filePermssionRepo)
-	fileCommentService := fileCommentService.NewCommentService(fileCommentRepo)
 
 	//init interactor
 	authInteractor := authInteractors.NewAuthInteractor(oauth2SerivceFactory, userRepo, userJwtService, logger, userConfirmService, mongoService, passwordService)
