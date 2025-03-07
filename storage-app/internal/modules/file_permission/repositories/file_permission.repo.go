@@ -11,6 +11,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+type PermissionRepository struct {
+	Collection *mongo.Collection
+}
+
 type FilterPermssionOption int
 
 const (
