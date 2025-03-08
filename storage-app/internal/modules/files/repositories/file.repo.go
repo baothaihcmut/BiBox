@@ -15,7 +15,7 @@ import (
 
 type FindFileOfUserArg struct {
 	IsFolder       *bool
-	ParentFolderId *string
+	ParentFolderId *primitive.ObjectID
 	SortBy         string
 	IsAsc          bool
 	Offset         int
@@ -28,13 +28,62 @@ type FindFileOfUserArg struct {
 type FileRepository interface {
 	CreateFile(context.Context, *models.File) error
 	FindFileById(ctx context.Context, id primitive.ObjectID, isDeleted bool) (*models.File, error)
-	UploadedFile(context.Context, *models.File) error
+	UpdateFile(context.Context, *models.File) error
 	FindAllFileOfUserWithPermssionAndCount(ctx context.Context, userId primitive.ObjectID, args FindFileOfUserArg) ([]*models.FileWithPermission, int64, error)
+	GetSubFileRecursive(context.Context, primitive.ObjectID, []primitive.ObjectID) ([]*models.File, error)
 }
 
 type MongoFileRepository struct {
 	collection *mongo.Collection
 	logger     logger.Logger
+}
+
+// GetSubFile implements FileRepository.
+func (f *MongoFileRepository) GetSubFileRecursive(ctx context.Context, fileId primitive.ObjectID, excludeFileIds []primitive.ObjectID) ([]*models.File, error) {
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{Key: "$match", Value: bson.D{{Key: "_id", Value: fileId}}},
+		},
+		bson.D{
+			{Key: "$graphLookup", Value: bson.D{
+				{Key: "from", Value: "files"},
+				{Key: "startWith", Value: "$_id"}, // Use actual ObjectID
+				{Key: "connectFromField", Value: "_id"},
+				{Key: "connectToField", Value: "parent_folder_id"},
+				{Key: "as", Value: "sub_files"},
+				{Key: "restrictSearchWithMatch", Value: bson.D{
+					{Key: "$nin", Value: excludeFileIds},
+				}},
+			}},
+		},
+		bson.D{
+			{Key: "$project", Value: bson.D{
+				{Key: "sub_files", Value: 1},
+			}},
+		},
+	}
+
+	cursor, err := f.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	// Define a result struct
+
+	var subFiles []*struct {
+		SubFiles []*models.File `bson:"sub_files"`
+	}
+	if err := cursor.All(ctx, &subFiles); err != nil {
+		return nil, err
+	}
+
+	// Check if result is empty
+	if len(subFiles) == 0 || len(subFiles[0].SubFiles) == 0 {
+		return nil, nil
+	}
+
+	fmt.Println(subFiles)
+	return subFiles[0].SubFiles, nil
 }
 
 func (f *MongoFileRepository) CreateFile(ctx context.Context, file *models.File) error {
@@ -64,13 +113,15 @@ func (f *MongoFileRepository) FindFileById(ctx context.Context, id primitive.Obj
 	return &res, nil
 }
 
-func (f *MongoFileRepository) UploadedFile(ctx context.Context, file *models.File) error {
-	_, err := f.collection.UpdateOne(ctx, bson.M{
+func (f *MongoFileRepository) UpdateFile(ctx context.Context, file *models.File) error {
+	updateData, err := bson.Marshal(file)
+	if err != nil {
+		return err
+	}
+	_, err = f.collection.UpdateOne(ctx, bson.M{
 		"_id": file.ID,
 	}, bson.M{
-		"$set": bson.M{
-			"storage_detail.is_uploaded": true,
-		},
+		"$set": updateData,
 	})
 	if err != nil {
 		f.logger.Errorf(ctx, map[string]any{
@@ -97,7 +148,6 @@ func (f *MongoFileRepository) FindAllFileOfUserWithPermssionAndCount(ctx context
 		filter = append(filter, bson.E{Key: "storage_detail.mime_type", Value: *args.FileType})
 	}
 
-	fmt.Println(filter)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	dataCh := make(chan []*models.FileWithPermission, 1)
@@ -112,6 +162,8 @@ func (f *MongoFileRepository) FindAllFileOfUserWithPermssionAndCount(ctx context
 			bson.D{
 				{Key: "$match", Value: filter},
 			},
+
+			//lookup permission
 			bson.D{
 				{Key: "$lookup", Value: bson.D{
 					{Key: "from", Value: "file_permissions"},
@@ -130,18 +182,43 @@ func (f *MongoFileRepository) FindAllFileOfUserWithPermssionAndCount(ctx context
 						bson.D{
 							{Key: "$unwind", Value: "$user"},
 						},
-						bson.D{
-							{Key: "$project", Value: bson.D{
-								{Key: "user_id", Value: 1},
-								{Key: "permission_type", Value: 1},
-								{Key: "user_image", Value: "$user.image"},
-								{Key: "user_email", Value: "$user.email"},
-								{Key: "user_first_name", Value: "$user.first_name"},
-								{Key: "user_last_name", Value: "$user.last_name"},
-							}},
-						},
 					}},
 				}},
+			},
+			//match file user have permission
+			bson.D{
+				{Key: "$match", Value: bson.D{
+					{Key: "permissions", Value: bson.D{
+						{Key: "$elemMatch", Value: bson.D{
+							{Key: "user_id", Value: args.OwnerId},
+						}},
+					}},
+				}},
+			},
+
+			//add permission type of user
+			bson.D{
+				{Key: "$addFields", Value: bson.D{
+					{Key: "permission_users", Value: bson.D{
+						{Key: "$filter", Value: bson.D{
+							{Key: "input", Value: "$permissions"},
+							{Key: "as", Value: "item"},
+							{Key: "cond", Value: bson.D{
+								{Key: "$eq", Value: bson.A{"$$item.user_id", args.OwnerId}},
+							}},
+						}},
+					}},
+				}},
+			},
+			bson.D{
+				{Key: "$addFields", Value: bson.D{
+					{Key: "permission_type", Value: bson.D{
+						{Key: "$arrayElemAt", Value: bson.A{"$permission_users.permission_type", 0}},
+					}},
+				}},
+			},
+			bson.D{
+				{Key: "$unset", Value: "permission_types"},
 			},
 			bson.D{
 				{Key: "$project", Value: bson.D{
@@ -162,8 +239,22 @@ func (f *MongoFileRepository) FindAllFileOfUserWithPermssionAndCount(ctx context
 					{Key: "tags", Value: 1},
 					{Key: "storage_detail", Value: 1},
 					{Key: "permissions", Value: bson.D{
-						{Key: "$slice", Value: bson.A{"$permissions", 0, args.PermssionLimit}},
+						{Key: "$map", Value: bson.D{
+							{Key: "input", Value: bson.D{
+								{Key: "$slice", Value: bson.A{"$permissions", 0, args.PermssionLimit}},
+							}},
+							{Key: "as", Value: "perm"},
+							{Key: "in", Value: bson.D{
+								{Key: "user_id", Value: "$$perm.user_id"},
+								{Key: "permission_type", Value: "$$perm.permission_type"},
+								{Key: "user_email", Value: "$$perm.user.email"},
+								{Key: "user_first_name", Value: "$$perm.user.first_name"},
+								{Key: "user_last_name", Value: "$$perm.user.last_name"},
+								{Key: "user_image", Value: "$$perm.user.image"},
+							}},
+						}},
 					}},
+					{Key: "permission_type", Value: 1},
 				}},
 			},
 			bson.D{

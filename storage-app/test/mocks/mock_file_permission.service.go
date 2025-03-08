@@ -14,7 +14,6 @@ import (
 	reflect "reflect"
 
 	enums "github.com/baothaihcmut/Bibox/storage-app/internal/common/enums"
-	services "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/services"
 	primitive "go.mongodb.org/mongo-driver/bson/primitive"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -56,18 +55,4 @@ func (m *MockPermissionService) CheckPermission(ctx context.Context, fileID, use
 func (mr *MockPermissionServiceMockRecorder) CheckPermission(ctx, fileID, userId, permssion any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckPermission", reflect.TypeOf((*MockPermissionService)(nil).CheckPermission), ctx, fileID, userId, permssion)
-}
-
-// CreatePermssion mocks base method.
-func (m *MockPermissionService) CreatePermssion(ctx context.Context, args services.CreatePermssionArgs) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreatePermssion", ctx, args)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// CreatePermssion indicates an expected call of CreatePermssion.
-func (mr *MockPermissionServiceMockRecorder) CreatePermssion(ctx, args any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePermssion", reflect.TypeOf((*MockPermissionService)(nil).CreatePermssion), ctx, args)
 }

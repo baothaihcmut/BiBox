@@ -386,6 +386,13 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "preview mode",
+                        "name": "preview",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {

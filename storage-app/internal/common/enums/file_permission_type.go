@@ -6,5 +6,4 @@ const (
 	ViewPermission FilePermissionType = iota + 1
 	CommentPermission
 	EditPermission
-	OwnerPermission
 )
