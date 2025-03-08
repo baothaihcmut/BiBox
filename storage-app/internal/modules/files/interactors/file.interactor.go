@@ -44,6 +44,7 @@ type FileInteractor interface {
 	GetFilePermissions(context.Context, *presenters.GetFilePermissionInput) (*presenters.GetFilePermissionOuput, error)
 	GetFileDownloadUrl(context.Context, *presenters.GetFileDownloadUrlInput) (*presenters.GetFileDownloadUrlOutput, error)
 	GetFileStructure(context.Context, *presenters.GetFileStructureInput) (*presenters.GetFileStructrueOuput, error)
+	GetAllSubFileOfFolder(context.Context, *presenters.GetSubFileOfFolderInput) (*presenters.GetSubFileOfFolderOutput, error)
 }
 
 type FileInteractorImpl struct {
@@ -55,6 +56,79 @@ type FileInteractorImpl struct {
 	mongoService       mongo.MongoService
 	filePermission     services.PermissionService
 	filePermissionRepo filePermissionRepo.FilePermissionRepository
+}
+
+// GetAllSubFileOfFolder implements FileInteractor.
+func (f *FileInteractorImpl) GetAllSubFileOfFolder(ctx context.Context, input *presenters.GetSubFileOfFolderInput) (*presenters.GetSubFileOfFolderOutput, error) {
+	userCtx := ctx.Value(constant.UserContext).(*commonModel.UserContext)
+	userId, _ := primitive.ObjectIDFromHex(userCtx.Id)
+	fileId, _ := primitive.ObjectIDFromHex(input.Id)
+	_, err := f.checkFilePermission(ctx, fileId, userId)
+	if err != nil {
+		return nil, err
+	}
+	//check if sort field is allowed
+	args := fileRepo.FindFileOfUserArg{
+		ParentFolderId: &fileId,
+		IsFolder:       input.IsFolder,
+		Offset:         input.Offset,
+		Limit:          input.Limit,
+		IsAsc:          input.IsAsc,
+		PermssionLimit: 4,
+		UserId:         userId,
+	}
+	//check allow sort field
+	if !slices.Contains(ALLOW_FILE_SORT_FIELD, input.SortBy) {
+		return nil, exception.ErrUnAllowedSortField
+	}
+	args.SortBy = input.SortBy
+
+	if input.FileType != nil && input.IsFolder != nil && !*input.IsFolder {
+		fileType := enums.MapToMimeType("", *input.FileType)
+		args.FileType = &fileType
+	}
+
+	data, count, err := f.fileRepo.FindFileWithPermssionAndCount(ctx, args)
+	if err != nil {
+		return nil, err
+	}
+	fileOutputs := make([]*presenters.FileWithPermissionOutput, len(data))
+	for idx, file := range data {
+		permissionOfFile := make([]*presenters.PermissionOfFileOuput, len(file.Permissions))
+		for j, permission := range file.Permissions {
+			permissionOfFile[j] = &presenters.PermissionOfFileOuput{
+				UserID:         permission.UserID,
+				PermissionType: permission.PermissionType,
+				UserImage:      permission.UserImage,
+			}
+		}
+		fileOutputs[idx] = &presenters.FileWithPermissionOutput{
+			FileOutput:     presenters.MapFileToFileOutput(&file.File),
+			Permissions:    permissionOfFile,
+			PermissionType: file.PermissionType,
+		}
+	}
+	pagination := response.PaginationResponse{
+		Offset:  input.Offset,
+		Limit:   input.Limit,
+		Total:   count,
+		HasNext: false,
+		HasPrev: false,
+	}
+	if input.Offset+input.Limit < int(count) {
+		nextOffset := input.Offset + input.Limit
+		pagination.HasNext = true
+		pagination.NextOffset = &nextOffset
+	}
+	if input.Offset > 0 {
+		prevOffset := input.Offset - input.Limit
+		pagination.HasPrev = true
+		pagination.PrevOffset = &prevOffset
+	}
+	return &presenters.GetSubFileOfFolderOutput{
+		Data:       fileOutputs,
+		Pagination: pagination,
+	}, nil
 }
 
 // GetFileStructure implements FileInteractor.
@@ -248,7 +322,7 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 	//check user permission
 
 	//check size of user
-	if !input.IsFolder {
+	if !input.IsFolder && input.StorageDetail != nil {
 		checkWg.Add(1)
 		go func() {
 			defer checkWg.Done()
@@ -562,28 +636,16 @@ func (f *FileInteractorImpl) FindAllFileOfUser(ctx context.Context, input *prese
 	if err != nil {
 		return nil, exception.ErrInvalidObjectId
 	}
-	var parentFolerId *primitive.ObjectID
-	if input.ParentFolderId != nil {
-		//check parent folder exist
-		parentId, _ := primitive.ObjectIDFromHex(*input.ParentFolderId)
-		parentFolerId = &parentId
-		parentFile, err := f.fileRepo.FindFileById(ctx, *parentFolerId, false)
-		if err != nil {
-			return nil, err
-		}
-		if parentFile == nil {
-			return nil, exception.ErrParenFileNotExist
-		}
-	}
+
 	//check if sort field is allowed
 	args := fileRepo.FindFileOfUserArg{
-		ParentFolderId: parentFolerId,
 		IsFolder:       input.IsFolder,
 		Offset:         input.Offset,
 		Limit:          input.Limit,
 		IsAsc:          input.IsAsc,
 		PermssionLimit: 4,
-		OwnerId:        userId,
+		OwnerId:        &userId,
+		UserId:         userId,
 	}
 	//check allow sort field
 	if !slices.Contains(ALLOW_FILE_SORT_FIELD, input.SortBy) {
@@ -596,7 +658,7 @@ func (f *FileInteractorImpl) FindAllFileOfUser(ctx context.Context, input *prese
 		args.FileType = &fileType
 	}
 
-	data, count, err := f.fileRepo.FindAllFileOfUserWithPermssionAndCount(ctx, userId, args)
+	data, count, err := f.fileRepo.FindFileWithPermssionAndCount(ctx, args)
 	if err != nil {
 		return nil, err
 	}

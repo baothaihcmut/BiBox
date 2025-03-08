@@ -267,106 +267,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/files": {
-            "get": {
-                "description": "Find file of user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "files"
-                ],
-                "parameters": [
-                    {
-                        "type": "boolean",
-                        "description": "file is in other folder, if null fetch all file",
-                        "name": "is_in_folder",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "file is folder or not, if null fetch all file and folder",
-                        "name": "is_folder",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "sort field, allow short field: created_at, updated_at, opened_at",
-                        "name": "sort_by",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "sort direction",
-                        "name": "is_asc",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "for pagination",
-                        "name": "offset",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "for pagination",
-                        "name": "limit",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "mime type of file, if is_folder is true not pass mime_type",
-                        "name": "mime_type",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Find file of user sucess",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/presenters.FindFileOfUserOuput"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Un allow sort field, lack of query",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
         "/files/:id/download-url": {
             "get": {
                 "description": "Get download url of file",
@@ -683,6 +583,106 @@ const docTemplate = `{
                 }
             }
         },
+        "/files/:id/sub-file": {
+            "get": {
+                "description": "Find file of user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "file is folder or not, if null fetch all file and folder",
+                        "name": "is_folder",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "sort field, allow short field: created_at, updated_at, opened_at",
+                        "name": "sort_by",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "sort direction",
+                        "name": "is_asc",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "for pagination",
+                        "name": "offset",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "for pagination",
+                        "name": "limit",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "mime type of file, if is_folder is true not pass mime_type",
+                        "name": "mime_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "file id",
+                        "name": "id",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Find file of user sucess",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/presenters.GetSubFileOfFolderInput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Unallow sort field, lack of query",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/files/:id/tags": {
             "get": {
                 "description": "Get tag of file",
@@ -939,6 +939,106 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/files/my-drive": {
+            "get": {
+                "description": "Find file of user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "file is in other folder, if null fetch all file",
+                        "name": "is_in_folder",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "file is folder or not, if null fetch all file and folder",
+                        "name": "is_folder",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "sort field, allow short field: created_at, updated_at, opened_at",
+                        "name": "sort_by",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "sort direction",
+                        "name": "is_asc",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "for pagination",
+                        "name": "offset",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "for pagination",
+                        "name": "limit",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "mime type of file, if is_folder is true not pass mime_type",
+                        "name": "mime_type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Find file of user sucess",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/presenters.FindFileOfUserOuput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Un allow sort field, lack of query",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -947,14 +1047,12 @@ const docTemplate = `{
             "enum": [
                 1,
                 2,
-                3,
-                4
+                3
             ],
             "x-enum-varnames": [
                 "ViewPermission",
                 "CommentPermission",
-                "EditPermission",
-                "OwnerPermission"
+                "EditPermission"
             ]
         },
         "enums.MimeType": {
@@ -1297,6 +1395,9 @@ const docTemplate = `{
                 "parent_folder_id": {
                     "type": "string"
                 },
+                "permission_type": {
+                    "$ref": "#/definitions/enums.FilePermissionType"
+                },
                 "permissions": {
                     "type": "array",
                     "items": {
@@ -1339,6 +1440,9 @@ const docTemplate = `{
                 },
                 "expiry": {
                     "type": "integer"
+                },
+                "file_name": {
+                    "type": "string"
                 },
                 "method": {
                     "type": "string"
@@ -1414,6 +1518,32 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/presenters.TagOutput"
                     }
+                }
+            }
+        },
+        "presenters.GetSubFileOfFolderInput": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "is_asc": {
+                    "type": "boolean"
+                },
+                "is_folder": {
+                    "type": "boolean"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "mime_type": {
+                    "type": "string"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "sort_by": {
+                    "type": "string"
                 }
             }
         },

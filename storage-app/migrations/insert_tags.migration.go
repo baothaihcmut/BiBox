@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var tags = []interface{}{
+var tags = []any{
 	models.Tag{ID: primitive.NewObjectID(), Name: "Technology"},
 	models.Tag{ID: primitive.NewObjectID(), Name: "Health"},
 	models.Tag{ID: primitive.NewObjectID(), Name: "Finance"},
