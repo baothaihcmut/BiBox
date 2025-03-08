@@ -28,12 +28,13 @@ func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
 	internal.Use(middleware.AuthMiddleware(f.authHandler, f.logger, false))
 	internal.POST("/add", middleware.ValidateMiddleware[presenters.CreateFileInput](false, binding.JSON), f.handleCreateFile)
 	internal.PATCH("/:id/uploaded", middleware.ValidateMiddleware[presenters.UploadedFileInput](true), f.handleUploadedFile)
-	internal.GET("", middleware.ValidateMiddleware[presenters.FindFileOfUserInput](false, binding.Query), f.handleFindFileOfUser)
+	internal.GET("/my-drive", middleware.ValidateMiddleware[presenters.FindFileOfUserInput](false, binding.Query), f.handleFindFileOfUser)
 	internal.GET("/:id/tags", middleware.ValidateMiddleware[presenters.GetFileTagsInput](true), f.handleGetTagOfFile)
 	internal.GET("/:id/permissions", middleware.ValidateMiddleware[presenters.GetFilePermissionInput](true), f.handleGetPermissionOfFile)
 	internal.GET("/:id/metadata", middleware.ValidateMiddleware[presenters.GetFileMetaDataInput](true), f.handleGetFileMetadata)
 	internal.GET("/:id/download-url", middleware.ValidateMiddleware[presenters.GetFileDownloadUrlInput](true, binding.Query), f.handleGetFileDownloadUrl)
 	internal.GET("/:id/structure", middleware.ValidateMiddleware[presenters.GetFileStructureInput](true), f.handleGetFileStructure)
+	internal.GET("/:id/sub-file", middleware.ValidateMiddleware[presenters.GetSubFileOfFolderInput](true, binding.Query), f.handleGetSubFileOfFolder)
 }
 
 // @Sumary Create new file
@@ -92,7 +93,7 @@ func (f *FileControllerImpl) handleUploadedFile(c *gin.Context) {
 // @Param mime_type query string false "mime type of file, if is_folder is true not pass mime_type"
 // @Success 200 {object} response.AppResponse{data=presenters.FindFileOfUserOuput} "Find file of user sucess"
 // @Failure 400 {object} response.AppResponse{data=nil} "Un allow sort field, lack of query"
-// @Router   /files [get]
+// @Router   /files/my-drive [get]
 func (f *FileControllerImpl) handleFindFileOfUser(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
 	res, err := f.interactor.FindAllFileOfUser(c.Request.Context(), payload.(*presenters.FindFileOfUserInput))
@@ -195,6 +196,32 @@ func (f *FileControllerImpl) handleGetFileDownloadUrl(c *gin.Context) {
 
 }
 
+// @Sumary Find file of user
+// @Description Find file of user
+// @Tags files
+// @Accept json
+// @Produce json
+// @Param is_folder query bool false "file is folder or not, if null fetch all file and folder"
+// @Param sort_by query string true "sort field, allow short field: created_at, updated_at, opened_at"
+// @Param is_asc query bool true "sort direction"
+// @Param offset query int true "for pagination"
+// @Param limit query int true "for pagination"
+// @Param mime_type query string false "mime type of file, if is_folder is true not pass mime_type"
+// @Param id path string false "file id"
+// @Success 200 {object} response.AppResponse{data=presenters.GetSubFileOfFolderInput} "Find file of user sucess"
+// @Failure 400 {object} response.AppResponse{data=nil} "Unallow sort field, lack of query"
+// @Router   /files/:id/sub-file [get]
+func (f *FileControllerImpl) handleGetSubFileOfFolder(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := f.interactor.GetAllSubFileOfFolder(c.Request.Context(), payload.(*presenters.GetSubFileOfFolderInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusOK, response.InitResponse(true, "Get file structure success", res))
+}
+
 func (f *FileControllerImpl) handleGetFileStructure(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
 	res, err := f.interactor.GetFileStructure(c.Request.Context(), payload.(*presenters.GetFileStructureInput))
@@ -203,7 +230,7 @@ func (f *FileControllerImpl) handleGetFileStructure(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	c.JSON(http.StatusOK, response.InitResponse(true, "Get file structure success", res))
+	c.JSON(http.StatusOK, response.InitResponse(true, "Get sub file of folder success", res))
 }
 
 func NewFileController(interactor interactors.FileInteractor, jwtService services.JwtService, logger logger.Logger) FileController {

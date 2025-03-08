@@ -22,14 +22,15 @@ type FindFileOfUserArg struct {
 	Limit          int
 	PermssionLimit int
 	FileType       *enums.MimeType
-	OwnerId        primitive.ObjectID
+	OwnerId        *primitive.ObjectID
+	UserId         primitive.ObjectID
 }
 
 type FileRepository interface {
 	CreateFile(context.Context, *models.File) error
 	FindFileById(ctx context.Context, id primitive.ObjectID, isDeleted bool) (*models.File, error)
 	UpdateFile(context.Context, *models.File) error
-	FindAllFileOfUserWithPermssionAndCount(ctx context.Context, userId primitive.ObjectID, args FindFileOfUserArg) ([]*models.FileWithPermission, int64, error)
+	FindFileWithPermssionAndCount(ctx context.Context, args FindFileOfUserArg) ([]*models.FileWithPermission, int64, error)
 	GetSubFileRecursive(context.Context, primitive.ObjectID, []primitive.ObjectID) ([]*models.File, error)
 }
 
@@ -132,9 +133,10 @@ func (f *MongoFileRepository) UpdateFile(ctx context.Context, file *models.File)
 	return nil
 }
 
-func (f *MongoFileRepository) FindAllFileOfUserWithPermssionAndCount(ctx context.Context, userId primitive.ObjectID, args FindFileOfUserArg) ([]*models.FileWithPermission, int64, error) {
-	filter := bson.D{
-		{Key: "owner_id", Value: args.OwnerId},
+func (f *MongoFileRepository) FindFileWithPermssionAndCount(ctx context.Context, args FindFileOfUserArg) ([]*models.FileWithPermission, int64, error) {
+	filter := bson.D{}
+	if args.OwnerId != nil {
+		filter = append(filter, bson.E{Key: "owner_id", Value: *args.OwnerId})
 	}
 	if args.IsFolder != nil {
 		filter = append(filter, bson.E{Key: "is_folder", Value: *args.IsFolder})
@@ -147,7 +149,6 @@ func (f *MongoFileRepository) FindAllFileOfUserWithPermssionAndCount(ctx context
 	if args.FileType != nil {
 		filter = append(filter, bson.E{Key: "storage_detail.mime_type", Value: *args.FileType})
 	}
-
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	dataCh := make(chan []*models.FileWithPermission, 1)
@@ -190,7 +191,7 @@ func (f *MongoFileRepository) FindAllFileOfUserWithPermssionAndCount(ctx context
 				{Key: "$match", Value: bson.D{
 					{Key: "permissions", Value: bson.D{
 						{Key: "$elemMatch", Value: bson.D{
-							{Key: "user_id", Value: args.OwnerId},
+							{Key: "user_id", Value: args.UserId},
 						}},
 					}},
 				}},

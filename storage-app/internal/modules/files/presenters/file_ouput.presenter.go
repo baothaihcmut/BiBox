@@ -8,6 +8,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type FileWithPermissionOutput struct {
+	*FileOutput
+	Permissions    []*PermissionOfFileOuput `json:"permissions"`
+	PermissionType enums.FilePermissionType `json:"permission_type"`
+}
+
 type StorageDetailOuput struct {
 	Size     int            `json:"file_size"`
 	MimeType enums.MimeType `json:"mime_type"`
