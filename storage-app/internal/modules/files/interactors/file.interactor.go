@@ -43,6 +43,7 @@ type FileInteractor interface {
 	GetFileTags(context.Context, *presenters.GetFileTagsInput) (*presenters.GetFileTagsOutput, error)
 	GetFilePermissions(context.Context, *presenters.GetFilePermissionInput) (*presenters.GetFilePermissionOuput, error)
 	GetFileDownloadUrl(context.Context, *presenters.GetFileDownloadUrlInput) (*presenters.GetFileDownloadUrlOutput, error)
+	GetFileStructure(context.Context, *presenters.GetFileStructureInput) (*presenters.GetFileStructrueOuput, error)
 }
 
 type FileInteractorImpl struct {
@@ -54,6 +55,21 @@ type FileInteractorImpl struct {
 	mongoService       mongo.MongoService
 	filePermission     services.PermissionService
 	filePermissionRepo filePermissionRepo.FilePermissionRepository
+}
+
+// GetFileStructure implements FileInteractor.
+func (f *FileInteractorImpl) GetFileStructure(ctx context.Context, input *presenters.GetFileStructureInput) (*presenters.GetFileStructrueOuput, error) {
+	fileId, _ := primitive.ObjectIDFromHex(input.Id)
+	subFiles, err := f.fileRepo.GetSubFileRecursive(ctx, fileId, []primitive.ObjectID{})
+	if err != nil {
+		return nil, err
+	}
+	return &presenters.GetFileStructrueOuput{
+		SubFiles: lo.Map(subFiles, func(item *models.File, _ int) *presenters.FileOutput {
+			return presenters.MapFileToFileOutput(item)
+		}),
+	}, nil
+
 }
 
 func (f *FileInteractorImpl) checkFilePermission(ctx context.Context, fileId primitive.ObjectID, userId primitive.ObjectID) (*models.File, error) {
@@ -132,11 +148,13 @@ func (f *FileInteractorImpl) GetFileDownloadUrl(ctx context.Context, input *pres
 		Key:         file.StorageDetail.StorageKey,
 		ContentType: file.StorageDetail.MimeType,
 		Expiry:      3 * time.Hour,
+		Preview:     input.Preview,
 	})
 	if err != nil {
 		return nil, err
 	}
 	return &presenters.GetFileDownloadUrlOutput{
+		FileName:    file.Name,
 		Url:         url,
 		Expiry:      1,
 		Method:      "GET",
@@ -153,7 +171,7 @@ func (f *FileInteractorImpl) GetFilePermissions(ctx context.Context, input *pres
 	if err != nil {
 		return nil, err
 	}
-	permission, err := f.filePermissionRepo.GetPermissionOfFile(ctx, file.ID)
+	permission, err := f.filePermissionRepo.GetPermissionOfFileWithUserInfo(ctx, file.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -375,6 +393,7 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 	}()
 	wgSave := sync.WaitGroup{}
 	errSave := make(chan error, 1)
+	doneCreateFileCh := make(chan struct{}, 1)
 	//cancel context when have err
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -398,6 +417,7 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 			}, "User storage size updated")
 		}()
 	}
+	//create file
 	wgSave.Add(1)
 	go func() {
 		defer wgSave.Done()
@@ -411,24 +431,52 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 			cancel()
 			errSave <- err
 		}
+		doneCreateFileCh <- struct{}{}
 		f.logger.Info(ctx, map[string]any{
 			"file_id": file.ID.Hex(),
 		}, "File created")
 	}()
-	//create owner permission
+	//create  permission
 	wgSave.Add(1)
 	go func() {
 		defer wgSave.Done()
-		err = f.filePermission.CreatePermssion(
-			ctx,
-			services.CreatePermssionArgs{
-				FileID:      file.ID,
-				UserID:      userId,
-				Permssion:   enums.OwnerPermission,
-				AcessSecure: true,
-				CanShare:    true,
-			},
-		)
+		//get all permission of parent folder
+		permssions := make([]*permissionModel.FilePermission, 0)
+		if input.ParentFolderID != nil {
+			//if file is in folder extend all permision
+			parentFilePermission, err := f.filePermissionRepo.GetPermissionOfFile(ctx, *input.ParentFolderID)
+			if err != nil {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
+				cancel()
+				errSave <- err
+			}
+			for _, permission := range parentFilePermission {
+				//with owner change it to edit permission
+
+				permssions = append(permssions, permissionModel.NewFilePermission(
+					file.ID,
+					permission.UserID,
+					permission.PermissionType,
+					permission.CanShare,
+					permission.ExpireAt,
+				))
+			}
+		} else {
+			//else append edit permission for user
+			permssions = append(permssions, permissionModel.NewFilePermission(
+				file.ID,
+				userId,
+				enums.EditPermission,
+				true,
+				nil,
+			))
+		}
+		<-doneCreateFileCh
+		err = f.filePermissionRepo.BulkCreatePermission(ctx, permssions)
 		if err != nil {
 			select {
 			case <-ctx.Done():
@@ -438,6 +486,7 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 			cancel()
 			errSave <- err
 		}
+
 	}()
 
 	//update parent file routine
@@ -496,7 +545,7 @@ func (f *FileInteractorImpl) UploadedFile(ctx context.Context, input *presenters
 	}
 	file.StorageDetail.IsUploaded = true
 	//update db
-	err = f.fileRepo.UploadedFile(ctx, file)
+	err = f.fileRepo.UpdateFile(ctx, file)
 	if err != nil {
 		return nil, err
 	}
@@ -513,9 +562,22 @@ func (f *FileInteractorImpl) FindAllFileOfUser(ctx context.Context, input *prese
 	if err != nil {
 		return nil, exception.ErrInvalidObjectId
 	}
+	var parentFolerId *primitive.ObjectID
+	if input.ParentFolderId != nil {
+		//check parent folder exist
+		parentId, _ := primitive.ObjectIDFromHex(*input.ParentFolderId)
+		parentFolerId = &parentId
+		parentFile, err := f.fileRepo.FindFileById(ctx, *parentFolerId, false)
+		if err != nil {
+			return nil, err
+		}
+		if parentFile == nil {
+			return nil, exception.ErrParenFileNotExist
+		}
+	}
 	//check if sort field is allowed
 	args := fileRepo.FindFileOfUserArg{
-		ParentFolderId: input.ParentFolderId,
+		ParentFolderId: parentFolerId,
 		IsFolder:       input.IsFolder,
 		Offset:         input.Offset,
 		Limit:          input.Limit,
@@ -549,8 +611,9 @@ func (f *FileInteractorImpl) FindAllFileOfUser(ctx context.Context, input *prese
 			}
 		}
 		fileOutputs[idx] = &presenters.FileWithPermissionOutput{
-			FileOutput:  presenters.MapFileToFileOutput(&file.File),
-			Permissions: permissionOfFile,
+			FileOutput:     presenters.MapFileToFileOutput(&file.File),
+			Permissions:    permissionOfFile,
+			PermissionType: file.PermissionType,
 		}
 	}
 	pagination := response.PaginationResponse{

@@ -32,7 +32,8 @@ func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
 	internal.GET("/:id/tags", middleware.ValidateMiddleware[presenters.GetFileTagsInput](true), f.handleGetTagOfFile)
 	internal.GET("/:id/permissions", middleware.ValidateMiddleware[presenters.GetFilePermissionInput](true), f.handleGetPermissionOfFile)
 	internal.GET("/:id/metadata", middleware.ValidateMiddleware[presenters.GetFileMetaDataInput](true), f.handleGetFileMetadata)
-	internal.GET("/:id/download-url", middleware.ValidateMiddleware[presenters.GetFileDownloadUrlInput](true), f.handleGetFileDownloadUrl)
+	internal.GET("/:id/download-url", middleware.ValidateMiddleware[presenters.GetFileDownloadUrlInput](true, binding.Query), f.handleGetFileDownloadUrl)
+	internal.GET("/:id/structure", middleware.ValidateMiddleware[presenters.GetFileStructureInput](true), f.handleGetFileStructure)
 }
 
 // @Sumary Create new file
@@ -175,6 +176,7 @@ func (f *FileControllerImpl) handleGetFileMetadata(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "file id"
+// @Param preview query string true "preview mode"
 // @Success 200 {object} response.AppResponse{data=presenters.GetFileDownloadUrlOutput} "Find tags of file sucess"
 // @Failure 400 {object} response.AppResponse{data=nil} "miss id"
 // @Failure 404 {object} response.AppResponse{data=nil} "file not found"
@@ -191,6 +193,17 @@ func (f *FileControllerImpl) handleGetFileDownloadUrl(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, response.InitResponse(true, "Get file download url success", res))
 
+}
+
+func (f *FileControllerImpl) handleGetFileStructure(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := f.interactor.GetFileStructure(c.Request.Context(), payload.(*presenters.GetFileStructureInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusOK, response.InitResponse(true, "Get file structure success", res))
 }
 
 func NewFileController(interactor interactors.FileInteractor, jwtService services.JwtService, logger logger.Logger) FileController {

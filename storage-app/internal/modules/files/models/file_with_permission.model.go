@@ -15,4 +15,5 @@ type FileWithPermission struct {
 		LastName       string                   `bson:"user_last_name"`
 		Email          string                   `bson:"user_email"`
 	} `bson:"permissions"`
+	PermissionType enums.FilePermissionType `bson:"permission_type"`
 }

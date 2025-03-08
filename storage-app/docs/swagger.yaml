@@ -642,6 +642,11 @@ paths:
         name: id
         required: true
         type: string
+      - description: preview mode
+        in: query
+        name: preview
+        required: true
+        type: string
       produces:
       - application/json
       responses:

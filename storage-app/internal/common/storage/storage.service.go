@@ -24,6 +24,8 @@ type GetPresignUrlArg struct {
 	Key         string
 	ContentType enums.MimeType
 	Expiry      time.Duration
+	Preview     bool
+	fileName    string
 }
 
 type StorageService interface {
@@ -55,11 +57,18 @@ func (s *S3StorageService) GetPresignUrl(ctx context.Context, args GetPresignUrl
 		}
 		return url.URL, nil
 	} else {
-		url, err := presigner.PresignGetObject(ctx, &s3.GetObjectInput{
+		arg := &s3.GetObjectInput{
 			Key:                 aws.String(args.Key),
 			Bucket:              aws.String(s.cfg.Bucket),
 			ResponseContentType: aws.String(string(args.ContentType)),
-		}, s3.WithPresignExpires(args.Expiry))
+		}
+		if args.Preview {
+			arg.ResponseContentDisposition = aws.String("inline")
+		} else {
+			arg.ResponseContentDisposition = aws.String("attachment")
+
+		}
+		url, err := presigner.PresignGetObject(ctx, arg, s3.WithPresignExpires(args.Expiry))
 		if err != nil {
 			s.logger.Errorf(ctx, map[string]any{
 				"key":    args.Key,

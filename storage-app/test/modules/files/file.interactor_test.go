@@ -61,7 +61,6 @@ func TestFileInteractor_CreatFile(t *testing.T) {
 		}, nil)
 	mockFileRepo.EXPECT().CreateFile(gomock.Any(), gomock.Any()).Return(nil)
 	mockFilePermissionService := mocks.NewMockPermissionService(ctrl)
-	mockFilePermissionService.EXPECT().CreatePermssion(gomock.Any(), gomock.Any()).Return(nil)
 	mockFilePermissionService.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
 	mockLogger := mocks.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Info(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()

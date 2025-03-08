@@ -1,6 +1,7 @@
 package presenters
 
 import (
+	"github.com/baothaihcmut/Bibox/storage-app/internal/common/enums"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/response"
 )
 
@@ -16,7 +17,8 @@ type FindFileOfUserInput struct {
 
 type FileWithPermissionOutput struct {
 	*FileOutput
-	Permissions []*PermissionOfFileOuput `json:"permissions"`
+	Permissions    []*PermissionOfFileOuput `json:"permissions"`
+	PermissionType enums.FilePermissionType `json:"permission_type"`
 }
 
 type FindFileOfUserOuput struct {

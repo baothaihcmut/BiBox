@@ -16,10 +16,9 @@ type FilePermissionOuput struct {
 
 func MapToOuput(f models.FilePermission) *FilePermissionOuput {
 	return &FilePermissionOuput{
-		FileID:           f.FileID,
-		UserID:           f.UserID,
-		PermissionType:   f.PermissionType,
-		CanShare:         f.CanShare,
-		AccessSecureFile: f.AccessSecureFile,
+		FileID:         f.FileID,
+		UserID:         f.UserID,
+		PermissionType: f.PermissionType,
+		CanShare:       f.CanShare,
 	}
 }

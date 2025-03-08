@@ -6,6 +6,7 @@ import (
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/enums"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/models"
+	"github.com/samber/lo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -31,13 +32,43 @@ type FilePermissionRepository interface {
 	UpdatePermission(context.Context, primitive.ObjectID, primitive.ObjectID, enums.FilePermissionType, bool, bool) error
 	GetFileByID(ctx context.Context, fileID primitive.ObjectID) (*models.FilePermission, error)
 	CreateFilePermission(ctx context.Context, filePermission *models.FilePermission) error
-	GetFilePermission(ctx context.Context, fileID primitive.ObjectID, userID primitive.ObjectID, option FilterPermssionType) (*models.FilePermission, error)
-	GetPermissionOfFile(ctx context.Context, fileId primitive.ObjectID) ([]*models.FilePermissionWithUser, error)
+	GetFilePermission(ctx context.Context, fileID primitive.ObjectID, userID primitive.ObjectID) (*models.FilePermission, error)
+	GetPermissionOfFileWithUserInfo(ctx context.Context, fileId primitive.ObjectID) ([]*models.FilePermissionWithUser, error)
+	GetPermissionOfFile(ctx context.Context, fileID primitive.ObjectID) ([]*models.FilePermission, error)
+	BulkCreatePermission(ctx context.Context, filePermissions []*models.FilePermission) error
 }
 
 type FilePermissionRepositoryImpl struct {
 	collection *mongo.Collection
 	logger     logger.Logger
+}
+
+// BulkCreatePermission implements FilePermissionRepository.
+func (pr *FilePermissionRepositoryImpl) BulkCreatePermission(ctx context.Context, filePermissions []*models.FilePermission) error {
+	_, err := pr.collection.InsertMany(ctx, lo.Map(filePermissions, func(item *models.FilePermission, _ int) interface{} {
+		return item
+	}))
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
+
+// GetPermissionOfFile implements FilePermissionRepository.
+func (pr *FilePermissionRepositoryImpl) GetPermissionOfFile(ctx context.Context, fileID primitive.ObjectID) ([]*models.FilePermission, error) {
+	cursor, err := pr.collection.Find(ctx, bson.D{
+		{Key: "file_id", Value: fileID},
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var res []*models.FilePermission
+	if err := cursor.All(ctx, &res); err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func NewPermissionRepository(collection *mongo.Collection, logger logger.Logger) FilePermissionRepository {
@@ -96,29 +127,12 @@ func (pr *FilePermissionRepositoryImpl) CreateFilePermission(ctx context.Context
 }
 
 // get file permission by fileID and userID and permssion type
-func (pr *FilePermissionRepositoryImpl) GetFilePermission(ctx context.Context, fileID primitive.ObjectID, userID primitive.ObjectID, option FilterPermssionType) (*models.FilePermission, error) {
+func (pr *FilePermissionRepositoryImpl) GetFilePermission(ctx context.Context, fileID primitive.ObjectID, userID primitive.ObjectID) (*models.FilePermission, error) {
 	// build filter
-	filterPermssionType := bson.M{}
-	switch option.Option {
-	case PermssionInList:
-		filterPermssionType = bson.M{"$in": option.Value}
-	case PermssionLessThan:
-		filterPermssionType = bson.M{"$lt": option.Value[0]}
-	case PermssionGreaterThan:
-		filterPermssionType = bson.M{"$gt": option.Value[0]}
-	case PermssionEqual:
-		filterPermssionType = bson.M{"$eq": option.Value[0]}
-	case PermssionNotEqual:
-		filterPermssionType = bson.M{"$ne": option.Value[0]}
-	case PermssionNotInList:
-		filterPermssionType = bson.M{"$nin": option.Value[0]}
-	}
-
 	var file models.FilePermission
 	err := pr.collection.FindOne(ctx, bson.M{
-		"file_id":         fileID,
-		"user_id":         userID,
-		"permission_type": filterPermssionType,
+		"file_id": fileID,
+		"user_id": userID,
 	}).Decode(&file)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -128,7 +142,7 @@ func (pr *FilePermissionRepositoryImpl) GetFilePermission(ctx context.Context, f
 	}
 	return &file, nil
 }
-func (pr *FilePermissionRepositoryImpl) GetPermissionOfFile(ctx context.Context, fileId primitive.ObjectID) ([]*models.FilePermissionWithUser, error) {
+func (pr *FilePermissionRepositoryImpl) GetPermissionOfFileWithUserInfo(ctx context.Context, fileId primitive.ObjectID) ([]*models.FilePermissionWithUser, error) {
 	pipeline := mongo.Pipeline{
 		//match stage
 		bson.D{
