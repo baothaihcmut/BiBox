@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/enums"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -45,7 +46,7 @@ func NewFile(
 	storageDetail *FileStorageDetailArg) *File {
 	id := primitive.NewObjectID()
 	//key for storage
-	key := time.Now().String() + id.Hex()
+	key := uuid.New().String()
 	//intit storage storage
 	var storage *FileStorageDetail
 	if !isFolder {

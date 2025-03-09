@@ -5,10 +5,11 @@ import (
 	"errors"
 
 	"github.com/IBM/sarama"
+
+	"github.com/baothaihcmut/BiBox/libs/pkg/constant"
 	"github.com/baothaihcmut/BiBox/libs/pkg/events/users"
-	"github.com/baothaihcmut/BiBox/storage-app-email/internal/constant"
-	"github.com/baothaihcmut/BiBox/storage-app-email/internal/middlewares"
-	"github.com/baothaihcmut/BiBox/storage-app-email/internal/router"
+	"github.com/baothaihcmut/BiBox/libs/pkg/middlewares"
+	"github.com/baothaihcmut/BiBox/libs/pkg/router"
 	"github.com/baothaihcmut/BiBox/storage-app-email/internal/services"
 )
 
