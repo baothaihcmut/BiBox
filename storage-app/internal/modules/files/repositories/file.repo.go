@@ -115,14 +115,11 @@ func (f *MongoFileRepository) FindFileById(ctx context.Context, id primitive.Obj
 }
 
 func (f *MongoFileRepository) UpdateFile(ctx context.Context, file *models.File) error {
-	updateData, err := bson.Marshal(file)
-	if err != nil {
-		return err
-	}
-	_, err = f.collection.UpdateOne(ctx, bson.M{
+
+	_, err := f.collection.UpdateOne(ctx, bson.M{
 		"_id": file.ID,
 	}, bson.M{
-		"$set": updateData,
+		"$set": file,
 	})
 	if err != nil {
 		f.logger.Errorf(ctx, map[string]any{

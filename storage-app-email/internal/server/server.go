@@ -8,11 +8,11 @@ import (
 	"syscall"
 
 	"github.com/IBM/sarama"
+	"github.com/baothaihcmut/BiBox/libs/pkg/consumer"
+	"github.com/baothaihcmut/BiBox/libs/pkg/middlewares"
+	"github.com/baothaihcmut/BiBox/libs/pkg/router"
 	"github.com/baothaihcmut/BiBox/storage-app-email/internal/config"
-	"github.com/baothaihcmut/BiBox/storage-app-email/internal/consumer"
 	"github.com/baothaihcmut/BiBox/storage-app-email/internal/handlers"
-	"github.com/baothaihcmut/BiBox/storage-app-email/internal/middlewares"
-	"github.com/baothaihcmut/BiBox/storage-app-email/internal/router"
 	"github.com/baothaihcmut/BiBox/storage-app-email/internal/services"
 	"gopkg.in/gomail.v2"
 )
