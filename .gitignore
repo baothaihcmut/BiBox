@@ -2,4 +2,6 @@
 /storage-app-email/config/config.yaml
 /storage-app/bin/*
 /storage-app-email/bin/*
+.vscode
+.trunk
 
