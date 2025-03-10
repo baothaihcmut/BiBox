@@ -118,3 +118,4 @@ func (cr *CommentRepository) AnswerComment(ctx context.Context, commentID, userI
 
 //moi comment co 1 mang ID cua answer, mang answerID string thanh primitive.objectID
 // mang phan tu co noi dung cau tra loi, userID, answerd at, bo email
+//join database user mail and username

@@ -28,7 +28,6 @@ func (cs *CommentService) AddComment(fileID, userID, content string) error {
 		return &InvalidInputError{"All fields are required"}
 	}
 
-	// Convert fileID and userID to primitive.ObjectID
 	fileObjectID, err := primitive.ObjectIDFromHex(fileID)
 	if err != nil {
 		return &InvalidInputError{"Invalid file ID format"}
@@ -39,11 +38,11 @@ func (cs *CommentService) AddComment(fileID, userID, content string) error {
 		return &InvalidInputError{"Invalid user ID format"}
 	}
 
-	// Create a context with timeout
+	// context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Call repository with correct types
+	// call repository
 	return cs.Repo.CreateComment(ctx, fileObjectID, userObjectID, content)
 }
 
@@ -52,7 +51,6 @@ func (cs *CommentService) AnswerComment(commentID, userID, content string) error
 		return &InvalidInputError{"All fields are required"}
 	}
 
-	// Convert commentID and userID to primitive.ObjectID
 	commentObjectID, err := primitive.ObjectIDFromHex(commentID)
 	if err != nil {
 		return &InvalidInputError{"Invalid comment ID format"}
@@ -63,11 +61,10 @@ func (cs *CommentService) AnswerComment(commentID, userID, content string) error
 		return &InvalidInputError{"Invalid user ID format"}
 	}
 
-	// Create a context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Call repository to answer the comment
+	// Call repository
 	return cs.Repo.AnswerComment(ctx, commentObjectID, userObjectID, content)
 }
 
