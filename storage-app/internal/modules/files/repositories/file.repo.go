@@ -8,6 +8,7 @@ import (
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/enums"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/models"
+	"github.com/samber/lo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -28,9 +29,10 @@ type FindFileOfUserArg struct {
 
 type FileRepository interface {
 	CreateFile(context.Context, *models.File) error
-	FindFileById(ctx context.Context, id primitive.ObjectID, isDeleted bool) (*models.File, error)
+	BuckCreateFiles(context.Context, []*models.File) error
+	FindFileById(context.Context, primitive.ObjectID, bool) (*models.File, error)
 	UpdateFile(context.Context, *models.File) error
-	FindFileWithPermssionAndCount(ctx context.Context, args FindFileOfUserArg) ([]*models.FileWithPermission, int64, error)
+	FindFileWithPermssionAndCount(context.Context, FindFileOfUserArg) ([]*models.FileWithPermission, int64, error)
 	GetSubFileRecursive(context.Context, primitive.ObjectID, []primitive.ObjectID) ([]*models.File, error)
 }
 
@@ -91,6 +93,15 @@ func (f *MongoFileRepository) CreateFile(ctx context.Context, file *models.File)
 	_, err := f.collection.InsertOne(ctx, file)
 	if err != nil {
 		f.logger.Errorf(ctx, nil, "Error insert document:", err)
+	}
+	return nil
+}
+func (f *MongoFileRepository) BuckCreateFiles(ctx context.Context, files []*models.File) error {
+	_, err := f.collection.InsertMany(ctx, lo.Map(files, func(item *models.File, _ int) interface{} {
+		return item
+	}))
+	if err != nil {
+		return err
 	}
 	return nil
 }
