@@ -27,6 +27,7 @@ import (
 	fileController "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/controllers"
 	fileInteractor "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/interactors"
 	fileRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/repositories"
+	fileService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/services"
 	tagRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/tags/repositories"
 	userRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/users/repositories"
 	"github.com/gin-contrib/cors"
@@ -98,10 +99,11 @@ func (s *Server) initApp() {
 	mongoService := mongoLib.NewMongoTransactionService(s.mongo)
 	passwordService := authService.NewPasswordService()
 	filePermssionService := filePermissionService.NewPermissionService(filePermssionRepo)
+	fileStructureService := fileService.NewFileStructureService()
 
 	//init interactor
 	authInteractor := authInteractors.NewAuthInteractor(oauth2SerivceFactory, userRepo, userJwtService, logger, userConfirmService, mongoService, passwordService)
-	fileInteractor := fileInteractor.NewFileInteractor(userRepo, tagRepo, fileRepo, filePermssionService, filePermssionRepo, logger, storageService, mongoService)
+	fileInteractor := fileInteractor.NewFileInteractor(userRepo, tagRepo, fileRepo, filePermssionService, filePermssionRepo, fileStructureService, logger, storageService, mongoService)
 	//init controllers
 	authController := authController.NewAuthController(authInteractor, &s.config.Jwt, &s.config.Oauth2)
 	fileController := fileController.NewFileController(fileInteractor, userJwtService, logger)

@@ -17,8 +17,9 @@ import (
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/storage"
 	permissionModel "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/models"
 	filePermissionRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/repositories"
-	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/services"
+	permissionService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/services"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/models"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/services"
 
 	permissionPresenter "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/presenters"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/presenters"
@@ -37,6 +38,7 @@ var ALLOW_FILE_SORT_FIELD = []string{"created_at", "updated_at", "opened_at"}
 
 type FileInteractor interface {
 	CreatFile(context.Context, *presenters.CreateFileInput) (*presenters.CreateFileOutput, error)
+	UploadFolder(context.Context, *presenters.UploadFolderInput) (*presenters.UploadFolderOutput, error)
 	UploadedFile(context.Context, *presenters.UploadedFileInput) (*presenters.UploadedFileOutput, error)
 	FindAllFileOfUser(context.Context, *presenters.FindFileOfUserInput) (*presenters.FindFileOfUserOuput, error)
 	GetFileMetaData(context.Context, *presenters.GetFileMetaDataInput) (*presenters.GetFileMetaDataOuput, error)
@@ -48,14 +50,245 @@ type FileInteractor interface {
 }
 
 type FileInteractorImpl struct {
-	userRepo           userRepo.UserRepository
-	fileRepo           fileRepo.FileRepository
-	tagRepo            tagRepo.TagRepository
-	logger             logger.Logger
-	storageService     storage.StorageService
-	mongoService       mongo.MongoService
-	filePermission     services.PermissionService
-	filePermissionRepo filePermissionRepo.FilePermissionRepository
+	userRepo             userRepo.UserRepository
+	fileRepo             fileRepo.FileRepository
+	tagRepo              tagRepo.TagRepository
+	logger               logger.Logger
+	storageService       storage.StorageService
+	mongoService         mongo.MongoService
+	filePermission       permissionService.PermissionService
+	filePermissionRepo   filePermissionRepo.FilePermissionRepository
+	fileStructureService services.FileStructureService
+}
+
+// UploadFolder implements FileInteractor.
+func (f *FileInteractorImpl) UploadFolder(ctx context.Context, folder *presenters.UploadFolderInput) (*presenters.UploadFolderOutput, error) {
+	//get file list from foler tree
+	//get user context
+	userContext := ctx.Value(constant.UserContext).(*commonModel.UserContext)
+	//tranform id
+	userId, err := primitive.ObjectIDFromHex(userContext.Id)
+	if err != nil {
+		return nil, exception.ErrInvalidObjectId
+	}
+	files, totalSize, err := f.fileStructureService.TraverseUploadFolder(ctx, folder, userId, f.storageService.GetStorageProviderName(), f.storageService.GetStorageBucket())
+	if err != nil {
+		return nil, err
+	}
+	//checkpermission and size
+	wgCheck := sync.WaitGroup{}
+	ctx, cancelCheck := context.WithCancel(ctx)
+	defer cancelCheck()
+	errCheck := make(chan error, 1)
+	userCh := make(chan *userModel.User, 1)
+	//check size
+	if totalSize > 0 {
+		wgCheck.Add(1)
+		go func() {
+			defer wgCheck.Done()
+			user, err := f.userRepo.FindUserById(ctx, userId)
+			if err != nil {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
+				cancelCheck()
+				errCheck <- err
+				return
+			}
+			err = user.IncreStorageSize(totalSize)
+			if err != nil {
+				cancelCheck()
+				errCheck <- err
+				return
+			}
+			userCh <- user
+		}()
+	}
+	if folder.Data.ParentFolderID != nil {
+		//check if parent folder exist
+		wgCheck.Add(1)
+		go func() {
+			parentFolder, err := f.fileRepo.FindFileById(ctx, *folder.Data.ParentFolderID, false)
+			if err != nil {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
+				cancelCheck()
+				errCheck <- err
+				return
+			}
+			if parentFolder == nil {
+				cancelCheck()
+				errCheck <- exception.ErrParenFileNotExist
+				return
+			}
+		}()
+	}
+
+	//store to db
+	session, err := f.mongoService.BeginTransaction(ctx)
+	if err != nil {
+		f.logger.Errorf(ctx, nil, "Error init transaction mongo:", err)
+		return nil, err
+	}
+	defer func() {
+		if err != nil {
+			f.mongoService.RollbackTransaction(ctx, session)
+		}
+		f.mongoService.EndTransansaction(ctx, session)
+	}()
+	//save phase
+	wgSave := sync.WaitGroup{}
+	ctx, cancelSave := context.WithCancel(ctx)
+	errSave := make(chan error, 1)
+	defer cancelSave()
+	wgSave.Add(1)
+	go func() {
+		defer wgSave.Done()
+		err = f.fileRepo.BuckCreateFiles(ctx, lo.Map(files, func(item *services.FileWithPath, _ int) *models.File {
+			return item.File
+		}))
+		if err != nil {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+			cancelSave()
+			errSave <- err
+			return
+		}
+	}()
+	//update user size
+	if totalSize > 0 {
+		wgSave.Add(1)
+		go func() {
+			defer wgSave.Done()
+			user := <-userCh
+			err = f.userRepo.UpdateUserStorageSize(ctx, user)
+			if err != nil {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
+				cancelSave()
+				errSave <- err
+			}
+			f.logger.Info(ctx, map[string]any{
+				"user_new_size": user.CurrentStorageSize,
+			}, "User storage size updated")
+		}()
+	}
+	//extend permission of parent
+	wgSave.Add(1)
+	go func() {
+		defer wgSave.Done()
+		permissions := make([]*permissionModel.FilePermission, 0)
+
+		if folder.Data.ParentFolderID != nil {
+			parentPermissions, err := f.filePermissionRepo.GetFilePermissions(ctx, filePermissionRepo.GetPermissionArg{
+				FileId:         folder.Data.ParentFolderID,
+				PermissionType: enums.GetPermissionTypePointer(enums.PermissionType(enums.ViewPermission)),
+			})
+			if err != nil {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
+				cancelSave()
+				errSave <- err
+			}
+			for _, file := range files {
+				//add parent view permission
+				targetPermission := lo.Map(parentPermissions, func(item *permissionModel.FilePermission, _ int) *permissionModel.FilePermission {
+					return permissionModel.NewFilePermission(
+						file.ID,
+						item.UserID,
+						item.PermissionType,
+						item.CanShare,
+						item.ExpireAt,
+					)
+				})
+				permissions = append(permissions, targetPermission...)
+			}
+		}
+		userPermissions := lo.Map(files, func(item *services.FileWithPath, _ int) *permissionModel.FilePermission {
+			return permissionModel.NewFilePermission(
+				item.ID,
+				userId,
+				enums.EditPermission,
+				true,
+				nil,
+			)
+		})
+		permissions = append(permissions, userPermissions...)
+		err = f.filePermissionRepo.BulkCreatePermission(ctx, permissions)
+		if err != nil {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+			cancelSave()
+			errSave <- err
+		}
+	}()
+
+	//storage phase
+	//respone
+	wg := sync.WaitGroup{}
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	errCh := make(chan error, 1)
+	resFile := make([]*presenters.FileWithPathOutput, len(files))
+	for idx, file := range files {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			resFile[idx] = &presenters.FileWithPathOutput{
+				FileOutput: presenters.MapFileToFileOutput(file.File),
+				Path:       file.Path,
+			}
+
+			if !file.IsFolder && file.StorageDetail != nil {
+				//get presign url
+				presignUrl, err := f.storageService.GetPresignUrl(ctx, storage.GetPresignUrlArg{
+					Method:      storage.PresignUrlPutMethod,
+					Key:         file.StorageDetail.StorageKey,
+					ContentType: file.StorageDetail.MimeType,
+					Expiry:      30 * time.Minute,
+				})
+				if err != nil {
+					select {
+					case <-ctx.Done():
+						return
+					default:
+					}
+					cancel()
+					errCh <- err
+					return
+				}
+				resFile[idx].PutObjectUrl = presignUrl
+				resFile[idx].UrlExpiry = 30
+			}
+		}()
+	}
+	wg.Wait()
+	select {
+	case err = <-errCh:
+		return nil, err
+	default:
+		return &presenters.UploadFolderOutput{
+			Files: resFile,
+		}, nil
+	}
+
 }
 
 // GetAllSubFileOfFolder implements FileInteractor.
@@ -518,7 +751,10 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 		permssions := make([]*permissionModel.FilePermission, 0)
 		if input.ParentFolderID != nil {
 			//if file is in folder extend all permision
-			parentFilePermission, err := f.filePermissionRepo.GetPermissionOfFile(ctx, *input.ParentFolderID)
+			parentFilePermission, err := f.filePermissionRepo.GetFilePermissions(ctx, filePermissionRepo.GetPermissionArg{
+				FileId:         input.ParentFolderID,
+				PermissionType: enums.GetPermissionTypePointer(enums.PermissionType(enums.ViewPermission)),
+			})
 			if err != nil {
 				select {
 				case <-ctx.Done():
@@ -528,27 +764,25 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 				cancel()
 				errSave <- err
 			}
-			for _, permission := range parentFilePermission {
-				//with owner change it to edit permission
-
-				permssions = append(permssions, permissionModel.NewFilePermission(
+			targetPermission := lo.Map(parentFilePermission, func(item *permissionModel.FilePermission, _ int) *permissionModel.FilePermission {
+				return permissionModel.NewFilePermission(
 					file.ID,
-					permission.UserID,
-					permission.PermissionType,
-					permission.CanShare,
-					permission.ExpireAt,
-				))
-			}
-		} else {
-			//else append edit permission for user
-			permssions = append(permssions, permissionModel.NewFilePermission(
-				file.ID,
-				userId,
-				enums.EditPermission,
-				true,
-				nil,
-			))
+					item.UserID,
+					item.PermissionType,
+					item.CanShare,
+					item.ExpireAt,
+				)
+			})
+			permssions = append(permssions, targetPermission...)
 		}
+		//else append edit permission for user
+		permssions = append(permssions, permissionModel.NewFilePermission(
+			file.ID,
+			userId,
+			enums.EditPermission,
+			true,
+			nil,
+		))
 		<-doneCreateFileCh
 		err = f.filePermissionRepo.BulkCreatePermission(ctx, permssions)
 		if err != nil {
@@ -706,21 +940,23 @@ func NewFileInteractor(
 	userRepo userRepo.UserRepository,
 	tagRepo tagRepo.TagRepository,
 	fileRepo fileRepo.FileRepository,
-	filePermission services.PermissionService,
+	filePermission permissionService.PermissionService,
 	filePermissionRepo filePermissionRepo.FilePermissionRepository,
+	fileStructureService services.FileStructureService,
 	logger logger.Logger,
 	storageService storage.StorageService,
 	mongoService mongo.MongoService,
 
 ) FileInteractor {
 	return &FileInteractorImpl{
-		userRepo:           userRepo,
-		fileRepo:           fileRepo,
-		tagRepo:            tagRepo,
-		logger:             logger,
-		storageService:     storageService,
-		mongoService:       mongoService,
-		filePermission:     filePermission,
-		filePermissionRepo: filePermissionRepo,
+		userRepo:             userRepo,
+		fileRepo:             fileRepo,
+		tagRepo:              tagRepo,
+		logger:               logger,
+		storageService:       storageService,
+		mongoService:         mongoService,
+		filePermission:       filePermission,
+		filePermissionRepo:   filePermissionRepo,
+		fileStructureService: fileStructureService,
 	}
 }
