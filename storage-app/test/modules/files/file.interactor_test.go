@@ -81,6 +81,7 @@ func TestFileInteractor_CreatFile(t *testing.T) {
 		nil,
 		mockFilePermissionService,
 		nil,
+		nil,
 		mockLogger,
 		mockStorageService,
 		mockMongoService,
