@@ -27,6 +27,7 @@ func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
 	internal := g.Group("/files")
 	internal.Use(middleware.AuthMiddleware(f.authHandler, f.logger, false))
 	internal.POST("/add", middleware.ValidateMiddleware[presenters.CreateFileInput](false, binding.JSON), f.handleCreateFile)
+	internal.POST("/upload-folder", middleware.ValidateMiddleware[presenters.UploadFolderInput](false, binding.JSON), f.handleUploadFolder)
 	internal.PATCH("/:id/uploaded", middleware.ValidateMiddleware[presenters.UploadedFileInput](true), f.handleUploadedFile)
 	internal.GET("/my-drive", middleware.ValidateMiddleware[presenters.FindFileOfUserInput](false, binding.Query), f.handleFindFileOfUser)
 	internal.GET("/:id/tags", middleware.ValidateMiddleware[presenters.GetFileTagsInput](true), f.handleGetTagOfFile)
@@ -220,6 +221,17 @@ func (f *FileControllerImpl) handleGetSubFileOfFolder(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, response.InitResponse(true, "Get file structure success", res))
+}
+
+func (f *FileControllerImpl) handleUploadFolder(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := f.interactor.UploadFolder(c.Request.Context(), payload.(*presenters.UploadFolderInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusCreated, response.InitResponse(true, "Upload folder success", res))
 }
 
 func (f *FileControllerImpl) handleGetFileStructure(c *gin.Context) {

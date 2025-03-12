@@ -28,13 +28,17 @@ type FilterPermssionType struct {
 	Value  []enums.FilePermissionType
 }
 
+type GetPermissionArg struct {
+	FileId         *primitive.ObjectID
+	UserId         *primitive.ObjectID
+	PermissionType *enums.PermissionType
+}
+
 type FilePermissionRepository interface {
-	UpdatePermission(context.Context, primitive.ObjectID, primitive.ObjectID, enums.FilePermissionType, bool, bool) error
-	GetFileByID(ctx context.Context, fileID primitive.ObjectID) (*models.FilePermission, error)
 	CreateFilePermission(ctx context.Context, filePermission *models.FilePermission) error
-	GetFilePermission(ctx context.Context, fileID primitive.ObjectID, userID primitive.ObjectID) (*models.FilePermission, error)
+	GetFilePermissionById(ctx context.Context, fileID primitive.ObjectID, userID primitive.ObjectID) (*models.FilePermission, error)
 	GetPermissionOfFileWithUserInfo(ctx context.Context, fileId primitive.ObjectID) ([]*models.FilePermissionWithUser, error)
-	GetPermissionOfFile(ctx context.Context, fileID primitive.ObjectID) ([]*models.FilePermission, error)
+	GetFilePermissions(ctx context.Context, args GetPermissionArg) ([]*models.FilePermission, error)
 	BulkCreatePermission(ctx context.Context, filePermissions []*models.FilePermission) error
 }
 
@@ -56,10 +60,18 @@ func (pr *FilePermissionRepositoryImpl) BulkCreatePermission(ctx context.Context
 }
 
 // GetPermissionOfFile implements FilePermissionRepository.
-func (pr *FilePermissionRepositoryImpl) GetPermissionOfFile(ctx context.Context, fileID primitive.ObjectID) ([]*models.FilePermission, error) {
-	cursor, err := pr.collection.Find(ctx, bson.D{
-		{Key: "file_id", Value: fileID},
-	})
+func (pr *FilePermissionRepositoryImpl) GetFilePermissions(ctx context.Context, args GetPermissionArg) ([]*models.FilePermission, error) {
+	filter := bson.D{}
+	if args.FileId != nil {
+		filter = append(filter, bson.E{Key: "file_id", Value: *args.FileId})
+	}
+	if args.UserId != nil {
+		filter = append(filter, bson.E{Key: "user_id", Value: *args.UserId})
+	}
+	if args.PermissionType != nil {
+		filter = append(filter, bson.E{Key: "permission_type", Value: *args.PermissionType})
+	}
+	cursor, err := pr.collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -78,41 +90,6 @@ func NewPermissionRepository(collection *mongo.Collection, logger logger.Logger)
 	}
 }
 
-// update permissino
-func (pr *FilePermissionRepositoryImpl) UpdatePermission(
-	ctx context.Context,
-	fileID primitive.ObjectID,
-	userID primitive.ObjectID,
-	permissionType enums.FilePermissionType,
-	accessSecure bool,
-	canShare bool,
-) error {
-	filter := bson.M{"file_id": fileID, "user_id": userID}
-	update := bson.M{
-		"$set": bson.M{
-			"permission_type":    permissionType,
-			"access_secure_file": accessSecure,
-			"can_share":          canShare,
-		},
-	}
-
-	_, err := pr.collection.UpdateOne(ctx, filter, update)
-	return err
-}
-
-// get file by ID to check ownership
-func (pr *FilePermissionRepositoryImpl) GetFileByID(ctx context.Context, fileID primitive.ObjectID) (*models.FilePermission, error) {
-	var file models.FilePermission
-	err := pr.collection.FindOne(ctx, bson.M{"file_id": fileID}).Decode(&file)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, nil // File not found
-		}
-		return nil, err
-	}
-	return &file, nil
-}
-
 // insert file permission into DB
 func (pr *FilePermissionRepositoryImpl) CreateFilePermission(ctx context.Context, filePermission *models.FilePermission) error {
 	_, err := pr.collection.InsertOne(ctx, filePermission)
@@ -127,7 +104,7 @@ func (pr *FilePermissionRepositoryImpl) CreateFilePermission(ctx context.Context
 }
 
 // get file permission by fileID and userID and permssion type
-func (pr *FilePermissionRepositoryImpl) GetFilePermission(ctx context.Context, fileID primitive.ObjectID, userID primitive.ObjectID) (*models.FilePermission, error) {
+func (pr *FilePermissionRepositoryImpl) GetFilePermissionById(ctx context.Context, fileID primitive.ObjectID, userID primitive.ObjectID) (*models.FilePermission, error) {
 	// build filter
 	var file models.FilePermission
 	err := pr.collection.FindOne(ctx, bson.M{

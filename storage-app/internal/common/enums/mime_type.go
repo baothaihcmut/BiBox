@@ -145,3 +145,6 @@ func MapToMimeType(fileName, fallback string) MimeType {
 		return MimeBIN
 	}
 }
+func GetMimeTypePointer(t MimeType) *MimeType {
+	return &t
+}

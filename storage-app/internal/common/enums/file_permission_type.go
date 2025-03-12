@@ -7,3 +7,7 @@ const (
 	CommentPermission
 	EditPermission
 )
+
+func GetPermissionTypePointer(p PermissionType) *PermissionType {
+	return &p
+}
