@@ -28,8 +28,8 @@ func NewCommentInteractor(commentRepo repositories.CommentRepository, permission
 	}
 }
 
-func (ci *CommentInteractor) GetAllComments() ([]map[string]interface{}, error) {
-	comments, err := ci.Repo.FetchComments()
+func (ci *CommentInteractor) GetAllComments(ctx context.Context) ([]map[string]interface{}, error) {
+	comments, err := ci.Repo.FetchCommentsWithUsersAndAnswers(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch comments: %w", err)
 	}
@@ -37,13 +37,13 @@ func (ci *CommentInteractor) GetAllComments() ([]map[string]interface{}, error) 
 }
 
 func (ci *CommentInteractor) AddComment(ctx context.Context, fileID, content string) error {
-	// Get user context from token
+	// get user context from token
 	userContext, ok := ctx.Value(constant.UserContext).(*models.UserContext)
 	if !ok {
 		return exception.ErrUnauthorized
 	}
 
-	// Convert fileID to ObjectID
+	// convert fileID to ObjectID
 	fileObjectID, err := primitive.ObjectIDFromHex(fileID)
 	if err != nil {
 		return exception.ErrInvalidObjectId
@@ -54,20 +54,20 @@ func (ci *CommentInteractor) AddComment(ctx context.Context, fileID, content str
 		return exception.ErrInvalidObjectId
 	}
 
-	// Check if user has permission to comment
+	// check user has permission to comment
 	option := permissionRepo.FilterPermssionType{
-		Option: permissionRepo.PermssionInList,
+		Option: permissionRepo.FilterPermssionOption(0),
 		Value:  []enums.FilePermissionType{enums.CommentPermission, enums.EditPermission}, // use enums for permission types
 	}
-	filePermission, err := ci.PermissionRepo.GetFilePermission(ctx, fileObjectID, userID, option) // corrected method name
+	filePermission, err := ci.PermissionRepo.GetFilePermission(ctx, fileObjectID, userID, option)
 	if err != nil {
 		return fmt.Errorf("failed to get file permission: %w", err)
 	}
 	if filePermission == nil {
-		return ErrPermissionDenied // User does not have permission
+		return ErrPermissionDenied
 	}
 
-	// User has permission, add comment
+	// user has permission
 	err = ci.Repo.CreateComment(ctx, fileObjectID, userID, content)
 	if err != nil {
 		return fmt.Errorf("failed to create comment: %w", err)

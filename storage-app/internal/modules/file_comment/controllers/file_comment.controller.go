@@ -19,7 +19,7 @@ func NewCommentController(interactor *interactors.CommentInteractor) *CommentCon
 }
 
 func (cc *CommentController) GetComments(c *gin.Context) {
-	comments, err := cc.Interactor.GetAllComments()
+	comments, err := cc.Interactor.GetAllComments(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch comments"})
 		return

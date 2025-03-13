@@ -11,5 +11,5 @@ type FileComment struct {
 	UserID    primitive.ObjectID `bson:"user_id,omitempty"`
 	Content   string             `bson:"content,omitempty"`
 	CreatedAt time.Time          `bson:"created_at,omitempty"`
-	Answers   []string           `bson:"answers,omitempty"` // Nested comments
+	Answers   [][]string         `bson:"answers,omitempty"` // Nested comments
 }
