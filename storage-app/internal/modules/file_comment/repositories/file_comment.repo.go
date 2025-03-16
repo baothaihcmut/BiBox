@@ -121,7 +121,6 @@ func (cr *CommentRepository) GetCommentsByFile(fileID string) ([]map[string]inte
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	//cnvert fileID from string to ObjectID
 	fileObjectID, err := primitive.ObjectIDFromHex(fileID)
 	if err != nil {
 		return nil, err
