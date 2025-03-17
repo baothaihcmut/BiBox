@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "storage-app/**"
+      - ".github/workflows/**"
     branches:
       - main
 
