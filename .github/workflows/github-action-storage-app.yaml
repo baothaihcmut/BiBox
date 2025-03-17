@@ -51,6 +51,7 @@ jobs:
           swag init -g ./cmd/storage-app/main.go --output ./docs
 
   build:
+    needs: docs
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
