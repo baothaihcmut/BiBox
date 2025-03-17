@@ -1,6 +1,6 @@
 services:
   api:
-    image: baothaihcmut/storage-app-api
+    image: baothaihcmut/storage-app:latest
     volumes:
       - ../config/config-storage-app.yaml:/app/config/config.yaml
     labels:
@@ -10,6 +10,16 @@ services:
       - traefik.http.services.api.loadbalancer.server.port=8080
     networks:
       - app-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256M
+        reservations:
+          cpus: "0.5"
+          memory: 128M
+
   reverse-proxy:
     image: traefik:v2.10
     command:
@@ -25,19 +35,34 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
-      - 80:80
+      - 8080:80
     networks:
       - app-network
       - reverse-proxy
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256M
+        reservations:
+          cpus: "0.5"
+          memory: 128M
   email-service:
-    image: baothaihcmut/storage-app-email-service
+    image: baothaihcmut/storage-app-email:v1
     volumes:
-      - ./config-email-service/config.yaml:/app/config/config.yaml
+      - ../config/config-email-service.yaml:/app/config/config.yaml
     networks:
       - app-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256M
+        reservations:
+          cpus: "0.5"
+          memory: 128M
 networks:
   app-network:
+    external: true
   reverse-proxy:
     external: true
-volumes:
-  mongodb_data:
