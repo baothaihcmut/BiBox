@@ -59,14 +59,6 @@ func (cr *CommentRepository) FetchCommentsWithUsersAndAnswers(ctx context.Contex
 			}},
 		},
 		{
-			{Key: "$lookup", Value: bson.D{
-				{Key: "from", Value: "answers"},
-				{Key: "localField", Value: "answers"},
-				{Key: "foreignField", Value: "_id"},
-				{Key: "as", Value: "answers"},
-			}},
-		},
-		{
 			{Key: "$unwind", Value: bson.D{
 				{Key: "path", Value: "$user"},
 				{Key: "preserveNullAndEmptyArrays", Value: true},
