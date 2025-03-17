@@ -100,52 +100,52 @@ jobs:
             baothaihcmut/storage-app:latest
   
   deploy:
-  needs: build-image
-  runs-on: ubuntu-latest
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    needs: build-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup SSH Key
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-    - name: SSH into Server and Deploy
-      run: |
-        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-          cd /path/to/docker-compose-directory
+      - name: SSH into Server and Deploy
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd /path/to/docker-compose-directory
 
-          # Export GitHub secrets as environment variables
-          export MONGO_URI="${{ secrets.MONGO_URI }}"
-          export JWT_ACCESS_TOKEN_SECRET="${{ secrets.JWT_ACCESS_TOKEN_SECRET }}"
-          export JWT_REFRESH_TOKEN_SECRET="${{ secrets.JWT_REFRESH_TOKEN_SECRET }}"
-          export GOOGLE_OAUTH2_CLIENT_ID="${{ secrets.GOOGLE_OAUTH2_CLIENT_ID }}"
-          export GOOGLE_OAUTH2_SECRET="${{ secrets.GOOGLE_OAUTH2_SECRET }}"
-          export OAUTH2_CLIENT_ID="${{ secrets.OAUTH2_CLIENT_ID }}"
-          export OAUTH2_SECRET="${{ secrets.OAUTH2_SECRET }}"
-          export S3_ACCESS_KEY="${{ secrets.S3_ACCESS_KEY }}"
-          export S3_SECRET_KEY="${{ secrets.S3_SECRET_KEY }}"
-          export GOOGLE_OAUTH2_REDIRECT_URI="$GOOGLE_OAUTH2_REDIRECT_URI"
-          export GMAIL_APP_PASSWORD = ${{ secrets.GMAIL_APP_PASSWORD }}
-          
+            # Export GitHub secrets as environment variables
+            export MONGO_URI="${{ secrets.MONGO_URI }}"
+            export JWT_ACCESS_TOKEN_SECRET="${{ secrets.JWT_ACCESS_TOKEN_SECRET }}"
+            export JWT_REFRESH_TOKEN_SECRET="${{ secrets.JWT_REFRESH_TOKEN_SECRET }}"
+            export GOOGLE_OAUTH2_CLIENT_ID="${{ secrets.GOOGLE_OAUTH2_CLIENT_ID }}"
+            export GOOGLE_OAUTH2_SECRET="${{ secrets.GOOGLE_OAUTH2_SECRET }}"
+            export OAUTH2_CLIENT_ID="${{ secrets.OAUTH2_CLIENT_ID }}"
+            export OAUTH2_SECRET="${{ secrets.OAUTH2_SECRET }}"
+            export S3_ACCESS_KEY="${{ secrets.S3_ACCESS_KEY }}"
+            export S3_SECRET_KEY="${{ secrets.S3_SECRET_KEY }}"
+            export GOOGLE_OAUTH2_REDIRECT_URI="$GOOGLE_OAUTH2_REDIRECT_URI"
+            export GMAIL_APP_PASSWORD = ${{ secrets.GMAIL_APP_PASSWORD }}
+            
 
-          git fetch origin storage-app-config
-          git checkout origin/storage-app-config
+            git fetch origin storage-app-config
+            git checkout origin/storage-app-config
 
-          cd environments/config
-          envsubst < config-storage-app.yml > config-storage-app.env.yml
-          envsubst < config-email-service.yml > config-email-service.env.yml
+            cd environments/config
+            envsubst < config-storage-app.yml > config-storage-app.env.yml
+            envsubst < config-email-service.yml > config-email-service.env.yml
 
-          cd ../docker
-          # Restart services
-          docker-compose -f docker-compose-api.yaml pull
-          docker-compose -f docker-compose-api.yaml up -d --remove-orphans
-          
-          # Clean up unused images
-          docker system prune -f
-        EOF
+            cd ../docker
+            # Restart services
+            docker-compose -f docker-compose-api.yaml pull
+            docker-compose -f docker-compose-api.yaml up -d --remove-orphans
+            
+            # Clean up unused images
+            docker system prune -f
+          EOF
  
 
