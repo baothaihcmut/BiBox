@@ -1,6 +1,6 @@
 mail:
   user_name: "banbao22042004@gmail.com"
-  password: ${GMAIL_APP_PASSWORD}
+  password: "${GMAIL_APP_PASSWORD}"
   mail_host: "smtp.gmail.com"
   mail_port: 587
 consumer:
