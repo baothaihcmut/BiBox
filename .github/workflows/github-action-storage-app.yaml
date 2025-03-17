@@ -106,15 +106,41 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: SSH into Server and Deploy
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-          ls -lah ~/.ssh
-          ssh -i ~/.ssh/id_rsa -tt ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ~"
+      - name: multiple host
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+              # Export GitHub secrets as environment variables
+              export MONGO_URI="${{ secrets.MONGO_URI }}"
+              export JWT_ACCESS_TOKEN_SECRET="${{ secrets.JWT_ACCESS_TOKEN_SECRET }}"
+              export JWT_REFRESH_TOKEN_SECRET="${{ secrets.JWT_REFRESH_TOKEN_SECRET }}"
+              export GOOGLE_OAUTH2_CLIENT_ID="${{ secrets.GOOGLE_OAUTH2_CLIENT_ID }}"
+              export GOOGLE_OAUTH2_SECRET="${{ secrets.GOOGLE_OAUTH2_SECRET }}"
+              export OAUTH2_CLIENT_ID="${{ secrets.OAUTH2_CLIENT_ID }}"
+              export OAUTH2_SECRET="${{ secrets.OAUTH2_SECRET }}"
+              export S3_ACCESS_KEY="${{ secrets.S3_ACCESS_KEY }}"
+              export S3_SECRET_KEY="${{ secrets.S3_SECRET_KEY }}"
+              export GOOGLE_OAUTH2_REDIRECT_URI="$GOOGLE_OAUTH2_REDIRECT_URI"
+              export GMAIL_APP_PASSWORD = ${{ secrets.GMAIL_APP_PASSWORD }}
+              
+
+              git fetch origin storage-app-config
+              git checkout origin/storage-app-config
+
+              cd environments/config
+              envsubst < config-storage-app.yml > config-storage-app.env.yml
+              envsubst < config-email-service.yml > config-email-service.env.yml
+
+              cd ../docker
+              # Restart services
+              docker-compose -f docker-compose-api.yaml pull
+              docker-compose -f docker-compose-api.yaml up -d --remove-orphans
+              
+              # Clean up unused images
+              docker system prune -f
  
 
