@@ -1,8 +1,8 @@
 services:
   api:
-    image: baothaihcmut/storage-app:v1
+    image: baothaihcmut/storage-app:latest
     volumes:
-      - ../config/config-storage-app.yaml:/app/config/config.yaml
+      - ../config/config-storage-app.env.yaml:/app/config/config.yaml
     labels:
       - traefik.enable=true
       - traefik.http.routers.api.rule=PathPrefix(`/api`)
@@ -50,7 +50,7 @@ services:
   email-service:
     image: baothaihcmut/storage-app-email:v1
     volumes:
-      - ../config/config-email-service.yaml:/app/config/config.yaml
+      - ../config/config-email-service.env.yaml:/app/config/config.yaml
     networks:
       - app-network
     deploy:
