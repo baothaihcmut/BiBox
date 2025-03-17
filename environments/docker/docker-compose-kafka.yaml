@@ -7,6 +7,14 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     networks:
       - kafka-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
   kafka:
     image: confluentinc/cp-kafka:7.4.4
     depends_on:
@@ -23,11 +31,17 @@ services:
     networks:
       - kafka-network
       - app-network
-    volumes:
-      - kafka-data:/var/lib/kafka/data
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 0.5G
+    ports:
+      - "9092:9092"
 networks:
   kafka-network:
   app-network:
     external: true
-volumes:
-  kafka-data:
