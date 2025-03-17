@@ -21,7 +21,7 @@ jobs:
 
       - name: Run Linter
         run: |
-          cd services/user-service
+          cd storage-app
           go install golang.org/x/lint/golint@latest
           golint ./...
         
