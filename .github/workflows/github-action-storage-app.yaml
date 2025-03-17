@@ -28,35 +28,6 @@ jobs:
         run: |
           cd storage-app
           golangci-lint run ./...
-  docs:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: 1.23.2
-
-          
-      - name: Install Swag
-        run: |
-          go install github.com/swaggo/swag/cmd/swag@latest
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-
-      - name: Generate Swagger docs
-        run: |
-          cd storage-app
-          swag init -g ./cmd/storage-app/main.go --output ./docs
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-          git add docs/
-          git diff --quiet && git diff --staged --quiet || git commit -m "Update Swagger docs [CI]"
-          git push origin main
-      
 
   build:
     needs: docs
@@ -70,6 +41,17 @@ jobs:
         with:
           go-version: 1.23.2
 
+      - name: Install Swag
+        run: |
+          go install github.com/swaggo/swag/cmd/swag@latest
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Generate Swagger docs
+        run: |
+          cd storage-app
+          swag init -g ./cmd/storage-app/main.go --output ./docs
+
+          
       - name: Build bin
         run: |
           cd storage-app
