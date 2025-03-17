@@ -30,6 +30,8 @@ jobs:
           golangci-lint run ./...
   docs:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -49,6 +51,15 @@ jobs:
         run: |
           cd storage-app
           swag init -g ./cmd/storage-app/main.go --output ./docs
+      
+      - name: Commit and Push Changes
+        run: |
+          cd storage-app
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add docs/
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update Swagger docs [CI]"
+          git push origin main
 
   build:
     needs: docs
