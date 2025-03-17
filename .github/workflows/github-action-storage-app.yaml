@@ -128,8 +128,8 @@ jobs:
           mkdir config
           envsubst < environments/config/config-storage-app-template.yaml > config/config-storage-app.yaml
           envsubst < environments/config/config-email-service-template.yaml > config/config-email-service.yaml
-          scp -r ./config ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/storage-app/config
-          scp -r environments/docker ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/storage-app/docker
+          scp -r ./config ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/storage-app
+          scp -r environments/docker ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/storage-app
 
       # - name: Deploy
       #   uses: appleboy/ssh-action@v1
