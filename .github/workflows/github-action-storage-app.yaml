@@ -131,15 +131,12 @@ jobs:
               git clone -b storage-app-config https://github.com/baothaihcmut/BiBox.git
 
               cd BiBox/environments/config
-              envsubst < config-storage-app.yml > config-storage-app.env.yml
-              envsubst < config-email-service.yml > config-email-service.env.yml
+              envsubst < config-storage-app.yaml > config-storage-app.env.yaml
+              envsubst < config-email-service.yaml > config-email-service.env.yaml
 
               cd ../docker
               # Restart services
               docker compose -f docker-compose-api.yaml pull
-              docker compose -f docker-compose-api.yaml up -d --remove-orphans
-              
-              # Clean up unused images
-              docker system prune -f
+              docker compose -f docker-compose-api.yaml up -d 
  
 
