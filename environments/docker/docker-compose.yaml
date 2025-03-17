@@ -2,7 +2,7 @@ services:
   api:
     image: baothaihcmut/storage-app-api
     volumes:
-      - ./config/config.yaml:/app/config/config.yaml
+      - ../config/config-storage-app.yaml:/app/config/config.yaml
     labels:
       - traefik.enable=true
       - traefik.http.routers.api.rule=PathPrefix(`/api`)
