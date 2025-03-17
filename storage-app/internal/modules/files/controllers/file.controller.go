@@ -39,7 +39,7 @@ func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
 }
 
 // @Sumary Create new file 1
-// @Description Create new file
+// @Description Create new file 111
 // @Tags files
 // @Accept json
 // @Produce json
