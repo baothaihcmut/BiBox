@@ -4,7 +4,6 @@ on:
   push:
     paths:
       - "storage-app/**"
-      - ".github/workflows/**"
     branches:
       - main
 
@@ -114,8 +113,7 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-          cat ~/.ssh/id_rsa
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          ssh -tt ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
             cd /path/to/docker-compose-directory
 
             # Export GitHub secrets as environment variables
