@@ -2,7 +2,7 @@ package models
 
 type FileNode struct {
 	Value    *File
-	SubFiles []*File
+	SubFiles []*FileNode
 }
 
 type FileStructure struct {

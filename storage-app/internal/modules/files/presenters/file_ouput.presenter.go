@@ -21,15 +21,14 @@ type StorageDetailOuput struct {
 type FileOutput struct {
 	ID             primitive.ObjectID   `json:"id"`
 	Name           string               `json:"name"`
+	TotalSize      int                  `json:"total_size"`
 	OwnerID        primitive.ObjectID   `json:"owner_id"`
 	IsFolder       bool                 `json:"is_folder"`
 	ParentFolderID *primitive.ObjectID  `json:"parent_folder_id"`
 	CreatedAt      time.Time            `json:"created_at"`
 	UpdatedAt      time.Time            `json:"updated_at"`
 	OpenedAt       *time.Time           `json:"opened_at"`
-	HasPassword    bool                 `json:"has_password"`
 	Description    string               `json:"description"`
-	IsSecure       bool                 `json:"is_secure"`
 	TagIDs         []primitive.ObjectID `json:"tags"`
 	StorageDetails *StorageDetailOuput  `json:"storage_detail"`
 }
@@ -61,15 +60,14 @@ func MapFileToFileOutput(file *models.File) *FileOutput {
 	return &FileOutput{
 		ID:             file.ID,
 		Name:           file.Name,
+		TotalSize:      file.TotalSize,
 		OwnerID:        file.OwnerID,
 		IsFolder:       file.IsFolder,
 		ParentFolderID: file.ParentFolderID,
 		CreatedAt:      file.CreatedAt,
 		UpdatedAt:      file.UpdatedAt,
 		OpenedAt:       file.OpenedAt,
-		HasPassword:    file.HasPassword,
 		Description:    file.Description,
-		IsSecure:       file.IsSecure,
 		TagIDs:         file.TagIDs,
 		StorageDetails: storageDetailOutput,
 	}

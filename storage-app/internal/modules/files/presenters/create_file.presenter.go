@@ -8,10 +8,7 @@ type CreateFileInput struct {
 	Name           string               `json:"name" validate:"required"`
 	IsFolder       bool                 `json:"is_folder"` // Use *bool to allow nil check
 	ParentFolderID *primitive.ObjectID  `json:"parent_folder_id,omitempty"`
-	HasPassword    bool                 `json:"has_password"` // Use *bool to allow nil check
-	Password       *string              `json:"password,omitempty"`
 	Description    string               `json:"description"`
-	IsSecure       bool                 `json:"is_secure"` // Use *bool to allow nil check
 	TagIDs         []primitive.ObjectID `json:"tags,omitempty"`
 	StorageDetail  *struct {
 		Size     int    `json:"size" validate:"required"`      // Required field

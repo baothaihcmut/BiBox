@@ -25,11 +25,13 @@ import (
 	filePermssionRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/repositories"
 	filePermissionService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/services"
 	fileController "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/controllers"
-	fileInteractor "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/interactors"
-	fileRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/repositories"
+	fileInteractor "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/interactors/impl"
+	fileRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/repositories/impl"
 	fileService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/services"
 	tagRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/tags/repositories"
-	userRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/users/repositories"
+	userController "github.com/baothaihcmut/Bibox/storage-app/internal/modules/users/controllers"
+	userInteractor "github.com/baothaihcmut/Bibox/storage-app/internal/modules/users/interactors/impl"
+	userRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/users/repositories/impl"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -102,12 +104,13 @@ func (s *Server) initApp() {
 	fileStructureService := fileService.NewFileStructureService()
 
 	//init interactor
+	userInteractor := userInteractor.NewUserInteractor(userRepo)
 	authInteractor := authInteractors.NewAuthInteractor(oauth2SerivceFactory, userRepo, userJwtService, logger, userConfirmService, mongoService, passwordService)
 	fileInteractor := fileInteractor.NewFileInteractor(userRepo, tagRepo, fileRepo, filePermssionService, filePermssionRepo, fileStructureService, logger, storageService, mongoService)
 	//init controllers
 	authController := authController.NewAuthController(authInteractor, &s.config.Jwt, &s.config.Oauth2)
 	fileController := fileController.NewFileController(fileInteractor, userJwtService, logger)
-
+	userController := userController.NewUserController(userInteractor, userJwtService, logger)
 	//init global middleware
 	s.g.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"https://storage-app-web.spsohcmut.xyz", "http://localhost:3000"}, // Explicitly allow frontend origin
@@ -130,6 +133,7 @@ func (s *Server) initApp() {
 	{
 		authController.Init(globalGroup)
 		fileController.Init(globalGroup)
+		userController.Init(globalGroup)
 	}
 }
 

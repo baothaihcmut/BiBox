@@ -98,6 +98,16 @@ definitions:
     - MimeShell
     - MimeEXE
     - MimeBIN
+  enums.PermissionType:
+    enum:
+    - 1
+    - 3
+    - 5
+    type: integer
+    x-enum-varnames:
+    - PermissionTypeView
+    - PermissionTypeComment
+    - PermissionEdit
   presenter.ConfirmSignUpInput:
     properties:
       code:
@@ -144,24 +154,42 @@ definitions:
     type: object
   presenter.SignUpOutput:
     type: object
+  presenters.AddFilePermissionInput:
+    properties:
+      fileId:
+        type: string
+      permissions:
+        items:
+          $ref: '#/definitions/presenters.FilePermission'
+        type: array
+    type: object
+  presenters.AddFilePermissionOutput:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/presenters.FilePermissionOuput'
+        type: array
+    type: object
+  presenters.AdditionFilePermission:
+    properties:
+      file_id:
+        type: string
+      permission_type:
+        $ref: '#/definitions/enums.FilePermissionType'
+    required:
+    - file_id
+    - permission_type
+    type: object
   presenters.CreateFileInput:
     properties:
       description:
         type: string
-      has_password:
-        description: Use *bool to allow nil check
-        type: boolean
       is_folder:
-        description: Use *bool to allow nil check
-        type: boolean
-      is_secure:
         description: Use *bool to allow nil check
         type: boolean
       name:
         type: string
       parent_folder_id:
-        type: string
-      password:
         type: string
       storage_detail:
         properties:
@@ -188,13 +216,9 @@ definitions:
         type: string
       description:
         type: string
-      has_password:
-        type: boolean
       id:
         type: string
       is_folder:
-        type: boolean
-      is_secure:
         type: boolean
       name:
         type: string
@@ -212,10 +236,38 @@ definitions:
         items:
           type: string
         type: array
+      total_size:
+        type: integer
       updated_at:
         type: string
       url_expiry:
         type: integer
+    type: object
+  presenters.FilePermission:
+    properties:
+      addition_permissions:
+        items:
+          $ref: '#/definitions/presenters.AdditionFilePermission'
+        type: array
+      permission_type:
+        $ref: '#/definitions/enums.PermissionType'
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
+  presenters.FilePermissionOuput:
+    properties:
+      access_secure_file:
+        type: boolean
+      can_share:
+        type: boolean
+      file_id:
+        type: string
+      permission_type:
+        $ref: '#/definitions/enums.FilePermissionType'
+      user_id:
+        type: string
     type: object
   presenters.FilePermissionUserInfo:
     properties:
@@ -243,19 +295,50 @@ definitions:
       user_id:
         type: string
     type: object
+  presenters.FileWithPathOutput:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_folder:
+        type: boolean
+      name:
+        type: string
+      opened_at:
+        type: string
+      owner_id:
+        type: string
+      parent_folder_id:
+        type: string
+      path:
+        type: string
+      put_object_url:
+        type: string
+      storage_detail:
+        $ref: '#/definitions/presenters.StorageDetailOuput'
+      tags:
+        items:
+          type: string
+        type: array
+      total_size:
+        type: integer
+      updated_at:
+        type: string
+      url_expiry:
+        type: integer
+    type: object
   presenters.FileWithPermissionOutput:
     properties:
       created_at:
         type: string
       description:
         type: string
-      has_password:
-        type: boolean
       id:
         type: string
       is_folder:
-        type: boolean
-      is_secure:
         type: boolean
       name:
         type: string
@@ -277,6 +360,8 @@ definitions:
         items:
           type: string
         type: array
+      total_size:
+        type: integer
       updated_at:
         type: string
     type: object
@@ -308,13 +393,9 @@ definitions:
         type: string
       description:
         type: string
-      has_password:
-        type: boolean
       id:
         type: string
       is_folder:
-        type: boolean
-      is_secure:
         type: boolean
       name:
         type: string
@@ -330,6 +411,8 @@ definitions:
         items:
           type: string
         type: array
+      total_size:
+        type: integer
       updated_at:
         type: string
     type: object
@@ -373,6 +456,15 @@ definitions:
       user_image:
         type: string
     type: object
+  presenters.SearchUserByEmailOuput:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/presenters.UserOutput'
+        type: array
+      pagination:
+        $ref: '#/definitions/response.PaginationResponse'
+    type: object
   presenters.StorageDetailOuput:
     properties:
       file_size:
@@ -387,19 +479,31 @@ definitions:
       name:
         type: string
     type: object
+  presenters.UploadFolderInput:
+    properties:
+      data:
+        $ref: '#/definitions/presenters.CreateFileInput'
+      sub_files:
+        items:
+          $ref: '#/definitions/presenters.UploadFolderInput'
+        type: array
+    type: object
+  presenters.UploadFolderOutput:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/presenters.FileWithPathOutput'
+        type: array
+    type: object
   presenters.UploadedFileOutput:
     properties:
       created_at:
         type: string
       description:
         type: string
-      has_password:
-        type: boolean
       id:
         type: string
       is_folder:
-        type: boolean
-      is_secure:
         type: boolean
       name:
         type: string
@@ -415,7 +519,22 @@ definitions:
         items:
           type: string
         type: array
+      total_size:
+        type: integer
       updated_at:
+        type: string
+    type: object
+  presenters.UserOutput:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      image:
+        type: string
+      last_name:
         type: string
     type: object
   response.AppResponse:
@@ -759,6 +878,55 @@ paths:
               type: object
       tags:
       - files
+  /files/:id/permissions/add:
+    post:
+      consumes:
+      - application/json
+      description: Add permission for file
+      parameters:
+      - description: file id must be UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: permission info
+        in: body
+        name: file
+        required: true
+        schema:
+          $ref: '#/definitions/presenters.AddFilePermissionInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Add permission success
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.AddFilePermissionOutput'
+              type: object
+        "403":
+          description: User don't have permission for this file operation
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: Parent folder not found, Tag of file not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
   /files/:id/sub-file:
     get:
       consumes:
@@ -1021,4 +1189,82 @@ paths:
               type: object
       tags:
       - files
+  /files/upload-folder:
+    post:
+      consumes:
+      - application/json
+      description: upload folder
+      parameters:
+      - description: folder information
+        in: body
+        name: file
+        required: true
+        schema:
+          $ref: '#/definitions/presenters.UploadFolderInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Create file sucess, storage_detail.put_object_url is presign
+            url for upload file
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.UploadFolderOutput'
+              type: object
+        "403":
+          description: User don't have permission for this file operation
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: Parent folder not found, Tag of file not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: search user by email
+      parameters:
+      - description: email value can be any string
+        in: query
+        name: email
+        required: true
+        type: string
+      - description: off set must be greater than 0
+        in: query
+        name: offset
+        type: string
+      - description: limit must be greater than 0
+        in: query
+        name: limit
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: search user success
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.SearchUserByEmailOuput'
+              type: object
+      tags:
+      - users
 swagger: "2.0"

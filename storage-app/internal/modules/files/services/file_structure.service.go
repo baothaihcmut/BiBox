@@ -1,12 +1,13 @@
 package services
 
 import (
-	"container/list"
 	"context"
 	"fmt"
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/enums"
+	permissionModel "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/models"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/models"
+
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/presenters"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -17,13 +18,15 @@ type FileWithPath struct {
 }
 
 type FileStructureService interface {
-	TraverseUploadFolder(_ context.Context, folder *presenters.UploadFolderInput, ownerID primitive.ObjectID, storageProvider string, storageBucket string) ([]*FileWithPath, int, error)
+	TraverseUploadFolder(_ context.Context, folder *presenters.UploadFolderInput, ownerID primitive.ObjectID, storageProvider string, storageBucket string) ([]*FileWithPath, int)
+	BuildFileStructureTree(_ context.Context, files []*models.File) *models.FileStructure
+	ExtractPermissionFromFileStructure(ctx context.Context, userId primitive.ObjectID, fileStructure *models.FileStructure, addtionPermssions []presenters.AdditionFilePermission) []*permissionModel.FilePermission
 }
 
 type FileStructureServiceImpl struct {
 }
 
-func (f *FileStructureServiceImpl) BuildFileStructureTree(_ context.Context, files []*models.File) (*models.FileStructure, error) {
+func (f *FileStructureServiceImpl) BuildFileStructureTree(_ context.Context, files []*models.File) *models.FileStructure {
 	targetStructure := &models.FileStructure{
 		Root: []*models.FileNode{},
 	}
@@ -31,44 +34,55 @@ func (f *FileStructureServiceImpl) BuildFileStructureTree(_ context.Context, fil
 	for _, file := range files {
 		mapNode[file.ID] = &models.FileNode{
 			Value:    file,
-			SubFiles: []*models.File{},
+			SubFiles: []*models.FileNode{},
 		}
 	}
 	for _, file := range files {
 		targetNode := mapNode[file.ID]
 		if file.ParentFolderID != nil {
-			targetNode.SubFiles = append(mapNode[*file.ParentFolderID].SubFiles, file)
-		} else {
-			targetStructure.Root = append(targetStructure.Root, targetNode)
-		}
-	}
-	return targetStructure, nil
-}
-
-func (f *FileStructureServiceImpl) ExcludeFile(_ context.Context, fileStructure *models.FileStructure, excludeFileIds []primitive.ObjectID) ([]*models.File, error) {
-	//using BFS
-	q := list.New()
-	for _, node := range fileStructure.Root {
-		q.PushBack(node)
-	}
-	excludeFileIdsSet := make(map[primitive.ObjectID]struct{})
-	for _, fileID := range excludeFileIds {
-		excludeFileIdsSet[fileID] = struct{}{}
-	}
-	res := make([]*models.File, 0)
-	for q.Len() > 0 {
-		targetNode := q.Remove(q.Front()).(*models.FileNode)
-		if _, exist := excludeFileIdsSet[targetNode.Value.ID]; !exist {
-			for _, subFile := range targetNode.SubFiles {
-				q.PushBack(subFile)
+			if parentNode, exist := mapNode[*file.ParentFolderID]; exist {
+				parentNode.SubFiles = append(parentNode.SubFiles, targetNode)
+				continue
 			}
 		}
-		res = append(res, targetNode.Value)
+		targetStructure.Root = append(targetStructure.Root, targetNode)
 	}
-	return res, nil
+	return targetStructure
 }
 
-func (f *FileStructureServiceImpl) TraverseUploadFolder(_ context.Context, folder *presenters.UploadFolderInput, ownerID primitive.ObjectID, storageProvider string, storageBucket string) ([]*FileWithPath, int, error) {
+func (f *FileStructureServiceImpl) ExtractPermissionFromFileStructure(ctx context.Context, userId primitive.ObjectID, fileStructure *models.FileStructure, addtionPermssions []presenters.AdditionFilePermission) []*permissionModel.FilePermission {
+	//map for addition permission
+	mapAdditionPermission := make(map[primitive.ObjectID]enums.PermissionType)
+	for _, additionPermission := range addtionPermssions {
+		mapAdditionPermission[additionPermission.FileId] = enums.PermissionType(additionPermission.PermissionType)
+	}
+	var traverseFileStructure func(*models.FileNode, enums.FilePermissionType) []*permissionModel.FilePermission
+	traverseFileStructure = func(root *models.FileNode, permissionType enums.FilePermissionType) []*permissionModel.FilePermission {
+		if overwritePermission, exist := mapAdditionPermission[root.Value.ID]; exist {
+			permissionType = enums.FilePermissionType(overwritePermission)
+		}
+		permissions := []*permissionModel.FilePermission{permissionModel.NewFilePermission(
+			root.Value.ID,
+			userId,
+			permissionType,
+			true,
+			nil,
+		),
+		}
+		for _, subFile := range root.SubFiles {
+			subPermissions := traverseFileStructure(subFile, permissionType)
+			permissions = append(permissions, subPermissions...)
+		}
+		return permissions
+	}
+	permissions := make([]*permissionModel.FilePermission, 0)
+	for _, root := range fileStructure.Root {
+		permissions = append(permissions, traverseFileStructure(root, enums.ViewPermission)...)
+	}
+	return permissions
+}
+
+func (f *FileStructureServiceImpl) TraverseUploadFolder(_ context.Context, folder *presenters.UploadFolderInput, ownerID primitive.ObjectID, storageProvider string, storageBucket string) ([]*FileWithPath, int) {
 	var traverseFunc func(*presenters.UploadFolderInput, *primitive.ObjectID, string) ([]*FileWithPath, int)
 	traverseFunc = func(folder *presenters.UploadFolderInput, parentFolderID *primitive.ObjectID, path string) ([]*FileWithPath, int) {
 		var storageDetail *models.FileStorageDetailArg
@@ -85,10 +99,7 @@ func (f *FileStructureServiceImpl) TraverseUploadFolder(_ context.Context, folde
 			folder.Data.Name,
 			parentFolderID,
 			folder.Data.Description,
-			folder.Data.Password,
 			folder.Data.IsFolder,
-			folder.Data.HasPassword,
-			folder.Data.IsSecure,
 			folder.Data.TagIDs,
 			storageDetail,
 		)
@@ -110,7 +121,7 @@ func (f *FileStructureServiceImpl) TraverseUploadFolder(_ context.Context, folde
 		return res, totalSize
 	}
 	files, totalSize := traverseFunc(folder, folder.Data.ParentFolderID, "")
-	return files, totalSize, nil
+	return files, totalSize
 }
 func NewFileStructureService() FileStructureService {
 	return &FileStructureServiceImpl{}
