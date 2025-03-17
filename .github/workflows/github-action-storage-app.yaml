@@ -106,13 +106,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-      - name: multiple host
+      - name: Deploy
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -134,7 +128,7 @@ jobs:
               export GMAIL_APP_PASSWORD="${{ secrets.GMAIL_APP_PASSWORD }}"
               
 
-              git clone -b storage-app-config git@github.com:baothaihcmut/BiBox.git
+              git clone -b storage-app-config https://github.com/baothaihcmut/BiBox.git
 
               cd BiBox/environments/config
               envsubst < config-storage-app.yml > config-storage-app.env.yml
