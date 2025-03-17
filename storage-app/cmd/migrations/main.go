@@ -31,5 +31,5 @@ func main() {
 	for _, migrate := range migrates {
 		migrate(ctx, client, database)
 	}
-	fmt.Println("Done migrate")
+	fmt.Println("Done migrate111")
 }
