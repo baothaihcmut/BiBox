@@ -1,0 +1,41 @@
+server:
+  port: 8080
+logger:
+  level: "debug"
+  format: "json"
+  output: "stdout"
+mongo:
+  uri: ${MONGO_URI}
+  max_pool_size: 100
+  min_pool_size: 10
+  connection_time_out: 30
+  database: "storage-app"
+jwt:
+  access_token:
+    secret: ${JWT_ACCESS_TOKEN_SECRET}
+    age: 3000
+  refresh_token:
+    secret: ${JWT_REFRESH_TOKEN_SECRET}
+    age: 7000
+oauth2:
+  google:
+    client_id: ${GOOGLE_OAUTH2_CLIENT_ID}
+    secret: ${GOOGLE_OAUTH2_SECRET}
+    redirect_uri: ${GOOGLE_OAUTH2_REDIRECT_URI}
+  github:
+    client_id: ${OAUTH2_CLIENT_ID}
+    secret: ${OAUTH2_SECRET}
+    redirect_uri: "http://localhost:8080/api/v1/auth/callback"
+s3:
+  access_key: "AKIA5FTZFI4OKLHKBITV"
+  secret_key: "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"
+  region: "us-east-1"
+  storage_provider: "s3"
+  bucket: "storage-app-go-bucket-baothai"
+redis:
+  endpoint: "redis:6379"
+  database: 0
+kafka:
+  brokers:
+    - "kafka:9092"
+  max_retry: 5
