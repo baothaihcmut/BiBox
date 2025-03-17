@@ -34,8 +34,8 @@ func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
 	internal.GET("/:id/permissions", middleware.ValidateMiddleware[presenters.GetFilePermissionInput](true), f.handleGetPermissionOfFile)
 	internal.GET("/:id/metadata", middleware.ValidateMiddleware[presenters.GetFileMetaDataInput](true), f.handleGetFileMetadata)
 	internal.GET("/:id/download-url", middleware.ValidateMiddleware[presenters.GetFileDownloadUrlInput](true, binding.Query), f.handleGetFileDownloadUrl)
-	internal.GET("/:id/structure", middleware.ValidateMiddleware[presenters.GetFileStructureInput](true), f.handleGetFileStructure)
 	internal.GET("/:id/sub-file", middleware.ValidateMiddleware[presenters.GetSubFileOfFolderInput](true, binding.Query), f.handleGetSubFileOfFolder)
+	internal.POST("/:id/permissions/add", middleware.ValidateMiddleware[presenters.AddFilePermissionInput](true, binding.JSON), f.handleAddFilePermission)
 }
 
 // @Sumary Create new file
@@ -223,6 +223,16 @@ func (f *FileControllerImpl) handleGetSubFileOfFolder(c *gin.Context) {
 	c.JSON(http.StatusOK, response.InitResponse(true, "Get file structure success", res))
 }
 
+// @Sumary Upload folder
+// @Description upload folder
+// @Tags files
+// @Accept json
+// @Produce json
+// @Param file body presenters.UploadFolderInput true "folder information"
+// @Success 201 {object} response.AppResponse{data=presenters.UploadFolderOutput} "Create file sucess, storage_detail.put_object_url is presign url for upload file"
+// @Failure 403 {object} response.AppResponse{data=nil} "User don't have permission for this file operation"
+// @Failure 404 {object} response.AppResponse{data=nil} "Parent folder not found, Tag of file not found"
+// @Router   /files/upload-folder [post]
 func (f *FileControllerImpl) handleUploadFolder(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
 	res, err := f.interactor.UploadFolder(c.Request.Context(), payload.(*presenters.UploadFolderInput))
@@ -234,15 +244,36 @@ func (f *FileControllerImpl) handleUploadFolder(c *gin.Context) {
 	c.JSON(http.StatusCreated, response.InitResponse(true, "Upload folder success", res))
 }
 
-func (f *FileControllerImpl) handleGetFileStructure(c *gin.Context) {
+// @Sumary Add permission for file
+// @Description Add permission for file
+// @Tags files
+// @Accept json
+// @Produce json
+// @Param id path string true "file id must be UUID"
+// @Param file body presenters.AddFilePermissionInput true "permission info"
+// @Success 201 {object} response.AppResponse{data=presenters.AddFilePermissionOutput} "Add permission success"
+// @Failure 403 {object} response.AppResponse{data=nil} "User don't have permission for this file operation"
+// @Failure 404 {object} response.AppResponse{data=nil} "Parent folder not found, Tag of file not found"
+// @Router   /files/:id/permissions/add [post]
+func (f *FileControllerImpl) handleAddFilePermission(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
-	res, err := f.interactor.GetFileStructure(c.Request.Context(), payload.(*presenters.GetFileStructureInput))
+	res, err := f.interactor.AddFilePermission(c.Request.Context(), payload.(*presenters.AddFilePermissionInput))
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
-	c.JSON(http.StatusOK, response.InitResponse(true, "Get sub file of folder success", res))
+	c.JSON(http.StatusCreated, response.InitResponse(true, "Add permission success", res))
+}
+func (f *FileControllerImpl) handleGetSubFileMetaData(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := f.interactor.GetSubFileMetaData(c.Request.Context(), payload.(*presenters.GetSubFileMetaDataInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusOK, response.InitResponse(true, "Get sub file metadata success", res))
 }
 
 func NewFileController(interactor interactors.FileInteractor, jwtService services.JwtService, logger logger.Logger) FileController {

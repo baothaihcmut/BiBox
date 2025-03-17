@@ -10,6 +10,7 @@ var (
 	ErrInvalidToken               = errors.New("invalid token")
 	ErrStorageSizeExceedLimitSize = errors.New("storage size exceed limit size")
 	ErrStorageSizeLessThanZero    = errors.New("storage size cannot less than 0")
+	ErrMissStorageDetail          = errors.New("storage detail is required")
 	ErrInvalidObjectId            = errors.New("object id is invalid")
 	ErrParenFileNotExist          = errors.New("parent file not exist")
 	ErrTagNotExist                = errors.New("tag not exist")
@@ -27,6 +28,7 @@ var (
 
 	ErrUnauthorized     = errors.New("unauthorized access")
 	ErrPermissionDenied = errors.New("permission denied")
+	ErrMissPermission   = errors.New("miss permission type")
 )
 var errMap = map[error]int{
 	ErrTokenExpire:                http.StatusUnauthorized,
@@ -47,6 +49,7 @@ var errMap = map[error]int{
 	ErrPermissionDenied:           http.StatusForbidden,
 	ErrMismatchPassword:           http.StatusConflict,
 	ErrWrongPasswordOrEmail:       http.StatusUnauthorized,
+	ErrMissStorageDetail:          http.StatusBadRequest,
 }
 
 func ErrorStatusMapper(err error) int {

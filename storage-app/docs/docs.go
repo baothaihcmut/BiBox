@@ -583,6 +583,94 @@ const docTemplate = `{
                 }
             }
         },
+        "/files/:id/permissions/add": {
+            "post": {
+                "description": "Add permission for file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "file id must be UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "permission info",
+                        "name": "file",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/presenters.AddFilePermissionInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Add permission success",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/presenters.AddFilePermissionOutput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "User don't have permission for this file operation",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Parent folder not found, Tag of file not found",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/files/:id/sub-file": {
             "get": {
                 "description": "Find file of user",
@@ -1039,6 +1127,142 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/files/upload-folder": {
+            "post": {
+                "description": "upload folder",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "parameters": [
+                    {
+                        "description": "folder information",
+                        "name": "file",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/presenters.UploadFolderInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Create file sucess, storage_detail.put_object_url is presign url for upload file",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/presenters.UploadFolderOutput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "User don't have permission for this file operation",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Parent folder not found, Tag of file not found",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/users": {
+            "get": {
+                "description": "search user by email",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "email value can be any string",
+                        "name": "email",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "off set must be greater than 0",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "limit must be greater than 0",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "search user success",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.AppResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/presenters.SearchUserByEmailOuput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1146,6 +1370,19 @@ const docTemplate = `{
                 "MimeBIN"
             ]
         },
+        "enums.PermissionType": {
+            "type": "integer",
+            "enum": [
+                1,
+                3,
+                5
+            ],
+            "x-enum-varnames": [
+                "PermissionTypeView",
+                "PermissionTypeComment",
+                "PermissionEdit"
+            ]
+        },
         "presenter.ConfirmSignUpInput": {
             "type": "object",
             "properties": {
@@ -1214,6 +1451,46 @@ const docTemplate = `{
         "presenter.SignUpOutput": {
             "type": "object"
         },
+        "presenters.AddFilePermissionInput": {
+            "type": "object",
+            "properties": {
+                "fileId": {
+                    "type": "string"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/presenters.FilePermission"
+                    }
+                }
+            }
+        },
+        "presenters.AddFilePermissionOutput": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/presenters.FilePermissionOuput"
+                    }
+                }
+            }
+        },
+        "presenters.AdditionFilePermission": {
+            "type": "object",
+            "required": [
+                "file_id",
+                "permission_type"
+            ],
+            "properties": {
+                "file_id": {
+                    "type": "string"
+                },
+                "permission_type": {
+                    "$ref": "#/definitions/enums.FilePermissionType"
+                }
+            }
+        },
         "presenters.CreateFileInput": {
             "type": "object",
             "required": [
@@ -1223,15 +1500,7 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "has_password": {
-                    "description": "Use *bool to allow nil check",
-                    "type": "boolean"
-                },
                 "is_folder": {
-                    "description": "Use *bool to allow nil check",
-                    "type": "boolean"
-                },
-                "is_secure": {
                     "description": "Use *bool to allow nil check",
                     "type": "boolean"
                 },
@@ -1239,9 +1508,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "parent_folder_id": {
-                    "type": "string"
-                },
-                "password": {
                     "type": "string"
                 },
                 "storage_detail": {
@@ -1278,16 +1544,10 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "has_password": {
-                    "type": "boolean"
-                },
                 "id": {
                     "type": "string"
                 },
                 "is_folder": {
-                    "type": "boolean"
-                },
-                "is_secure": {
                     "type": "boolean"
                 },
                 "name": {
@@ -1314,11 +1574,54 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "total_size": {
+                    "type": "integer"
+                },
                 "updated_at": {
                     "type": "string"
                 },
                 "url_expiry": {
                     "type": "integer"
+                }
+            }
+        },
+        "presenters.FilePermission": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "addition_permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/presenters.AdditionFilePermission"
+                    }
+                },
+                "permission_type": {
+                    "$ref": "#/definitions/enums.PermissionType"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "presenters.FilePermissionOuput": {
+            "type": "object",
+            "properties": {
+                "access_secure_file": {
+                    "type": "boolean"
+                },
+                "can_share": {
+                    "type": "boolean"
+                },
+                "file_id": {
+                    "type": "string"
+                },
+                "permission_type": {
+                    "$ref": "#/definitions/enums.FilePermissionType"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },
@@ -1362,6 +1665,59 @@ const docTemplate = `{
                 }
             }
         },
+        "presenters.FileWithPathOutput": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_folder": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "opened_at": {
+                    "type": "string"
+                },
+                "owner_id": {
+                    "type": "string"
+                },
+                "parent_folder_id": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "put_object_url": {
+                    "type": "string"
+                },
+                "storage_detail": {
+                    "$ref": "#/definitions/presenters.StorageDetailOuput"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "total_size": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "url_expiry": {
+                    "type": "integer"
+                }
+            }
+        },
         "presenters.FileWithPermissionOutput": {
             "type": "object",
             "properties": {
@@ -1371,16 +1727,10 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "has_password": {
-                    "type": "boolean"
-                },
                 "id": {
                     "type": "string"
                 },
                 "is_folder": {
-                    "type": "boolean"
-                },
-                "is_secure": {
                     "type": "boolean"
                 },
                 "name": {
@@ -1412,6 +1762,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "total_size": {
+                    "type": "integer"
                 },
                 "updated_at": {
                     "type": "string"
@@ -1461,16 +1814,10 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "has_password": {
-                    "type": "boolean"
-                },
                 "id": {
                     "type": "string"
                 },
                 "is_folder": {
-                    "type": "boolean"
-                },
-                "is_secure": {
                     "type": "boolean"
                 },
                 "name": {
@@ -1493,6 +1840,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "total_size": {
+                    "type": "integer"
                 },
                 "updated_at": {
                     "type": "string"
@@ -1561,6 +1911,20 @@ const docTemplate = `{
                 }
             }
         },
+        "presenters.SearchUserByEmailOuput": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/presenters.UserOutput"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/response.PaginationResponse"
+                }
+            }
+        },
         "presenters.StorageDetailOuput": {
             "type": "object",
             "properties": {
@@ -1583,6 +1947,31 @@ const docTemplate = `{
                 }
             }
         },
+        "presenters.UploadFolderInput": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/presenters.CreateFileInput"
+                },
+                "sub_files": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/presenters.UploadFolderInput"
+                    }
+                }
+            }
+        },
+        "presenters.UploadFolderOutput": {
+            "type": "object",
+            "properties": {
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/presenters.FileWithPathOutput"
+                    }
+                }
+            }
+        },
         "presenters.UploadedFileOutput": {
             "type": "object",
             "properties": {
@@ -1592,16 +1981,10 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "has_password": {
-                    "type": "boolean"
-                },
                 "id": {
                     "type": "string"
                 },
                 "is_folder": {
-                    "type": "boolean"
-                },
-                "is_secure": {
                     "type": "boolean"
                 },
                 "name": {
@@ -1625,7 +2008,30 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "total_size": {
+                    "type": "integer"
+                },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "presenters.UserOutput": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "last_name": {
                     "type": "string"
                 }
             }

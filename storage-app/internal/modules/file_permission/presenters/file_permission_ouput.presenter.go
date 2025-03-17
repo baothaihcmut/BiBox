@@ -14,7 +14,7 @@ type FilePermissionOuput struct {
 	AccessSecureFile bool                     `json:"access_secure_file"`
 }
 
-func MapToOuput(f models.FilePermission) *FilePermissionOuput {
+func MapToOuput(f *models.FilePermission) *FilePermissionOuput {
 	return &FilePermissionOuput{
 		FileID:         f.FileID,
 		UserID:         f.UserID,
