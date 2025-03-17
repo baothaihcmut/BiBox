@@ -30,7 +30,6 @@ jobs:
           golangci-lint run ./...
 
   build:
-    needs: docs
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -51,7 +50,7 @@ jobs:
           cd storage-app
           swag init -g ./cmd/storage-app/main.go --output ./docs
 
-          
+
       - name: Build bin
         run: |
           cd storage-app
