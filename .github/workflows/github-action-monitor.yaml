@@ -34,17 +34,17 @@ jobs:
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "mkdir -p ~/storage-app/prometheus ~/storage-app/docker"
           scp -r prometheus.yml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/storage-app/prometheus
           scp -r docker-compose-monitor.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/storage-app/docker
-      # - name: Deploy
-      #   uses: appleboy/ssh-action@v1
-      #   with:
-      #     host: ${{ secrets.SSH_HOST }}
-      #     username: ${{ secrets.SSH_USER }}
-      #     key: ${{ secrets.SSH_PRIVATE_KEY }}
-      #     port: 22
-      #     script: |
-      #         cd storage-app/docker
-      #         # Restart services
-      #         docker compose -f docker-compose-monitor.yaml up -d 
+      - name: Deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+              cd storage-app/docker
+              # Restart services
+              docker compose -f docker-compose-monitor.yaml up -d 
               
  
 
