@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "environments/prometheus/**"
+      - ".github/workflows/github-action-monitor.yaml"
       - "environments/docker/docker-compose-monitor-template.yaml"
     branches:
       - main 
