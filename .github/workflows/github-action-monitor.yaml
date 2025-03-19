@@ -3,8 +3,7 @@ name: Storage app monitor system CI/CD
 on:
   push:
     paths:
-      - "./environments/prometheus/**"
-      - "./environments/docker/docker-compose-monitor-template.yaml"
+      - "environments/prometheus/**"
     branches:
       - main 
 jobs:
