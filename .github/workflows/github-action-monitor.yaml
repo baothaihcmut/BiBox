@@ -29,7 +29,6 @@ jobs:
           export PROMETHEUS_CONFIG_PATH="../prometheus/prometheus.yaml"
           envsubst < environments/prometheus/prometheus-template.yaml > prometheus.yaml
           envsubst < environments/docker/docker-compose-monitor-template.yaml > docker-compose-monitor.yaml
-          cat docker/docker-compose-monitor-template.yaml
           scp -r prometheus.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/storage-app/prometheus
           scp -r docker-compose-monitor.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/storage-app/docker
       - name: Deploy
