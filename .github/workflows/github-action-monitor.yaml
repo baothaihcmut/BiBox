@@ -4,8 +4,7 @@ on:
   push:
     paths:
       - "environments/prometheus/**"
-      - ".github/workflows/**"
-
+      - "environments/docker/docker-compose-monitor-template.yaml"
     branches:
       - main 
 jobs:
@@ -30,8 +29,8 @@ jobs:
 
         run: |
           cd environments
-          envsubst < prometheus/prometheus-template.yaml > prometheus.yaml
-          envsubst < docker/docker-compose-monitor-template.yaml > docker-compose-monitor.yaml
+          envsubst < prometheus/prometheus-template.yaml > prometheus/prometheus.yaml
+          envsubst < docker/docker-compose-monitor-template.yaml > docker/docker-compose-monitor.yaml
           scp -r prometheus/prometheus.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/storage-app
           scp -r docker/docker-compose-monitor.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/storage-app
       - name: Deploy
