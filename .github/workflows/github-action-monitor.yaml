@@ -31,7 +31,7 @@ jobs:
           
           envsubst < environments/prometheus/prometheus-template.yaml > prometheus.yml
           envsubst < environments/docker/docker-compose-monitor-template.yaml > docker-compose-monitor.yaml
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "mkdir -p ~/storage-app/prometheus ~/storage-app/prometheus/docker"
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "mkdir -p ~/storage-app/prometheus ~/storage-app/docker"
           scp -r prometheus.yml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/storage-app/prometheus
           scp -r docker-compose-monitor.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/storage-app/docker
       # - name: Deploy
