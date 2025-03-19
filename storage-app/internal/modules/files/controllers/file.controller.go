@@ -38,8 +38,8 @@ func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
 	internal.POST("/:id/permissions/add", middleware.ValidateMiddleware[presenters.AddFilePermissionInput](true, binding.JSON), f.handleAddFilePermission)
 }
 
-// @Sumary Create new file
-// @Description Create new file
+// @Sumary Create new file 1
+// @Description Create new file 111
 // @Tags files
 // @Accept json
 // @Produce json
