@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - "environments/prometheus/**"
+      - ".github/workflows/**"
+
     branches:
       - main 
 jobs:
