@@ -34,17 +34,17 @@ jobs:
           envsubst < environments/docker/docker-compose-monitor-template.yaml > docker/docker-compose-monitor.yaml
           scp -r prometheus/prometheus.yml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/storage-app
           scp -r docker/docker-compose-monitor.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/storage-app
-      - name: Deploy
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-              cd storage-app/docker
-              # Restart services
-              docker compose -f docker-compose-monitor.yaml up -d 
+      # - name: Deploy
+      #   uses: appleboy/ssh-action@v1
+      #   with:
+      #     host: ${{ secrets.SSH_HOST }}
+      #     username: ${{ secrets.SSH_USER }}
+      #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+      #     port: 22
+      #     script: |
+      #         cd storage-app/docker
+      #         # Restart services
+      #         docker compose -f docker-compose-monitor.yaml up -d 
               
  
 
