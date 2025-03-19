@@ -23,12 +23,10 @@ jobs:
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
       
       - name: Copy config file to server 
-        env:
-          GRAFANA_ADMIN_USER_NAME: ${{ secrets.GRAFANA_ADMIN_USER_NAME }}
-          GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
-          PROMETHEUS_CONFIG_PATH: "../prometheus/prometheus.yaml"
-
         run: |
+          export GRAFANA_ADMIN_USER_NAME="${{ secrets.GRAFANA_ADMIN_USER_NAME }}"
+          export GRAFANA_ADMIN_PASSWORD="${{ secrets.GRAFANA_ADMIN_PASSWORD }}"
+          export PROMETHEUS_CONFIG_PATH="../prometheus/prometheus.yaml"
           cd environments
           envsubst < prometheus/prometheus-template.yaml > prometheus/prometheus.yaml
           envsubst < docker/docker-compose-monitor-template.yaml > docker/docker-compose-monitor.yaml
