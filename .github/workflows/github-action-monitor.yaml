@@ -29,9 +29,6 @@ jobs:
           PROMETHEUS_CONFIG_PATH: "../prometheus/prometheus.yaml"
 
         run: |
-          export GRAFANA_ADMIN_USER_NAME="${{ secrets.GRAFANA_ADMIN_USER_NAME }}"
-          export GRAFANA_ADMIN_PASSWORD="${{ secrets.GRAFANA_ADMIN_PASSWORD }}"
-          export PROMETHEUS_CONFIG_PATH="../prometheus/prometheus.yaml"
           envsubst < environments/prometheus/prometheus-template.yaml > prometheus.yaml
           envsubst < environments/docker/docker-compose-monitor-template.yaml > docker-compose-monitor.yaml
           scp -r prometheus.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/storage-app/prometheus
