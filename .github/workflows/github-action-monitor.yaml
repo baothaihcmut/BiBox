@@ -1,0 +1,53 @@
+name: Storage app monitor system CI/CD
+
+on:
+  push:
+    paths:
+      - "./environments/prometheus/**"
+      - "./environments/docker/docker-compose-monitor-template.yaml"
+    branches:
+      - main 
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v4
+      
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+      
+      - name: Copy config file to server 
+        env:
+          GRAFANA_ADMIN_USER_NAME: ${{ secrets.GRAFANA_ADMIN_USER_NAME }}
+          GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+          PROMETHEUS_CONFIG_PATH: "../prometheus/prometheus.yaml"
+
+        run: |
+          cd environments
+          envsubst < prometheus/prometheus-template.yaml > prometheus.yaml
+          envsubst < docker/docker-compose-monitor-template.yaml > docker-compose-monitor.yaml
+          scp -r prometheus/prometheus.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/storage-app
+          scp -r docker/docker-compose-monitor.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/storage-app
+      - name: Deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+              cd storage-app/docker
+              # Restart services
+              docker compose -f docker-compose-monitor.yaml up -d 
+              
+ 
+
+
+
+
+      

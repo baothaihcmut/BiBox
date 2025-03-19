@@ -16,6 +16,7 @@ import (
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
 	middleware "github.com/baothaihcmut/Bibox/storage-app/internal/common/middlewares"
 	mongoLib "github.com/baothaihcmut/Bibox/storage-app/internal/common/mongo"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/common/monitor"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/queue"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/storage"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/config"
@@ -34,6 +35,8 @@ import (
 	userRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/users/repositories/impl"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
@@ -111,6 +114,27 @@ func (s *Server) initApp() {
 	authController := authController.NewAuthController(authInteractor, &s.config.Jwt, &s.config.Oauth2)
 	fileController := fileController.NewFileController(fileInteractor, userJwtService, logger)
 	userController := userController.NewUserController(userInteractor, userJwtService, logger)
+	//register metrics monitor
+	httpRequestTotalMetric := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total",
+			Help: "Total http request",
+		},
+		[]string{"method", "uri", "status"},
+	)
+	httpRequestDurationMetric := prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "http_requests_duration",
+			Help:    "Duration http request",
+			Buckets: prometheus.DefBuckets,
+		},
+		[]string{"method", "uri", "status"},
+	)
+	prometheusService := monitor.NewPrometheusService(
+		httpRequestTotalMetric,
+		httpRequestDurationMetric,
+	)
+
 	//init global middleware
 	s.g.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"https://storage-app-web.spsohcmut.xyz", "http://localhost:3000"}, // Explicitly allow frontend origin
@@ -123,7 +147,10 @@ func (s *Server) initApp() {
 
 	// Global middleware
 	s.g.Use(middleware.LoggingMiddleware(logger))
+	s.g.Use(middleware.PrometheuseMiddleware(prometheusService))
 	s.g.Use(middleware.ErrorHandler())
+	s.g.GET("/metrics", gin.WrapH(promhttp.Handler()))
+
 	//global prefix
 	globalGroup := s.g.Group("/api/v1")
 
