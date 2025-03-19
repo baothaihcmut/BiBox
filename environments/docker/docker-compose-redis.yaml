@@ -8,6 +8,16 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
     networks:
       - app-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 128M
+        reservations:
+          cpus: "0.5"
+          memory: 64M
+    ports:
+      - "6379:6379"
 
 volumes:
   redis_data:
