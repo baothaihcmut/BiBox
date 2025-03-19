@@ -1,6 +1,7 @@
 services:
-  api:
+  storage-app:
     image: baothaihcmut/storage-app:latest
+    container_name: storage-app
     volumes:
       - ../config/config-storage-app.yaml:/app/config/config.yaml
     labels:
