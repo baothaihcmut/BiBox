@@ -6,6 +6,6 @@ metadata:
   labels:
     {{- include "common.labels" . | nindent 4 }}
 data:
-  config.yaml: |-
+  config.yaml: |
     {{- .Values.config | nindent 4 }}
 {{- end }}

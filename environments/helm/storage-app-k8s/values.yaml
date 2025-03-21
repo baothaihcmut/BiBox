@@ -11,3 +11,24 @@ storage-app:
           mountPath: /app/config/config.yaml
           subPath: config.yaml
           configMap: "storage-config-map"
+  service:
+    ports:
+      - name: "http"
+        protocol: "TCP"
+        port: 80
+        targetPort: 8080
+  resources:
+    requests:
+      cpu: "0.25"
+      memory: "128Mi"
+    limits:
+      cpu: "0.5"
+      memory: "256Mi"
+  configFrom:
+    envConfigMap:
+      - "storage-app-config-map"
+    fileConfigMap:
+     
+
+
+    
