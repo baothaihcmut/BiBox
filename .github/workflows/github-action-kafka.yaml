@@ -1,0 +1,13 @@
+name: "Kafka CI/CD"
+
+on:
+  push:
+    paths:
+      - "environments/k8s/infrastructure/kafka/**"
+      - "environments/k8s/infrastructure/zookeeper/**"
+      - ".github/workflows/github-action-kafka.yaml"
+    branches:
+      - main
+
+steps: 
+  

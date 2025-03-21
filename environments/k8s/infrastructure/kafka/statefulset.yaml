@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka-statefulset
+  namespace: storage-app
+spec:
+  serviceName: "kafka-headless"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      containers:
+        - name: kafka
+          image: confluentinc/cp-kafka:7.4.4
+          ports:
+            - name: listener
+              containerPort: 9092
+          envFrom:
+            - configMapRef:
+                name: kafka-config-map
+          volumeMounts:
+            - name: kafka-data
+              mountPath: /var/lib/kafka/data
+      
+  volumeClaimTemplates:
+  - metadata:
+      name: kafka-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: standard  # Use the default StorageClass
+      resources:
+        requests:
+          storage: 100Mi

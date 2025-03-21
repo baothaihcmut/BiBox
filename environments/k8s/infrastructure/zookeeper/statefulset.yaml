@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zookeeper-statefulset
+  namespace: storage-app
+spec:
+  selector:
+    matchLabels:
+      app: zookeeper 
+  serviceName: zookeeper-headless
+  replicas: 1 
+  minReadySeconds: 10 
+  template:
+    metadata:
+      labels:
+        app: zookeeper 
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: zookeeper
+        image: confluentinc/cp-zookeeper:7.4.4
+        envFrom:
+          - configMapRef:
+              name: zookeeper-config-map
+        ports:
+        - containerPort: 2181
+          name: client
+        volumeMounts:
+        - name: zookeeper-data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: zookeeper-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: standard  
+      resources:
+        requests:
+          storage: 100Mi

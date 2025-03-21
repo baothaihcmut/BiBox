@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-headless
+  namespace: storage-app
+  labels:
+    app: kafka
+spec:
+  clusterIP: None  
+  selector:
+    app: kafka
+  ports:
+    - name: listener
+      port: 9092
+      targetPort: listener

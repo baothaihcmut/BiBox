@@ -26,7 +26,7 @@ jobs:
         env:
           GRAFANA_ADMIN_USER_NAME: ${{ secrets.GRAFANA_ADMIN_USER_NAME }}
           GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
-
+          STORAGE_APP_URL: ${{ secrets.STORAGE_APP_URL }}
         run: |
           
           envsubst < environments/prometheus/prometheus-template.yaml > prometheus.yml
