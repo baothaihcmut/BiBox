@@ -1,12 +1,13 @@
+#for common label
 {{- define "common.labels" -}}
 app: {{ .Chart.Name }}
 release: {{ .Release.Name }}
 env: {{ .Values.global.environment | default "dev" }}
 {{- end }}
 
-
+#for config from env 
 {{- define "common.configEnv" -}}
-{{- if .Values.configFrom.envConfigMap }}
+{{- if (and .Values.configFrom .Values.configFrom.envConfigMap) }}
 envFrom:
   {{- range .Values.configFrom.envConfigMap }}
   - configMapRef:
@@ -15,8 +16,10 @@ envFrom:
 {{- end }}
 {{- end }}
 
+
+# for config from yaml file
 {{- define "common.configFile" -}}
-{{- if .Values.configFrom.fileConfigMap }}
+{{- if (and .Values.configFrom .Values.configFrom.fileConfigMap ) }}
 {{- range .Values.configFrom.fileConfigMap }}
 - name: {{ .volumeName }}
   mountPath: {{ .mountPath }}
@@ -27,8 +30,9 @@ envFrom:
 {{- end }}
 {{- end }}
 
+#for config volume with file
 {{- define "common.configMapVolume" -}}
-{{- if .Values.configFrom.fileConfigMap }}
+{{- if (and .Values.configFrom .Values.configFrom.fileConfigMap) }}
 {{- range .Values.configFrom.fileConfigMap}}
 - name: {{.volumeName }}
   configMap:
@@ -38,3 +42,6 @@ envFrom:
 []
 {{- end }}
 {{- end }}
+
+# for config value in config map
+   
