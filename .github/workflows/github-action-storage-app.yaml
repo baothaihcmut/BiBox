@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - "storage-app/**"
-      - ".github/workflows/**"
+      - ".github/workflows/github-action-storage-app.yaml"
     branches:
       - main
 
