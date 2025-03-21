@@ -1,0 +1,13 @@
+storage-app:
+  image:
+    repository: baothaihcmut/storage-app
+    tag: v1
+    pullPolicy: Always
+    configFrom:
+      envConfigmap:
+        - "config-map"
+      fileConfigmap:
+        - name: config-volume
+          mountPath: /app/config/config.yaml
+          subPath: config.yaml
+          configMap: "storage-config-map"
