@@ -43,5 +43,10 @@ envFrom:
 {{- end }}
 {{- end }}
 
-# for config value in config map
-   
+#for deployment init container
+{{- define "common.initContainers" -}}
+{{- if gt (len .Values.initContainers) 0}}
+initContainers:
+{{- .Values.initContainers | toYaml | nindent 2 }}
+{{- end }}
+{{- end }}   
