@@ -1,4 +1,5 @@
 storage-app:
+  enabled: false
   image:
     repository: baothaihcmut/storage-app
     tag: v1
@@ -12,6 +13,7 @@ storage-app:
           subPath: config.yaml
           configMap: "storage-config-map"
   service:
+    type: ClusterIP
     ports:
       - name: "http"
         protocol: "TCP"
@@ -24,11 +26,76 @@ storage-app:
     limits:
       cpu: "0.5"
       memory: "256Mi"
+  initContainers:
+    - name: wait-for-services
+      image: groundnuty/k8s-wait-for:v1.5
   configFrom:
-    envConfigMap:
-      - "storage-app-config-map"
     fileConfigMap:
-     
+      - volumeName: config-volume
+        mountPath: /app/config/config.yaml
+        subPath: config.yaml
+        configMap: storage-app-config-map
+  
+
+  
+  
+  configMap:
+    config.yaml: |
+      server:
+        port: 8080
+      logger:
+        level: "debug"
+        format: "json"
+        output: "stdout"
+      mongo:
+        uri: "mongodb://localhost:27017"
+        max_pool_size: 100
+        min_pool_size: 10
+        connection_time_out: 30
+        database: "storage-app"
+      jwt:
+        access_token:
+          secret: "your_access_secret"
+          age: 3000
+        refresh_token:
+          secret: "your_refresh_secret"
+          age: 7000
+      oauth2:
+        google:
+          client_id: "185040142880-e0o5rn2ms0d01vclb7ounj5n0i0a60he.apps.googleusercontent.com"
+          secret: "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"
+          redirect_uri: "http://localhost:8080/api/v1/auth/callback"
+        github:
+          client_id: "Ov23liJ3ADLrxMEn5M9o"
+          secret: "7ad93def9688d2a897a5fc7c9e0cdb7bc8089caf"
+          redirect_uri: "http://localhost:8080/api/v1/auth/callback"
+      s3:
+        access_key: "AKIA5FTZFI4ON633345J"
+        secret_key: "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"
+        region: "us-east-1"
+        storage_provider: "s3"
+        bucket: "storage-app-go-bucket-baothai"
+            redis:
+              endpoint: "redis:6379"
+              database: 0
+            kafka:
+        brokers:
+          - "kafka:9092"
+        max_retry: 5
 
 
-    
+#redis
+redis:
+  architecture: standalone
+  auth:
+    enabled: true
+    password: "redispassword"
+  master:
+    persistence:
+      storageClass: "local-path"
+      size: "500Mi"
+
+
+
+
+          

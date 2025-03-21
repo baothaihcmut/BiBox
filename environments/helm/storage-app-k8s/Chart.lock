@@ -1,0 +1,9 @@
+dependencies:
+- name: storage-app
+  repository: file://charts/storage-app
+  version: 1.0.0
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 20.11.3
+digest: sha256:fa1c2412d5fbb5805545a5cfde8ac1a927261a0a14c5901fa2ba6b94c08ef155
+generated: "2025-03-21T18:28:59.160965419+07:00"

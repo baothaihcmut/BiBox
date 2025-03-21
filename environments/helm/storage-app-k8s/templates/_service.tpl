@@ -16,6 +16,6 @@ spec:
       port: {{ .port }}
       targetPort: {{ .targetPort }}
     {{- end }}
-  type: {{ .Values.service.type }}
+  type: {{ .Values.service.type | default "ClusterIP"}}
 {{- end }}
 

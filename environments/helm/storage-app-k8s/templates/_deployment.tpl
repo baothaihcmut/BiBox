@@ -16,6 +16,7 @@ spec:
       labels:
         {{- include "common.labels" . | nindent 8 }}
     spec:
+      {{- include "common.initContainers" . | nindent 6}}        
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

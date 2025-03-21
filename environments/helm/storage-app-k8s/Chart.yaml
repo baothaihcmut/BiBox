@@ -8,4 +8,6 @@ dependencies:
   - name: storage-app
     version: 1.0.0
     repository: "file://charts/storage-app"
- 
+  - name: redis
+    repository: https://charts.bitnami.com/bitnami
+    version: 20.11.3
