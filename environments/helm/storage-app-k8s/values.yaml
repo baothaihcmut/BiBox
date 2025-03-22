@@ -86,6 +86,7 @@ storage-app:
 
 #redis
 redis:
+  enabled: false
   architecture: standalone
   auth:
     enabled: true
@@ -94,6 +95,43 @@ redis:
     persistence:
       storageClass: "local-path"
       size: "500Mi"
+
+#kafka
+kafka:
+  listeners:
+    client:
+      protocol: PLAINTEXT
+    controller:
+      protocol: PLAINTEXT 
+    interbroker:
+      protocol: PLAINTEXT 
+  controller:
+    replicaCount: 1
+    resources:
+      requests:
+        cpu: "0.1"
+        memory: "250Mi"
+      limits:
+        cpu: "0.2"
+        memory: "500Mi"
+    persistence:
+      storageClass: "local-path"
+  broker:
+    replicaCount: 1
+    resources:
+      requests:
+        cpu: "0.1"
+        memory: "250Mi"
+      limits:
+        cpu: "0.2"
+        memory: "500Mi"
+    persistence:
+      storageClass: "local-path"
+  kraft:
+    enabled: true 
+    metadataLogDir: /bitnami/kafka/data/meta
+    autoCreateTopicsEnable: true
+    clusterId: "185040142880-e0o5rn2ms0d01vclb7oun"
 
 
 

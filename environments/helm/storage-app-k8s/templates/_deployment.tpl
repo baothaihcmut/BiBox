@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-deployment
+  name: {{ .Release.Name }}-{{ .Chart.Name }}-deployment
   namespace: {{ .Values.namespace }}
   labels:
     {{- include "common.labels" . | nindent 4 }}

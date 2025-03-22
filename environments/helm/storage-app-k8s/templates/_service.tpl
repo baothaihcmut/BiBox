@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-svc
+  name: {{ .Release.Name }}-{{ .Chart.Name }}-svc
   namespace: {{ .Values.namespace }}
   labels:
     {{- include "common.labels" . | nindent 4 }}
