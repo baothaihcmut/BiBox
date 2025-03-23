@@ -12,19 +12,17 @@ import (
 
 type CommentRepository struct {
 	Collection       *mongo.Collection
-	UserCollection   *mongo.Collection // add user collection
-	AnswerCollection *mongo.Collection // add answer collection
+	AnswerCollection *mongo.Collection
 }
 
 func NewCommentRepository(db *mongo.Database) *CommentRepository {
 	return &CommentRepository{
 		Collection:       db.Collection("file_comments"),
-		UserCollection:   db.Collection("users"),   // initialize user collection
-		AnswerCollection: db.Collection("answers"), // initialize answer collection
+		AnswerCollection: db.Collection("answers"),
 	}
 }
 
-// retrieves all comments from the database
+// retrieves all comments
 func (cr *CommentRepository) FetchComments() ([]map[string]interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -47,7 +45,7 @@ func (cr *CommentRepository) FetchComments() ([]map[string]interface{}, error) {
 	return comments, nil
 }
 
-// retrieves all comments with user and answer details
+// retrieves all comments with details
 func (cr *CommentRepository) FetchCommentsWithUsersAndAnswers(ctx context.Context) ([]map[string]interface{}, error) {
 	pipeline := mongo.Pipeline{
 		{
@@ -90,7 +88,7 @@ func (cr *CommentRepository) FetchCommentsWithUsersAndAnswers(ctx context.Contex
 	return comments, nil
 }
 
-// inserts a new comment into the database
+// inserts a new comment
 func (cr *CommentRepository) CreateComment(ctx context.Context, fileID, userID primitive.ObjectID, commentText string) error {
 	_, err := cr.Collection.InsertOne(ctx, bson.M{
 		"file_id":    fileID,
@@ -108,7 +106,7 @@ func (cr *CommentRepository) CreateComment(ctx context.Context, fileID, userID p
 	return nil
 }
 
-// retrieves comments by fileID
+// retrieves comments
 func (cr *CommentRepository) GetCommentsByFile(fileID string) ([]map[string]interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -172,17 +170,17 @@ func (cr *CommentRepository) AnswerComment(ctx context.Context, commentID, userI
 	return nil
 }
 
-// retrieves a user by their ID
+// retrieves user
 func (cr *CommentRepository) FetchUserByID(ctx context.Context, userID primitive.ObjectID) (map[string]interface{}, error) {
 	var user bson.M
-	err := cr.UserCollection.FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
+	err := cr.Collection.Database().Collection("users").FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
 	if err != nil {
 		return nil, err
 	}
 	return user, nil
 }
 
-// retrieves an answer by answerID
+// retrieves answer
 func (cr *CommentRepository) FetchAnswerByID(ctx context.Context, answerID primitive.ObjectID) (map[string]interface{}, error) {
 	var answer bson.M
 	err := cr.AnswerCollection.FindOne(ctx, bson.M{"_id": answerID}).Decode(&answer)
