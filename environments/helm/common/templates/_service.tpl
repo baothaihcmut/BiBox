@@ -2,8 +2,8 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-{{ .Chart.Name }}-svc
-  namespace: {{ .Values.namespace }}
+  name: {{ .Release.Name }}-{{ .Chart.Name }}-{{ .Values.service.name | default ""}}-svc
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "common.labels" . | nindent 4 }}
 spec:

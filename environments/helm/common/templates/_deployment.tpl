@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Release.Name }}-{{ .Chart.Name }}-deployment
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "common.labels" . | nindent 4 }}
 spec:
@@ -16,6 +16,9 @@ spec:
       labels:
         {{- include "common.labels" . | nindent 8 }}
     spec:
+      {{ if .Values.serviceAccount.enabled -}}
+      serviceAccountName: {{ .Release.Name }}-{{ .Chart.Name }}-{{- .Values.serviceAccount.name -}}-sa
+      {{- end }}
       {{- include "common.initContainers" . | nindent 6}}        
       containers:
         - name: {{ .Chart.Name }}

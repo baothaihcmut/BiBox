@@ -1,0 +1,5 @@
+dependencies:
+- name: storage-app
+  repository: file://../../libs
+  version: 1.0.0
+
