@@ -1,0 +1,106 @@
+image:
+  repository: baothaihcmut/storage-app
+  tag: v1
+  pullPolicy: Always
+  configFrom:
+    envConfigmap:
+      - "config-map"
+    fileConfigmap:
+      - name: config-volume
+        mountPath: /app/config/config.yaml
+        subPath: config.yaml
+        configMap: "server"
+service:
+  name: "api"
+  type: ClusterIP
+  ports:
+    - name: "http"
+      protocol: "TCP"
+      port: 80
+      targetPort: 8080
+resources:
+  requests:
+    cpu: "0.25"
+    memory: "128Mi"
+  limits:
+    cpu: "0.5"
+    memory: "256Mi"
+serviceAccount:
+  enabled: true
+  name: wait-dependency
+  rules:
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list", "watch"]
+ingressRoutes:
+  - host: "storage-app.spsohcmut.xyz"
+    service: api 
+    port: 80
+    tls: true
+
+initContainers:
+  - name: wait-for-dependencies
+    image: bitnami/kubectl:latest
+    command:
+      - /bin/sh
+      - -c
+      - |
+        echo "Waiting for Redis and Kafka to be ready..."
+        kubectl wait --for=condition=Ready pod -l app=storage-app-dependency --timeout=300s
+configFrom:
+  fileConfigMap:
+    - volumeName: config-volume
+      mountPath: /app/config/config.yaml
+      subPath: config.yaml
+      configMap: "server"
+
+configMap:
+  name: server
+  config.yaml: |
+    server:
+      port: 8080
+    logger:
+      level: "debug"
+      format: "json"
+      output: "stdout"
+    mongo:
+      uri: "mongodb+srv://thaibao22042k4:22042004bao@ecommerce-go.xbph8.mongodb.net/?retryWrites=true&w=majority&appName=ecommerce-go"
+      max_pool_size: 100
+      min_pool_size: 10
+      connection_time_out: 30
+      database: "storage-app"
+    jwt:
+      access_token:
+        secret: "your_access_secret"
+        age: 3000
+      refresh_token:
+        secret: "your_refresh_secret"
+        age: 7000
+    oauth2:
+      google:
+        client_id: "185040142880-e0o5rn2ms0d01vclb7ounj5n0i0a60he.apps.googleusercontent.com"
+        secret: ${GOOGLE_OAUTH2_SECRET}
+        redirect_uri: "http://localhost:8080/api/v1/auth/callback"
+      github:
+        client_id: "Ov23liJ3ADLrxMEn5M9o"
+        secret: ${OAUTH2_SECRET}
+        redirect_uri: "http://localhost:8080/api/v1/auth/callback"
+    s3:
+      access_key: ${S3_ACCESS_KEY}
+      secret_key: ${S3_SECRET_KEY}
+      region: "us-east-1"
+      storage_provider: "s3"
+      bucket: "storage-app-go-bucket-baothai"
+    redis:
+      endpoint: "storage-app-redis-master-0.storage-app-redis-headless.storage-app.svc.cluster.local:6379"
+      password: "redispassword"
+      user_name: "default"
+      database: 0
+    kafka:
+      brokers:
+      - "storage-app-kafka-broker-0.storage-app-kafka-broker-headless.storage-app.svc.cluster.local:9092"
+      max_retry: 5
+
+
+
+

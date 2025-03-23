@@ -36,7 +36,7 @@ envFrom:
 {{- range .Values.configFrom.fileConfigMap}}
 - name: {{.volumeName }}
   configMap:
-    name: {{ .configMap }}
+    name: {{ $.Release.Name }}-{{ $.Chart.Name }}-{{ .configMap }}-config-map
 {{- end }}
 {{- else}}
 []
@@ -50,3 +50,5 @@ initContainers:
 {{- .Values.initContainers | toYaml | nindent 2 }}
 {{- end }}
 {{- end }}   
+
+# for route

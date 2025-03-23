@@ -1,0 +1,10 @@
+commonLabels:
+    app: storage-app-dependency
+architecture: standalone
+auth:
+  enabled: true
+  password: "redispassword"
+master:
+  persistence:
+    storageClass: "local-path"
+    size: "500Mi"
