@@ -2,7 +2,7 @@
 {{- define "common.labels" -}}
 app: {{ .Chart.Name }}
 release: {{ .Release.Name }}
-env: {{ .Values.global.environment | default "dev" }}
+env: {{ .Values.environment | default "dev" }}
 {{- end }}
 
 #for config from env 

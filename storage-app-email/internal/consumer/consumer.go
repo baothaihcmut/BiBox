@@ -3,6 +3,7 @@ package consumer
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/IBM/sarama"
@@ -38,6 +39,7 @@ func (c *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
 // ConsumeClaim processes messages from Kafka
 func (c *Consumer) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for msg := range claim.Messages() {
+		log.Println("Incomming message")
 		c.MsgChan <- msg
 		sess.MarkMessage(msg, "gmail-service")
 	}
@@ -52,7 +54,10 @@ func (c *Consumer) worker() {
 	}()
 	for msg := range c.MsgChan {
 		ctx := context.Background()
-		_ = c.msgRouter.Route(ctx, msg)
+		err := c.msgRouter.Route(ctx, msg)
+		if err != nil {
+			log.Printf("Error process message: %v", err)
+		}
 	}
 }
 func NewConsumer(msgRouter router.MessageRouter, cfg *config.ConsumerConfig) *Consumer {

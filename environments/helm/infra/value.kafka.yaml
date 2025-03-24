@@ -21,6 +21,9 @@ controller:
     storageClass: "local-path"
 broker:
   replicaCount: 1
+  extraConfig: |
+    offsets.topic.replication.factor = 1
+    auto.create.topics.enable = true
   resources:
     requests:
       cpu: "0.1"
@@ -35,3 +38,6 @@ kraft:
   metadataLogDir: /bitnami/kafka/data/meta
   autoCreateTopicsEnable: true
   clusterId: "185040142880-e0o5rn2ms0d01vclb7oun"
+
+
+

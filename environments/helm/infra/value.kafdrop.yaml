@@ -1,0 +1,3 @@
+envs:
+  config: 
+    KAFKA_BROKERS: "storage-app-kafka-broker-0.storage-app-kafka-broker-headless.storage-app.svc.cluster.local:9092"
