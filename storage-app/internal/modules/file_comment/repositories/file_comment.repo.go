@@ -5,20 +5,19 @@ import (
 	"log"
 	"time"
 
+	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_comment/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type CommentRepository struct {
-	Collection       *mongo.Collection
-	AnswerCollection *mongo.Collection
+	Collection *mongo.Collection
 }
 
 func NewCommentRepository(db *mongo.Database) *CommentRepository {
 	return &CommentRepository{
-		Collection:       db.Collection("file_comments"),
-		AnswerCollection: db.Collection("answers"),
+		Collection: db.Collection("file_comments"),
 	}
 }
 
@@ -62,12 +61,6 @@ func (cr *CommentRepository) FetchCommentsWithUsersAndAnswers(ctx context.Contex
 				{Key: "preserveNullAndEmptyArrays", Value: true},
 			}},
 		},
-		{
-			{Key: "$unwind", Value: bson.D{
-				{Key: "path", Value: "$answers"},
-				{Key: "preserveNullAndEmptyArrays", Value: true},
-			}},
-		},
 	}
 
 	cursor, err := cr.Collection.Aggregate(ctx, pipeline)
@@ -90,13 +83,15 @@ func (cr *CommentRepository) FetchCommentsWithUsersAndAnswers(ctx context.Contex
 
 // inserts a new comment
 func (cr *CommentRepository) CreateComment(ctx context.Context, fileID, userID primitive.ObjectID, commentText string) error {
-	_, err := cr.Collection.InsertOne(ctx, bson.M{
-		"file_id":    fileID,
-		"user_id":    userID,
-		"comment":    commentText,
-		"created_at": time.Now(),
-		"answers":    []primitive.ObjectID{}, //embeded
-	})
+	comment := models.FileComment{
+		FileID:    fileID,
+		UserID:    userID,
+		Content:   commentText,
+		CreatedAt: time.Now(),
+		Answers:   []models.AnswerComment{},
+	}
+
+	_, err := cr.Collection.InsertOne(ctx, comment)
 	if err != nil {
 		log.Println("Error inserting comment:", err)
 		return err
@@ -135,24 +130,17 @@ func (cr *CommentRepository) GetCommentsByFile(fileID string) ([]map[string]inte
 }
 
 func (cr *CommentRepository) AnswerComment(ctx context.Context, commentID, userID primitive.ObjectID, content string) error {
-	answerID := primitive.NewObjectID()
-	answer := bson.M{
-		"_id":         answerID,
-		"user_id":     userID,
-		"content":     content,
-		"answered_at": time.Now(),
-	}
-
-	_, err := cr.AnswerCollection.InsertOne(ctx, answer)
-	if err != nil {
-		log.Println("Error inserting answer:", err)
-		return err
+	answer := models.AnswerComment{
+		CommentID: commentID,
+		UserID:    userID,
+		Content:   content,
+		CreatedAt: time.Now(),
 	}
 
 	filter := bson.M{"_id": commentID}
 	update := bson.M{
 		"$push": bson.M{
-			"answers": answerID,
+			"answers": answer,
 		},
 	}
 
@@ -183,7 +171,7 @@ func (cr *CommentRepository) FetchUserByID(ctx context.Context, userID primitive
 // retrieves answer
 func (cr *CommentRepository) FetchAnswerByID(ctx context.Context, answerID primitive.ObjectID) (map[string]interface{}, error) {
 	var answer bson.M
-	err := cr.AnswerCollection.FindOne(ctx, bson.M{"_id": answerID}).Decode(&answer)
+	err := cr.Collection.FindOne(ctx, bson.M{"answers._id": answerID}).Decode(&answer)
 	if err != nil {
 		return nil, err
 	}
