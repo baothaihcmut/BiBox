@@ -1,1 +1,1 @@
-{{- include "common.ingressroute" .-}}
+{{- include "common.ingressroute" . -}}

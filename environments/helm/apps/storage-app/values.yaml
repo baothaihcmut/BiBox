@@ -79,11 +79,11 @@ configMap:
     oauth2:
       google:
         client_id: "185040142880-e0o5rn2ms0d01vclb7ounj5n0i0a60he.apps.googleusercontent.com"
-        secret: ${GOOGLE_OAUTH2_SECRET}
+        secret:  ${GOOGLE_OAUTH2_SECRET}
         redirect_uri: "http://localhost:8080/api/v1/auth/callback"
       github:
         client_id: "Ov23liJ3ADLrxMEn5M9o"
-        secret: ${OAUTH2_SECRET}
+        secret: ${GITHUB_OAUTH2_SECRET}
         redirect_uri: "http://localhost:8080/api/v1/auth/callback"
     s3:
       access_key: ${S3_ACCESS_KEY}

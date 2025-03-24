@@ -1,5 +1,5 @@
 apiVersion: v2
-name: bibox
+name: email
 description: An umbrella chart for the ecommerce microservices
 type: application
 version: 1.0.0
