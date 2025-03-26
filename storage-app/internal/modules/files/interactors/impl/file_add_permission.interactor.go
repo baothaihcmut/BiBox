@@ -28,6 +28,7 @@ func (f *FileInteractorImpl) AddFilePermission(ctx context.Context, input *prese
 	if err != nil {
 		return nil, exception.ErrInvalidObjectId
 	}
+
 	fileId, err := primitive.ObjectIDFromHex(input.FileId)
 	if err != nil {
 		return nil, exception.ErrInvalidObjectId
@@ -173,6 +174,7 @@ func (f *FileInteractorImpl) AddFilePermission(ctx context.Context, input *prese
 			if err != nil {
 				errSave <- f.mongoService.RollbackTransaction(ctx, session)
 			}
+
 		}()
 	}
 	go func() {

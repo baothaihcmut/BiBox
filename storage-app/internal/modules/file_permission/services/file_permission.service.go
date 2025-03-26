@@ -32,4 +32,5 @@ func (ps *PermissionServiceImpl) CheckPermission(ctx context.Context, fileID, us
 		return false, nil
 	}
 	return filePermssion.FilePermissionType >= permssion, nil
+
 }

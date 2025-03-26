@@ -7,7 +7,11 @@ auth:
 master:
   persistence:
     storageClass: "local-path"
+<<<<<<< HEAD
     size: "500Mi"
 service:
   type: ClusterIP
 
+=======
+    size: "500Mi"
+>>>>>>> 6026cc644775c7612e9a53f3d70dabba8995d917

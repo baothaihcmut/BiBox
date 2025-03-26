@@ -9,6 +9,7 @@ type UploadFolderInput struct {
 
 type FileWithPathOutput struct {
 	*response.FileOutput
+
 	Path         string `json:"path"`
 	PutObjectUrl string `json:"put_object_url"`
 	UrlExpiry    int    `json:"url_expiry"`

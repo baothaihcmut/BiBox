@@ -8,6 +8,7 @@ import (
 	commonModel "github.com/baothaihcmut/Bibox/storage-app/internal/common/models"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/response"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/models"
+
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/presenters"
 	"github.com/samber/lo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -29,6 +30,7 @@ func (f *FileInteractorImpl) GetFilePermissions(ctx context.Context, input *pres
 		Permissions: lo.Map(permission, func(item *models.FilePermissionWithUser, _ int) *presenters.FilePermssionWithUserOutput {
 			return &presenters.FilePermssionWithUserOutput{
 				FilePermissionOuput: response.MapToFilePermissionOutput(item.FilePermission),
+
 				User: &presenters.FilePermissionUserInfo{
 					Email:     item.User.Email,
 					FirstName: item.User.FirstName,

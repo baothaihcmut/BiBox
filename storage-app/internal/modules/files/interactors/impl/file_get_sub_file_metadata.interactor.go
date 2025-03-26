@@ -8,6 +8,7 @@ import (
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/exception"
 	commonModel "github.com/baothaihcmut/Bibox/storage-app/internal/common/models"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/response"
+
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/models"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/presenters"
 	"github.com/samber/lo"
@@ -34,6 +35,7 @@ func (f *FileInteractorImpl) GetSubFileMetaData(ctx context.Context, input *pres
 	return &presenters.GetSubFileMetaDataOutput{
 		SubFiles: lo.Map(subFiles, func(item *models.File, _ int) *response.FileOutput {
 			return response.MapFileToFileOutput(item)
+
 		}),
 	}, nil
 }

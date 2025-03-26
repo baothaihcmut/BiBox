@@ -32,4 +32,5 @@ func main() {
 		migrate(ctx, client, database)
 	}
 	fmt.Println("Done migrate111")
+	fmt.Println("Done migrate111")
 }

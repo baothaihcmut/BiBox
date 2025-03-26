@@ -17,6 +17,7 @@ func (u *UserInteractorImpl) SearchUserByEmail(ctx context.Context, input *prese
 	return &presenters.SearchUserOuput{
 		Data: lo.Map(users, func(item *models.User, _ int) *response.UserOutput {
 			return response.MapToUserOutput(item)
+
 		}),
 		Pagination: response.InitPaginationResponse(count, *input.Limit, *input.Offset),
 	}, nil

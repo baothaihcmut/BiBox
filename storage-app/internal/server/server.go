@@ -32,6 +32,7 @@ import (
 	tagController "github.com/baothaihcmut/Bibox/storage-app/internal/modules/tags/controllers"
 	tagInteractor "github.com/baothaihcmut/Bibox/storage-app/internal/modules/tags/interactors/impl"
 	tagRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/tags/repositories/impl"
+
 	userController "github.com/baothaihcmut/Bibox/storage-app/internal/modules/users/controllers"
 	userInteractor "github.com/baothaihcmut/Bibox/storage-app/internal/modules/users/interactors/impl"
 	userRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/users/repositories/impl"
@@ -113,11 +114,13 @@ func (s *Server) initApp() {
 	authInteractor := authInteractors.NewAuthInteractor(oauth2SerivceFactory, userRepo, userJwtService, logger, userConfirmService, mongoService, passwordService)
 	fileInteractor := fileInteractor.NewFileInteractor(userRepo, tagRepo, fileRepo, filePermssionService, filePermssionRepo, fileStructureService, logger, storageService, mongoService)
 	tagInteractor := tagInteractor.NewTagInteractor(tagRepo, fileRepo, logger, mongoService)
+
 	//init controllers
 	authController := authController.NewAuthController(authInteractor, &s.config.Jwt, &s.config.Oauth2)
 	fileController := fileController.NewFileController(fileInteractor, userJwtService, logger)
 	userController := userController.NewUserController(userInteractor, userJwtService, logger)
 	tagController := tagController.NewTagController(tagInteractor)
+
 	//register metrics monitor
 	httpRequestTotalMetric := prometheus.NewCounterVec(
 		prometheus.CounterOpts{

@@ -10,6 +10,7 @@ import (
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/exception"
 	commonModel "github.com/baothaihcmut/Bibox/storage-app/internal/common/models"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/response"
+
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/storage"
 	permissionModel "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/models"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/repositories"
@@ -217,6 +218,7 @@ func (f *FileInteractorImpl) UploadFolder(ctx context.Context, folder *presenter
 						file.ID,
 						item.UserID,
 						item.FilePermissionType,
+
 						item.CanShare,
 						item.ExpireAt,
 					)
@@ -274,7 +276,8 @@ func (f *FileInteractorImpl) UploadFolder(ctx context.Context, folder *presenter
 			defer wg.Done()
 			resFile[idx] = &presenters.FileWithPathOutput{
 				FileOutput: response.MapFileToFileOutput(file.File),
-				Path:       file.Path,
+
+				Path: file.Path,
 			}
 
 			if !file.IsFolder && file.StorageDetail != nil {

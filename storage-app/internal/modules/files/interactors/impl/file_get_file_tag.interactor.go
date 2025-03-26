@@ -35,6 +35,7 @@ func (f *FileInteractorImpl) GetFileTags(ctx context.Context, input *presenters.
 	return &presenters.GetFileTagsOutput{
 		Tags: lo.Map(tags, func(item *models.Tag, _ int) *response.TagOutput {
 			return response.MapToTagOuput(item)
+
 		}),
 	}, nil
 }

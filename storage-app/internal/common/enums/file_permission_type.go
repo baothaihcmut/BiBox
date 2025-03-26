@@ -9,5 +9,6 @@ const (
 )
 
 func GetPermissionTypePointer(p FilePermissionType) *FilePermissionType {
+
 	return &p
 }

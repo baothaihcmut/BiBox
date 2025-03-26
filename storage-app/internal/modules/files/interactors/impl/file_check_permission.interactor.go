@@ -11,6 +11,7 @@ import (
 )
 
 func (f *FileInteractorImpl) checkFilePermission(ctx context.Context, fileId primitive.ObjectID, userId primitive.ObjectID, FilePermissionType enums.FilePermissionType) (*models.File, error) {
+
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	fileCh := make(chan *models.File, 1)

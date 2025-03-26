@@ -15,6 +15,7 @@ type GetFilePermissionInput struct {
 
 type FilePermssionWithUserOutput struct {
 	*response.FilePermissionOuput
+
 	User *FilePermissionUserInfo `json:"user"`
 }
 

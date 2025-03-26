@@ -28,6 +28,7 @@ func (u *UserControllerImpl) Init(g *gin.RouterGroup) {
 	internal := g.Group("/users")
 	internal.Use(middleware.AuthMiddleware(u.authHandler, u.logger, false))
 	internal.GET("/search", middleware.ValidateMiddleware[presenters.SearchUserInput](false, binding.Query), u.handleSearchUserByEmail)
+
 }
 
 // @Sumary Search user by email
@@ -43,6 +44,7 @@ func (u *UserControllerImpl) Init(g *gin.RouterGroup) {
 func (u *UserControllerImpl) handleSearchUserByEmail(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
 	res, err := u.userInteractor.SearchUserByEmail(c.Request.Context(), payload.(*presenters.SearchUserInput))
+
 	if err != nil {
 		c.Error(err)
 		c.Abort()

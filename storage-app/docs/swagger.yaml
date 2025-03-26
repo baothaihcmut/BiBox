@@ -194,12 +194,14 @@ definitions:
       storage_detail:
         properties:
           mime_type:
+          mime_type:
             description: Required field
             type: string
           size:
             description: Required field
             type: integer
         required:
+        - mime_type
         - mime_type
         - size
         type: object
@@ -236,6 +238,8 @@ definitions:
         items:
           type: string
         type: array
+      total_size:
+        type: integer
       total_size:
         type: integer
       updated_at:
@@ -304,7 +308,41 @@ definitions:
       id:
         type: string
       is_folder:
+      id:
+        type: string
+      is_folder:
         type: boolean
+      name:
+        type: string
+      opened_at:
+        type: string
+      owner_id:
+        type: string
+      parent_folder_id:
+        type: string
+      path:
+        type: string
+      put_object_url:
+        type: string
+      storage_detail:
+        $ref: '#/definitions/presenters.StorageDetailOuput'
+      tags:
+        items:
+          type: string
+        type: array
+      total_size:
+        type: integer
+      updated_at:
+        type: string
+      url_expiry:
+        type: integer
+    type: object
+  presenters.FileWithPermissionOutput:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
       name:
         type: string
       opened_at:
@@ -413,6 +451,8 @@ definitions:
         type: array
       total_size:
         type: integer
+      total_size:
+        type: integer
       updated_at:
         type: string
     type: object
@@ -424,9 +464,19 @@ definitions:
         type: array
     type: object
   presenters.GetFileTagsOutput:
+  presenters.GetFilePermissionOuput:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/presenters.FilePermssionWithUserOutput'
+        type: array
+    type: object
+  presenters.GetFileTagsOutput:
     properties:
       tags:
+      tags:
         items:
+          $ref: '#/definitions/presenters.TagOutput'
           $ref: '#/definitions/presenters.TagOutput'
         type: array
     type: object
@@ -477,7 +527,31 @@ definitions:
       id:
         type: string
       name:
+      mime_type:
+        $ref: '#/definitions/enums.MimeType'
+    type: object
+  presenters.TagOutput:
+    properties:
+      id:
         type: string
+      name:
+        type: string
+    type: object
+  presenters.UploadFolderInput:
+    properties:
+      data:
+        $ref: '#/definitions/presenters.CreateFileInput'
+      sub_files:
+        items:
+          $ref: '#/definitions/presenters.UploadFolderInput'
+        type: array
+    type: object
+  presenters.UploadFolderOutput:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/presenters.FileWithPathOutput'
+        type: array
     type: object
   presenters.UploadFolderInput:
     properties:
@@ -521,7 +595,22 @@ definitions:
         type: array
       total_size:
         type: integer
+      total_size:
+        type: integer
       updated_at:
+        type: string
+    type: object
+  presenters.UserOutput:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      image:
+        type: string
+      last_name:
         type: string
     type: object
   presenters.UserOutput:
@@ -561,6 +650,23 @@ definitions:
       total:
         type: integer
     type: object
+  response.PaginationResponse:
+    properties:
+      has_next:
+        type: boolean
+      has_prev:
+        type: boolean
+      limit:
+        type: integer
+      next_offset:
+        type: integer
+      offset:
+        type: integer
+      prev_offset:
+        type: integer
+      total:
+        type: integer
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -568,6 +674,41 @@ info:
   title: Storage App API
   version: "1.0"
 paths:
+  /auth/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Confirm sign up
+      parameters:
+      - description: code for confirm
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presenter.ConfirmSignUpInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Confirm sign up success
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenter.ConfirmSignUpOutput'
+              type: object
+        "401":
+          description: Invalid confirm code
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - auth
   /auth/confirm:
     post:
       consumes:
@@ -928,6 +1069,296 @@ paths:
       tags:
       - files
   /files/:id/sub-file:
+  /auth/log-in:
+    post:
+      consumes:
+      - application/json
+      description: Log in
+      parameters:
+      - description: information for log in
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presenter.LogInInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Login success
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Wrong password or email
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - auth
+  /auth/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: Sign up
+      parameters:
+      - description: information for sign up
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presenter.SignUpInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Sign up success
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenter.SignUpOutput'
+              type: object
+        "409":
+          description: Email exist, email is pending for cofirm
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - auth
+  /files/:id/download-url:
+    get:
+      consumes:
+      - application/json
+      description: Get download url of file
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: preview mode
+        in: query
+        name: preview
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Find tags of file sucess
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.GetFileDownloadUrlOutput'
+              type: object
+        "400":
+          description: miss id
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "403":
+          description: permission denied
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: file not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "409":
+          description: file is folder
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/:id/metadata:
+    get:
+      consumes:
+      - application/json
+      description: Get metadata of file
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Find tags of file sucess
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.GetFileMetaDataOuput'
+              type: object
+        "400":
+          description: miss id
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "403":
+          description: permission denied
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: file not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/:id/permissions:
+    get:
+      consumes:
+      - application/json
+      description: Get permission of file
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Find tags of file sucess
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.GetFilePermissionOuput'
+              type: object
+        "400":
+          description: miss id
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "403":
+          description: permission denied
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: file not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/:id/permissions/add:
+    post:
+      consumes:
+      - application/json
+      description: Add permission for file
+      parameters:
+      - description: file id must be UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: permission info
+        in: body
+        name: file
+        required: true
+        schema:
+          $ref: '#/definitions/presenters.AddFilePermissionInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Add permission success
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.AddFilePermissionOutput'
+              type: object
+        "403":
+          description: User don't have permission for this file operation
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: Parent folder not found, Tag of file not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/:id/sub-file:
     get:
       consumes:
       - application/json
@@ -965,6 +1396,14 @@ paths:
         in: path
         name: id
         type: string
+      - description: mime type of file, if is_folder is true not pass mime_type
+        in: query
+        name: mime_type
+        type: string
+      - description: file id
+        in: path
+        name: id
+        type: string
       produces:
       - application/json
       responses:
@@ -975,6 +1414,41 @@ paths:
             - $ref: '#/definitions/response.AppResponse'
             - properties:
                 data:
+                  $ref: '#/definitions/presenters.GetSubFileOfFolderInput'
+              type: object
+        "400":
+          description: Unallow sort field, lack of query
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/:id/tags:
+    get:
+      consumes:
+      - application/json
+      description: Get tag of file
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Find tags of file sucess
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.GetFileTagsOutput'
                   $ref: '#/definitions/presenters.GetSubFileOfFolderInput'
               type: object
         "400":
@@ -1074,6 +1548,25 @@ paths:
               type: object
         "404":
           description: file not found
+          description: miss id
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "403":
+          description: permission denied
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: file not found
           schema:
             allOf:
             - $ref: '#/definitions/response.AppResponse'
@@ -1083,6 +1576,50 @@ paths:
               type: object
       tags:
       - files
+  /files/:id/uploaded:
+    patch:
+      consumes:
+      - application/json
+      description: Uploaded file
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Uploaded file sucess
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.UploadedFileOutput'
+              type: object
+        "403":
+          description: file is folder
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: file not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/add:
   /files/add:
     post:
       consumes:
@@ -1130,10 +1667,24 @@ paths:
       - files
   /files/my-drive:
     get:
+  /files/my-drive:
+    get:
       consumes:
       - application/json
       description: Find file of user
+      description: Find file of user
       parameters:
+      - description: file is in other folder, if null fetch all file
+        in: query
+        name: is_in_folder
+        type: boolean
+      - description: file is folder or not, if null fetch all file and folder
+        in: query
+        name: is_folder
+        type: boolean
+      - description: 'sort field, allow short field: created_at, updated_at, opened_at'
+        in: query
+        name: sort_by
       - description: file is in other folder, if null fetch all file
         in: query
         name: is_in_folder
@@ -1201,10 +1752,66 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/presenters.UploadFolderInput'
+      - description: sort direction
+        in: query
+        name: is_asc
+        required: true
+        type: boolean
+      - description: for pagination
+        in: query
+        name: offset
+        required: true
+        type: integer
+      - description: for pagination
+        in: query
+        name: limit
+        required: true
+        type: integer
+      - description: mime type of file, if is_folder is true not pass mime_type
+        in: query
+        name: mime_type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Find file of user sucess
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.FindFileOfUserOuput'
+              type: object
+        "400":
+          description: Un allow sort field, lack of query
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/upload-folder:
+    post:
+      consumes:
+      - application/json
+      description: upload folder
+      parameters:
+      - description: folder information
+        in: body
+        name: file
+        required: true
+        schema:
+          $ref: '#/definitions/presenters.UploadFolderInput'
       produces:
       - application/json
       responses:
         "201":
+          description: Create file sucess, storage_detail.put_object_url is presign
+            url for upload file
           description: Create file sucess, storage_detail.put_object_url is presign
             url for upload file
           schema:
@@ -1213,8 +1820,10 @@ paths:
             - properties:
                 data:
                   $ref: '#/definitions/presenters.UploadFolderOutput'
+                  $ref: '#/definitions/presenters.UploadFolderOutput'
               type: object
         "403":
+          description: User don't have permission for this file operation
           description: User don't have permission for this file operation
           schema:
             allOf:
@@ -1224,6 +1833,7 @@ paths:
                   type: object
               type: object
         "404":
+          description: Parent folder not found, Tag of file not found
           description: Parent folder not found, Tag of file not found
           schema:
             allOf:
