@@ -1,18 +1,18 @@
-package main
+package seeder
 
 import (
 	"context"
 	"fmt"
 	"log"
 
+	"github.com/baothaihcmut/Bibox/storage-app/db/seeder"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/config"
-	"github.com/baothaihcmut/Bibox/storage-app/migrations"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var migrates = []func(context.Context, *mongo.Client, string) error{
-	migrations.InsertTags,
+	seeder.InsertTags,
 }
 
 func main() {

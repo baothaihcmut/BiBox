@@ -949,7 +949,7 @@ const docTemplate = `{
         },
         "/files/add": {
             "post": {
-                "description": "Create new file",
+                "description": "Create new file 111",
                 "consumes": [
                     "application/json"
                 ],
@@ -1209,7 +1209,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users": {
+        "/users/search": {
             "get": {
                 "description": "search user by email",
                 "consumes": [
@@ -1254,7 +1254,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/presenters.SearchUserByEmailOuput"
+                                            "$ref": "#/definitions/presenters.SearchUserOuput"
                                         }
                                     }
                                 }
@@ -1266,7 +1266,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "enums.FilePermissionType": {
+        "enums.FileFilePermissionType": {
             "type": "integer",
             "enum": [
                 1,
@@ -1370,7 +1370,7 @@ const docTemplate = `{
                 "MimeBIN"
             ]
         },
-        "enums.PermissionType": {
+        "enums.FilePermissionType": {
             "type": "integer",
             "enum": [
                 1,
@@ -1378,8 +1378,8 @@ const docTemplate = `{
                 5
             ],
             "x-enum-varnames": [
-                "PermissionTypeView",
-                "PermissionTypeComment",
+                "FilePermissionTypeView",
+                "FilePermissionTypeComment",
                 "PermissionEdit"
             ]
         },
@@ -1487,7 +1487,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "permission_type": {
-                    "$ref": "#/definitions/enums.FilePermissionType"
+                    "$ref": "#/definitions/enums.FileFilePermissionType"
                 }
             }
         },
@@ -1598,7 +1598,7 @@ const docTemplate = `{
                     }
                 },
                 "permission_type": {
-                    "$ref": "#/definitions/enums.PermissionType"
+                    "$ref": "#/definitions/enums.FilePermissionType"
                 },
                 "user_id": {
                     "type": "string"
@@ -1618,7 +1618,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "permission_type": {
-                    "$ref": "#/definitions/enums.FilePermissionType"
+                    "$ref": "#/definitions/enums.FileFilePermissionType"
                 },
                 "user_id": {
                     "type": "string"
@@ -1655,7 +1655,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "permission_type": {
-                    "$ref": "#/definitions/enums.FilePermissionType"
+                    "$ref": "#/definitions/enums.FileFilePermissionType"
                 },
                 "user": {
                     "$ref": "#/definitions/presenters.FilePermissionUserInfo"
@@ -1746,7 +1746,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "permission_type": {
-                    "$ref": "#/definitions/enums.FilePermissionType"
+                    "$ref": "#/definitions/enums.FileFilePermissionType"
                 },
                 "permissions": {
                     "type": "array",
@@ -1901,7 +1901,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "permission_type": {
-                    "$ref": "#/definitions/enums.FilePermissionType"
+                    "$ref": "#/definitions/enums.FileFilePermissionType"
                 },
                 "user_id": {
                     "type": "string"
@@ -1911,7 +1911,7 @@ const docTemplate = `{
                 }
             }
         },
-        "presenters.SearchUserByEmailOuput": {
+        "presenters.SearchUserOuput": {
             "type": "object",
             "properties": {
                 "data": {

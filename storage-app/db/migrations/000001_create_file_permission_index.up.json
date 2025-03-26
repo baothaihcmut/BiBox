@@ -1,0 +1,16 @@
+[
+    {
+        "createIndexes": "file_permissions",
+        "indexes": [
+                {
+                "key": {
+                    "file_id": 1,
+                    "user_id":1
+                },
+                    "name": "unique_file_permission_index",
+                    "unique": true
+                }
+            ]
+    }
+]
+  

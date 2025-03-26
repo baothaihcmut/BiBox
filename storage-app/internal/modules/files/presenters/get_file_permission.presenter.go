@@ -1,6 +1,6 @@
 package presenters
 
-import "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/presenters"
+import "github.com/baothaihcmut/Bibox/storage-app/internal/common/response"
 
 type FilePermissionUserInfo struct {
 	Email     string `json:"email"`
@@ -14,7 +14,7 @@ type GetFilePermissionInput struct {
 }
 
 type FilePermssionWithUserOutput struct {
-	*presenters.FilePermissionOuput
+	*response.FilePermissionOuput
 	User *FilePermissionUserInfo `json:"user"`
 }
 

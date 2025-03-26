@@ -1,0 +1,7 @@
+[
+    {
+        "dropIndexes": "file_permissions",
+        "index": "unique_file_permission_index"
+    }
+]
+  

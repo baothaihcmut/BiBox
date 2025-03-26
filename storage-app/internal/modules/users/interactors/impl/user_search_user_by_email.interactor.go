@@ -9,14 +9,14 @@ import (
 	"github.com/samber/lo"
 )
 
-func (u *UserInteractorImpl) SearchUserByEmail(ctx context.Context, input *presenters.SearchUserByEmailInput) (*presenters.SearchUserByEmailOuput, error) {
-	users, count, err := u.userRepo.FindUserByEmailRegexAndCount(ctx, input.Email, input.Limit, input.Offset)
+func (u *UserInteractorImpl) SearchUserByEmail(ctx context.Context, input *presenters.SearchUserInput) (*presenters.SearchUserOuput, error) {
+	users, count, err := u.userRepo.FindUserRegexAndCount(ctx, input.Query, input.Limit, input.Offset)
 	if err != nil {
 		return nil, err
 	}
-	return &presenters.SearchUserByEmailOuput{
-		Data: lo.Map(users, func(item *models.User, _ int) *presenters.UserOutput {
-			return presenters.MapToUserOutput(item)
+	return &presenters.SearchUserOuput{
+		Data: lo.Map(users, func(item *models.User, _ int) *response.UserOutput {
+			return response.MapToUserOutput(item)
 		}),
 		Pagination: response.InitPaginationResponse(count, *input.Limit, *input.Offset),
 	}, nil

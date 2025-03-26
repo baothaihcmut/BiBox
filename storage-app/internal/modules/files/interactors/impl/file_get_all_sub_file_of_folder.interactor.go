@@ -50,20 +50,20 @@ func (f *FileInteractorImpl) GetAllSubFileOfFolder(ctx context.Context, input *p
 	if err != nil {
 		return nil, err
 	}
-	fileOutputs := make([]*presenters.FileWithPermissionOutput, len(data))
+	fileOutputs := make([]*response.FileWithPermissionOutput, len(data))
 	for idx, file := range data {
-		permissionOfFile := make([]*presenters.PermissionOfFileOuput, len(file.Permissions))
+		permissionOfFile := make([]*response.PermissionOfFileOuput, len(file.Permissions))
 		for j, permission := range file.Permissions {
-			permissionOfFile[j] = &presenters.PermissionOfFileOuput{
-				UserID:         permission.UserID,
-				PermissionType: permission.PermissionType,
-				UserImage:      permission.UserImage,
+			permissionOfFile[j] = &response.PermissionOfFileOuput{
+				UserID:             permission.UserID,
+				FilePermissionType: permission.FilePermissionType,
+				UserImage:          permission.UserImage,
 			}
 		}
-		fileOutputs[idx] = &presenters.FileWithPermissionOutput{
-			FileOutput:     presenters.MapFileToFileOutput(&file.File),
-			Permissions:    permissionOfFile,
-			PermissionType: file.PermissionType,
+		fileOutputs[idx] = &response.FileWithPermissionOutput{
+			FileOutput:         response.MapFileToFileOutput(&file.File),
+			Permissions:        permissionOfFile,
+			FilePermissionType: file.FilePermissionType,
 		}
 	}
 	pagination := response.PaginationResponse{

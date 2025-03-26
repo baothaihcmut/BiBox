@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/exception"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/common/response"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/presenters"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -32,6 +33,6 @@ func (f *FileInteractorImpl) UploadedFile(ctx context.Context, input *presenters
 		return nil, err
 	}
 	return &presenters.UploadedFileOutput{
-		FileOutput: presenters.MapFileToFileOutput(file),
+		FileOutput: response.MapFileToFileOutput(file),
 	}, nil
 }

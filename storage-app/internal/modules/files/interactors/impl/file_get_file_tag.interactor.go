@@ -6,8 +6,8 @@ import (
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/constant"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/enums"
 	commonModel "github.com/baothaihcmut/Bibox/storage-app/internal/common/models"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/common/response"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/presenters"
-	tagPresenter "github.com/baothaihcmut/Bibox/storage-app/internal/modules/tags/presenters"
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/tags/models"
 	"github.com/samber/lo"
@@ -33,8 +33,8 @@ func (f *FileInteractorImpl) GetFileTags(ctx context.Context, input *presenters.
 	//map to ouput
 
 	return &presenters.GetFileTagsOutput{
-		Tags: lo.Map(tags, func(item *models.Tag, _ int) *tagPresenter.TagOutput {
-			return tagPresenter.MaptoOuput(item)
+		Tags: lo.Map(tags, func(item *models.Tag, _ int) *response.TagOutput {
+			return response.MapToTagOuput(item)
 		}),
 	}, nil
 }

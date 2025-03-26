@@ -27,7 +27,7 @@ type UserControllerImpl struct {
 func (u *UserControllerImpl) Init(g *gin.RouterGroup) {
 	internal := g.Group("/users")
 	internal.Use(middleware.AuthMiddleware(u.authHandler, u.logger, false))
-	internal.GET("", middleware.ValidateMiddleware[presenters.SearchUserByEmailInput](false, binding.Query), u.handleSearchUserByEmail)
+	internal.GET("/search", middleware.ValidateMiddleware[presenters.SearchUserInput](false, binding.Query), u.handleSearchUserByEmail)
 }
 
 // @Sumary Search user by email
@@ -38,11 +38,11 @@ func (u *UserControllerImpl) Init(g *gin.RouterGroup) {
 // @Param email query string true "email value can be any string"
 // @Param offset query string false "off set must be greater than 0"
 // @Param limit query string false "limit must be greater than 0"
-// @Success 201 {object} response.AppResponse{data=presenters.SearchUserByEmailOuput} "search user success"
-// @Router   /users [get]
+// @Success 201 {object} response.AppResponse{data=presenters.SearchUserOuput} "search user success"
+// @Router   /users/search [get]
 func (u *UserControllerImpl) handleSearchUserByEmail(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
-	res, err := u.userInteractor.SearchUserByEmail(c.Request.Context(), payload.(*presenters.SearchUserByEmailInput))
+	res, err := u.userInteractor.SearchUserByEmail(c.Request.Context(), payload.(*presenters.SearchUserInput))
 	if err != nil {
 		c.Error(err)
 		c.Abort()

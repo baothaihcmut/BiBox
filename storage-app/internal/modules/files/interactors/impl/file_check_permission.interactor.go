@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func (f *FileInteractorImpl) checkFilePermission(ctx context.Context, fileId primitive.ObjectID, userId primitive.ObjectID, permissionType enums.FilePermissionType) (*models.File, error) {
+func (f *FileInteractorImpl) checkFilePermission(ctx context.Context, fileId primitive.ObjectID, userId primitive.ObjectID, FilePermissionType enums.FilePermissionType) (*models.File, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	fileCh := make(chan *models.File, 1)
@@ -41,7 +41,7 @@ func (f *FileInteractorImpl) checkFilePermission(ctx context.Context, fileId pri
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		hasPermission, err := f.filePermission.CheckPermission(ctx, fileId, userId, permissionType)
+		hasPermission, err := f.filePermission.CheckPermission(ctx, fileId, userId, FilePermissionType)
 		if err != nil {
 			select {
 			case <-ctx.Done():

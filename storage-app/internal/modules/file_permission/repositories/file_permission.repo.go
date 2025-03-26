@@ -29,9 +29,9 @@ type FilterPermssionType struct {
 }
 
 type GetPermissionArg struct {
-	FileId         *primitive.ObjectID
-	UserId         *primitive.ObjectID
-	PermissionType *enums.PermissionType
+	FileId             *primitive.ObjectID
+	UserId             *primitive.ObjectID
+	FilePermissionType *enums.FilePermissionType
 }
 
 type FilePermissionRepository interface {
@@ -40,6 +40,8 @@ type FilePermissionRepository interface {
 	GetPermissionOfFileWithUserInfo(ctx context.Context, fileId primitive.ObjectID) ([]*models.FilePermissionWithUser, error)
 	GetFilePermissions(ctx context.Context, args GetPermissionArg) ([]*models.FilePermission, error)
 	BulkCreatePermission(ctx context.Context, filePermissions []*models.FilePermission) error
+	FindPermissionByIds(ctx context.Context, ids []FilePermissionId) ([]*models.FilePermission, error)
+	BulkUpdatePermission(ctx context.Context, permissions []*models.FilePermission) error
 }
 
 type FilePermissionRepositoryImpl struct {
@@ -68,8 +70,8 @@ func (pr *FilePermissionRepositoryImpl) GetFilePermissions(ctx context.Context, 
 	if args.UserId != nil {
 		filter = append(filter, bson.E{Key: "user_id", Value: *args.UserId})
 	}
-	if args.PermissionType != nil {
-		filter = append(filter, bson.E{Key: "permission_type", Value: *args.PermissionType})
+	if args.FilePermissionType != nil {
+		filter = append(filter, bson.E{Key: "permission_type", Value: *args.FilePermissionType})
 	}
 	cursor, err := pr.collection.Find(ctx, filter)
 	if err != nil {
@@ -164,4 +166,56 @@ func (pr *FilePermissionRepositoryImpl) GetPermissionOfFileWithUserInfo(ctx cont
 	}
 	return result, nil
 
+}
+
+type FilePermissionId struct {
+	FileId primitive.ObjectID
+	UserId primitive.ObjectID
+}
+
+func (pr *FilePermissionRepositoryImpl) FindPermissionByIds(ctx context.Context, ids []FilePermissionId) ([]*models.FilePermission, error) {
+	orFilterIds := bson.A{}
+	for _, id := range ids {
+		orFilterIds = append(orFilterIds, bson.M{
+			"file_id": id.FileId,
+			"user_id": id.UserId,
+		})
+	}
+	cursor, err := pr.collection.Find(ctx, bson.M{
+		"$or": orFilterIds,
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var res []*models.FilePermission
+	if err := cursor.All(ctx, &res); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (pr *FilePermissionRepositoryImpl) BulkUpdatePermission(ctx context.Context, permissions []*models.FilePermission) error {
+	bulkOperation := make([]mongo.WriteModel, 0, len(permissions))
+	for _, permission := range permissions {
+		filter := bson.M{
+			"file_id": permission.FileID,
+			"user_id": permission.UserID,
+		}
+		update := bson.M{
+			"$set": bson.M{
+				"permission_type": permission.FilePermissionType,
+				"expire_at":       permission.ExpireAt,
+				"can_share":       permission.CanShare,
+			},
+		}
+		bulkOperation = append(bulkOperation, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update))
+	}
+	if len(bulkOperation) > 0 {
+		_, err := pr.collection.BulkWrite(ctx, bulkOperation)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

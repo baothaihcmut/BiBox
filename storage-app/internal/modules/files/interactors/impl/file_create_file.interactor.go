@@ -8,6 +8,7 @@ import (
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/enums"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/exception"
 	commonModel "github.com/baothaihcmut/Bibox/storage-app/internal/common/models"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/common/response"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/storage"
 	permissionModel "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/models"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/repositories"
@@ -280,8 +281,8 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 			parentFolder := <-parentFolderCh
 			//if file is in folder extend all permision
 			parentFilePermission, err := f.filePermissionRepo.GetFilePermissions(ctx, repositories.GetPermissionArg{
-				FileId:         &parentFolder.ID,
-				PermissionType: enums.GetPermissionTypePointer(enums.PermissionType(enums.ViewPermission)),
+				FileId:             &parentFolder.ID,
+				FilePermissionType: enums.GetPermissionTypePointer(enums.FilePermissionType(enums.ViewPermission)),
 			})
 			if err != nil {
 				select {
@@ -296,7 +297,7 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 				return permissionModel.NewFilePermission(
 					file.ID,
 					item.UserID,
-					item.PermissionType,
+					item.FilePermissionType,
 					item.CanShare,
 					item.ExpireAt,
 				)
@@ -346,7 +347,7 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 		return nil, err
 	}
 	output := &presenters.CreateFileOutput{
-		FileOutput: presenters.MapFileToFileOutput(file),
+		FileOutput: response.MapFileToFileOutput(file),
 	}
 	//get presign url for put object
 	if !file.IsFolder {

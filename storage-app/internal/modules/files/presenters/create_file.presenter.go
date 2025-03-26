@@ -1,6 +1,7 @@
 package presenters
 
 import (
+	"github.com/baothaihcmut/Bibox/storage-app/internal/common/response"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -17,7 +18,7 @@ type CreateFileInput struct {
 }
 
 type CreateFileOutput struct {
-	*FileOutput
+	*response.FileOutput
 	PutObjectUrl string `json:"put_object_url"`
 	UrlExpiry    int    `json:"url_expiry"`
 }

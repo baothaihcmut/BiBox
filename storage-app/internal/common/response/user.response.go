@@ -1,4 +1,4 @@
-package presenters
+package response
 
 import (
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/users/models"

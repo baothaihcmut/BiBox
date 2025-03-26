@@ -265,16 +265,17 @@ func (f *FileControllerImpl) handleAddFilePermission(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, response.InitResponse(true, "Add permission success", res))
 }
-func (f *FileControllerImpl) handleGetSubFileMetaData(c *gin.Context) {
-	payload, _ := c.Get(string(constant.PayloadContext))
-	res, err := f.interactor.GetSubFileMetaData(c.Request.Context(), payload.(*presenters.GetSubFileMetaDataInput))
-	if err != nil {
-		c.Error(err)
-		c.Abort()
-		return
-	}
-	c.JSON(http.StatusOK, response.InitResponse(true, "Get sub file metadata success", res))
-}
+
+// func (f *FileControllerImpl) handleGetSubFileMetaData(c *gin.Context) {
+// 	payload, _ := c.Get(string(constant.PayloadContext))
+// 	res, err := f.interactor.GetSubFileMetaData(c.Request.Context(), payload.(*presenters.GetSubFileMetaDataInput))
+// 	if err != nil {
+// 		c.Error(err)
+// 		c.Abort()
+// 		return
+// 	}
+// 	c.JSON(http.StatusOK, response.InitResponse(true, "Get sub file metadata success", res))
+// }
 
 func NewFileController(interactor interactors.FileInteractor, jwtService services.JwtService, logger logger.Logger) FileController {
 	return &FileControllerImpl{

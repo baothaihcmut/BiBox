@@ -7,5 +7,5 @@ import (
 )
 
 type UserInteractor interface {
-	SearchUserByEmail(context.Context, *presenters.SearchUserByEmailInput) (*presenters.SearchUserByEmailOuput, error)
+	SearchUserByEmail(context.Context, *presenters.SearchUserInput) (*presenters.SearchUserOuput, error)
 }

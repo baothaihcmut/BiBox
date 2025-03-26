@@ -943,7 +943,7 @@
         },
         "/files/add": {
             "post": {
-                "description": "Create new file",
+                "description": "Create new file 111",
                 "consumes": [
                     "application/json"
                 ],
@@ -1203,7 +1203,7 @@
                 }
             }
         },
-        "/users": {
+        "/users/search": {
             "get": {
                 "description": "search user by email",
                 "consumes": [
@@ -1248,7 +1248,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/presenters.SearchUserByEmailOuput"
+                                            "$ref": "#/definitions/presenters.SearchUserOuput"
                                         }
                                     }
                                 }
@@ -1260,7 +1260,7 @@
         }
     },
     "definitions": {
-        "enums.FilePermissionType": {
+        "enums.FileFilePermissionType": {
             "type": "integer",
             "enum": [
                 1,
@@ -1364,7 +1364,7 @@
                 "MimeBIN"
             ]
         },
-        "enums.PermissionType": {
+        "enums.FilePermissionType": {
             "type": "integer",
             "enum": [
                 1,
@@ -1372,8 +1372,8 @@
                 5
             ],
             "x-enum-varnames": [
-                "PermissionTypeView",
-                "PermissionTypeComment",
+                "FilePermissionTypeView",
+                "FilePermissionTypeComment",
                 "PermissionEdit"
             ]
         },
@@ -1481,7 +1481,7 @@
                     "type": "string"
                 },
                 "permission_type": {
-                    "$ref": "#/definitions/enums.FilePermissionType"
+                    "$ref": "#/definitions/enums.FileFilePermissionType"
                 }
             }
         },
@@ -1592,7 +1592,7 @@
                     }
                 },
                 "permission_type": {
-                    "$ref": "#/definitions/enums.PermissionType"
+                    "$ref": "#/definitions/enums.FilePermissionType"
                 },
                 "user_id": {
                     "type": "string"
@@ -1612,7 +1612,7 @@
                     "type": "string"
                 },
                 "permission_type": {
-                    "$ref": "#/definitions/enums.FilePermissionType"
+                    "$ref": "#/definitions/enums.FileFilePermissionType"
                 },
                 "user_id": {
                     "type": "string"
@@ -1649,7 +1649,7 @@
                     "type": "string"
                 },
                 "permission_type": {
-                    "$ref": "#/definitions/enums.FilePermissionType"
+                    "$ref": "#/definitions/enums.FileFilePermissionType"
                 },
                 "user": {
                     "$ref": "#/definitions/presenters.FilePermissionUserInfo"
@@ -1740,7 +1740,7 @@
                     "type": "string"
                 },
                 "permission_type": {
-                    "$ref": "#/definitions/enums.FilePermissionType"
+                    "$ref": "#/definitions/enums.FileFilePermissionType"
                 },
                 "permissions": {
                     "type": "array",
@@ -1895,7 +1895,7 @@
             "type": "object",
             "properties": {
                 "permission_type": {
-                    "$ref": "#/definitions/enums.FilePermissionType"
+                    "$ref": "#/definitions/enums.FileFilePermissionType"
                 },
                 "user_id": {
                     "type": "string"
@@ -1905,7 +1905,7 @@
                 }
             }
         },
-        "presenters.SearchUserByEmailOuput": {
+        "presenters.SearchUserOuput": {
             "type": "object",
             "properties": {
                 "data": {

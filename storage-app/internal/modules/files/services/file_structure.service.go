@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/enums"
-	permissionModel "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/models"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/models"
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/presenters"
@@ -20,7 +19,6 @@ type FileWithPath struct {
 type FileStructureService interface {
 	TraverseUploadFolder(_ context.Context, folder *presenters.UploadFolderInput, ownerID primitive.ObjectID, storageProvider string, storageBucket string) ([]*FileWithPath, int)
 	BuildFileStructureTree(_ context.Context, files []*models.File) *models.FileStructure
-	ExtractPermissionFromFileStructure(ctx context.Context, userId primitive.ObjectID, fileStructure *models.FileStructure, addtionPermssions []presenters.AdditionFilePermission) []*permissionModel.FilePermission
 }
 
 type FileStructureServiceImpl struct {
@@ -48,38 +46,6 @@ func (f *FileStructureServiceImpl) BuildFileStructureTree(_ context.Context, fil
 		targetStructure.Root = append(targetStructure.Root, targetNode)
 	}
 	return targetStructure
-}
-
-func (f *FileStructureServiceImpl) ExtractPermissionFromFileStructure(ctx context.Context, userId primitive.ObjectID, fileStructure *models.FileStructure, addtionPermssions []presenters.AdditionFilePermission) []*permissionModel.FilePermission {
-	//map for addition permission
-	mapAdditionPermission := make(map[primitive.ObjectID]enums.PermissionType)
-	for _, additionPermission := range addtionPermssions {
-		mapAdditionPermission[additionPermission.FileId] = enums.PermissionType(additionPermission.PermissionType)
-	}
-	var traverseFileStructure func(*models.FileNode, enums.FilePermissionType) []*permissionModel.FilePermission
-	traverseFileStructure = func(root *models.FileNode, permissionType enums.FilePermissionType) []*permissionModel.FilePermission {
-		if overwritePermission, exist := mapAdditionPermission[root.Value.ID]; exist {
-			permissionType = enums.FilePermissionType(overwritePermission)
-		}
-		permissions := []*permissionModel.FilePermission{permissionModel.NewFilePermission(
-			root.Value.ID,
-			userId,
-			permissionType,
-			true,
-			nil,
-		),
-		}
-		for _, subFile := range root.SubFiles {
-			subPermissions := traverseFileStructure(subFile, permissionType)
-			permissions = append(permissions, subPermissions...)
-		}
-		return permissions
-	}
-	permissions := make([]*permissionModel.FilePermission, 0)
-	for _, root := range fileStructure.Root {
-		permissions = append(permissions, traverseFileStructure(root, enums.ViewPermission)...)
-	}
-	return permissions
 }
 
 func (f *FileStructureServiceImpl) TraverseUploadFolder(_ context.Context, folder *presenters.UploadFolderInput, ownerID primitive.ObjectID, storageProvider string, storageBucket string) ([]*FileWithPath, int) {

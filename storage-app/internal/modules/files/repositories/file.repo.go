@@ -31,4 +31,11 @@ type FileRepository interface {
 	FindSubFileRecursive(context.Context, primitive.ObjectID) ([]*models.File, error)
 	FindFileByParentFolderId(context.Context, primitive.ObjectID) ([]*models.File, error)
 	FindAllParentFolder(context.Context, primitive.ObjectID) ([]*models.File, error)
+	FindAllFileByTagAndCount(
+		ctx context.Context,
+		tagId, userId primitive.ObjectID,
+		limit, offset int,
+		sortBy string,
+		isAsc bool,
+	) ([]*models.FileWithPermission, int, error)
 }

@@ -9,11 +9,21 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func (m *MongoUserRepository) FindUserByEmailRegexAndCount(ctx context.Context, email string, limit, offset *int) ([]*models.User, int, error) {
+func (m *MongoUserRepository) FindUserRegexAndCount(ctx context.Context, query string, limit, offset *int) ([]*models.User, int, error) {
 	filter := bson.M{
-		"email": bson.M{
-			"$regex":   email,
-			"$options": "i",
+		"$or": bson.A{
+			bson.M{"email": bson.M{
+				"$regex":   query,
+				"$options": "i",
+			}},
+			bson.M{"first_name": bson.M{
+				"$regex":   query,
+				"$options": "i",
+			}},
+			bson.M{"last_name": bson.M{
+				"$regex":   query,
+				"$options": "i",
+			}},
 		},
 	}
 	var res []*models.User

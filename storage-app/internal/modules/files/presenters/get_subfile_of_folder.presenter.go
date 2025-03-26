@@ -13,6 +13,6 @@ type GetSubFileOfFolderInput struct {
 }
 
 type GetSubFileOfFolderOutput struct {
-	Data       []*FileWithPermissionOutput `json:"data"`
-	Pagination response.PaginationResponse `json:"pagination"`
+	Data       []*response.FileWithPermissionOutput `json:"data"`
+	Pagination response.PaginationResponse          `json:"pagination"`
 }

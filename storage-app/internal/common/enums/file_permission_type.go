@@ -8,6 +8,6 @@ const (
 	EditPermission
 )
 
-func GetPermissionTypePointer(p PermissionType) *PermissionType {
+func GetPermissionTypePointer(p FilePermissionType) *FilePermissionType {
 	return &p
 }

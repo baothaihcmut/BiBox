@@ -6,6 +6,7 @@ import (
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/constant"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/enums"
 	commonModel "github.com/baothaihcmut/Bibox/storage-app/internal/common/models"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/common/response"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/presenters"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -22,6 +23,6 @@ func (f *FileInteractorImpl) GetFileMetaData(ctx context.Context, input *present
 		return nil, err
 	}
 	return &presenters.GetFileMetaDataOuput{
-		FileOutput: presenters.MapFileToFileOutput(file),
+		FileOutput: response.MapFileToFileOutput(file),
 	}, nil
 }

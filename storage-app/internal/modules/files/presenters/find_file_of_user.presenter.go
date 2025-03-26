@@ -14,6 +14,6 @@ type FindFileOfUserInput struct {
 }
 
 type FindFileOfUserOuput struct {
-	Data       []*FileWithPermissionOutput `json:"data"`
-	Pagination response.PaginationResponse `json:"pagination"`
+	Data       []*response.FileWithPermissionOutput `json:"data"`
+	Pagination response.PaginationResponse          `json:"pagination"`
 }

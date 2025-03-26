@@ -8,19 +8,19 @@ import (
 )
 
 type FilePermission struct {
-	FileID         primitive.ObjectID       `bson:"file_id"`
-	UserID         primitive.ObjectID       `bson:"user_id"`
-	PermissionType enums.FilePermissionType `bson:"permission_type"`
-	CanShare       bool                     `bson:"can_share"`
-	ExpireAt       *time.Time               `bson:"expire_at"`
+	FileID             primitive.ObjectID       `bson:"file_id"`
+	UserID             primitive.ObjectID       `bson:"user_id"`
+	FilePermissionType enums.FilePermissionType `bson:"permission_type"`
+	CanShare           bool                     `bson:"can_share"`
+	ExpireAt           *time.Time               `bson:"expire_at"`
 }
 
-func NewFilePermission(fileID, userID primitive.ObjectID, permissionType enums.FilePermissionType, canShare bool, exprireAt *time.Time) *FilePermission {
+func NewFilePermission(fileID, userID primitive.ObjectID, FilePermissionType enums.FilePermissionType, canShare bool, exprireAt *time.Time) *FilePermission {
 	return &FilePermission{
-		FileID:         fileID,
-		UserID:         userID,
-		PermissionType: permissionType,
-		CanShare:       canShare,
-		ExpireAt:       exprireAt,
+		FileID:             fileID,
+		UserID:             userID,
+		FilePermissionType: FilePermissionType,
+		CanShare:           canShare,
+		ExpireAt:           exprireAt,
 	}
 }

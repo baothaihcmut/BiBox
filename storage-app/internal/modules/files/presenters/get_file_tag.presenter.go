@@ -1,7 +1,7 @@
 package presenters
 
 import (
-	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/tags/presenters"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/common/response"
 )
 
 type GetFileTagsInput struct {
@@ -9,5 +9,5 @@ type GetFileTagsInput struct {
 }
 
 type GetFileTagsOutput struct {
-	Tags []*presenters.TagOutput `json:"tags"`
+	Tags []*response.TagOutput `json:"tags"`
 }
