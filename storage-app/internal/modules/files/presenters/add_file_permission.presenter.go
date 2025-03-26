@@ -10,7 +10,7 @@ import (
 
 type UserPermission struct {
 	UserId          primitive.ObjectID       `json:"user_id" validate:"required"`
-	PermissionsType enums.FilePermissionType `json:"permission_type" validate:"required,gte=1,lte=3"`
+	PermissionsType enums.FilePermissionType `json:"permission_type" validate:"required,enum"`
 	ExpireAt        *time.Time               `json:"expire_at"`
 }
 

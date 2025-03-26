@@ -5,7 +5,7 @@ import (
 )
 
 type GetFileTagsInput struct {
-	Id string `uri:"id" binding:"required"`
+	Id string `uri:"id" validate:"required"`
 }
 
 type GetFileTagsOutput struct {

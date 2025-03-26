@@ -78,69 +78,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/confirm": {
-            "post": {
-                "description": "Confirm sign up",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "parameters": [
-                    {
-                        "description": "code for confirm",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/presenter.ConfirmSignUpInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Confirm sign up success",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/presenter.ConfirmSignUpOutput"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid confirm code",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
         "/auth/exchange": {
             "post": {
                 "description": "Exchange Google auth code",
@@ -331,136 +268,8 @@ const docTemplate = `{
             }
         },
         "/files/:id/download-url": {
-        "/auth/log-in": {
-            "post": {
-                "description": "Log in",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "parameters": [
-                    {
-                        "description": "information for log in",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/presenter.LogInInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Login success",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Wrong password or email",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/sign-up": {
-            "post": {
-                "description": "Sign up",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "parameters": [
-                    {
-                        "description": "information for sign up",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/presenter.SignUpInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Sign up success",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/presenter.SignUpOutput"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "409": {
-                        "description": "Email exist, email is pending for cofirm",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/files/:id/download-url": {
             "get": {
                 "description": "Get download url of file",
-                "description": "Get download url of file",
                 "consumes": [
                     "application/json"
                 ],
@@ -472,409 +281,6 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "file id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "preview mode",
-                        "name": "preview",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Find tags of file sucess",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/presenters.GetFileDownloadUrlOutput"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "miss id",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "403": {
-                        "description": "permission denied",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "404": {
-                        "description": "file not found",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "409": {
-                        "description": "file is folder",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/files/:id/metadata": {
-            "get": {
-                "description": "Get metadata of file",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "files"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "file id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Find tags of file sucess",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/presenters.GetFileMetaDataOuput"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "miss id",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "403": {
-                        "description": "permission denied",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "404": {
-                        "description": "file not found",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/files/:id/permissions": {
-            "get": {
-                "description": "Get permission of file",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "files"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "file id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Find tags of file sucess",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/presenters.GetFilePermissionOuput"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "miss id",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "403": {
-                        "description": "permission denied",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "404": {
-                        "description": "file not found",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/files/:id/permissions/add": {
-            "post": {
-                "description": "Add permission for file",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "files"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "file id must be UUID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "permission info",
-                        "name": "file",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/presenters.AddFilePermissionInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Add permission success",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/presenters.AddFilePermissionOutput"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "403": {
-                        "description": "User don't have permission for this file operation",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "404": {
-                        "description": "Parent folder not found, Tag of file not found",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/files/:id/sub-file": {
-            "get": {
-                "description": "Find file of user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "files"
-                ],
-                "parameters": [
                         "type": "string",
                         "description": "file id",
                         "name": "id",
@@ -1323,18 +729,6 @@ const docTemplate = `{
                         "description": "file id",
                         "name": "id",
                         "in": "path"
-                    },
-                    {
-                        "type": "string",
-                        "description": "mime type of file, if is_folder is true not pass mime_type",
-                        "name": "mime_type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "file id",
-                        "name": "id",
-                        "in": "path"
                     }
                 ],
                 "responses": {
@@ -1350,7 +744,6 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/presenters.GetSubFileOfFolderInput"
-                                            "$ref": "#/definitions/presenters.GetSubFileOfFolderInput"
                                         }
                                     }
                                 }
@@ -1358,7 +751,6 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Unallow sort field, lack of query",
                         "description": "Unallow sort field, lack of query",
                         "schema": {
                             "allOf": [
@@ -1495,182 +887,7 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Uploaded file sucess",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/presenters.UploadedFileOutput"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
                     },
-                    "403": {
-                        "description": "file is folder",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "404": {
-                        "description": "file not found",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/files/add": {
-                        }
-                    }
-                }
-            }
-        },
-        "/files/:id/tags": {
-            "get": {
-                "description": "Get tag of file",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "files"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "file id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Find tags of file sucess",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/presenters.GetFileTagsOutput"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "miss id",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "403": {
-                        "description": "permission denied",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "404": {
-                        "description": "file not found",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/files/:id/uploaded": {
-            "patch": {
-                "description": "Uploaded file",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "files"
-                ],
-                "parameters": [
                     {
                         "type": "string",
                         "description": "file id",
@@ -1739,7 +956,7 @@ const docTemplate = `{
         },
         "/files/add": {
             "post": {
-                "description": "Create new file 111",
+                "description": "Create new file 111\nCreate new file 111",
                 "consumes": [
                     "application/json"
                 ],
@@ -1821,9 +1038,6 @@ const docTemplate = `{
         "/files/my-drive": {
             "get": {
                 "description": "Find file of user",
-        "/files/my-drive": {
-            "get": {
-                "description": "Find file of user",
                 "consumes": [
                     "application/json"
                 ],
@@ -1847,22 +1061,7 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "boolean",
-                        "description": "file is in other folder, if null fetch all file",
-                        "name": "is_in_folder",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "file is folder or not, if null fetch all file and folder",
-                        "name": "is_folder",
-                        "in": "query"
-                    },
-                    {
                         "type": "string",
-                        "description": "sort field, allow short field: created_at, updated_at, opened_at",
-                        "name": "sort_by",
-                        "in": "query",
                         "description": "sort field, allow short field: created_at, updated_at, opened_at",
                         "name": "sort_by",
                         "in": "query",
@@ -1894,90 +1093,6 @@ const docTemplate = `{
                         "description": "mime type of file, if is_folder is true not pass mime_type",
                         "name": "mime_type",
                         "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Find file of user sucess",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/presenters.FindFileOfUserOuput"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Un allow sort field, lack of query",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.AppResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/files/upload-folder": {
-            "post": {
-                "description": "upload folder",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "files"
-                ],
-                "parameters": [
-                    {
-                        "description": "folder information",
-                        "name": "file",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/presenters.UploadFolderInput"
-                        }
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "sort direction",
-                        "name": "is_asc",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "for pagination",
-                        "name": "offset",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "for pagination",
-                        "name": "limit",
-                        "in": "query",
-                        "required": true
                     },
                     {
                         "type": "string",
@@ -2052,7 +1167,6 @@ const docTemplate = `{
                 "responses": {
                     "201": {
                         "description": "Create file sucess, storage_detail.put_object_url is presign url for upload file",
-                        "description": "Create file sucess, storage_detail.put_object_url is presign url for upload file",
                         "schema": {
                             "allOf": [
                                 {
@@ -2063,7 +1177,6 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/presenters.UploadFolderOutput"
-                                            "$ref": "#/definitions/presenters.UploadFolderOutput"
                                         }
                                     }
                                 }
@@ -2071,7 +1184,6 @@ const docTemplate = `{
                         }
                     },
                     "403": {
-                        "description": "User don't have permission for this file operation",
                         "description": "User don't have permission for this file operation",
                         "schema": {
                             "allOf": [
@@ -2090,7 +1202,6 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Parent folder not found, Tag of file not found",
                         "description": "Parent folder not found, Tag of file not found",
                         "schema": {
                             "allOf": [
@@ -2168,7 +1279,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "enums.FileFilePermissionType": {
+        "enums.FilePermissionType": {
             "type": "integer",
             "enum": [
                 1,
@@ -2272,19 +1383,6 @@ const docTemplate = `{
                 "MimeBIN"
             ]
         },
-        "enums.FilePermissionType": {
-            "type": "integer",
-            "enum": [
-                1,
-                3,
-                5
-            ],
-            "x-enum-varnames": [
-                "FilePermissionTypeView",
-                "FilePermissionTypeComment",
-                "PermissionEdit"
-            ]
-        },
         "presenter.ConfirmSignUpInput": {
             "type": "object",
             "properties": {
@@ -2355,6 +1453,9 @@ const docTemplate = `{
         },
         "presenters.AddFilePermissionInput": {
             "type": "object",
+            "required": [
+                "permissions"
+            ],
             "properties": {
                 "fileId": {
                     "type": "string"
@@ -2362,7 +1463,7 @@ const docTemplate = `{
                 "permissions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/presenters.FilePermission"
+                        "$ref": "#/definitions/presenters.UserPermission"
                     }
                 }
             }
@@ -2373,30 +1474,17 @@ const docTemplate = `{
                 "permissions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/presenters.FilePermissionOuput"
+                        "$ref": "#/definitions/response.FilePermissionOuput"
                     }
-                }
-            }
-        },
-        "presenters.AdditionFilePermission": {
-            "type": "object",
-            "required": [
-                "file_id",
-                "permission_type"
-            ],
-            "properties": {
-                "file_id": {
-                    "type": "string"
-                },
-                "permission_type": {
-                    "$ref": "#/definitions/enums.FileFilePermissionType"
                 }
             }
         },
         "presenters.CreateFileInput": {
             "type": "object",
             "required": [
-                "name"
+                "is_folder",
+                "name",
+                "tags"
             ],
             "properties": {
                 "description": {
@@ -2414,13 +1502,7 @@ const docTemplate = `{
                 },
                 "storage_detail": {
                     "type": "object",
-                    "required": [
-                        "mime_type",
-                        "mime_type",
-                        "size"
-                    ],
                     "properties": {
-                        "mime_type": {
                         "mime_type": {
                             "description": "Required field",
                             "type": "string"
@@ -2470,7 +1552,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "storage_detail": {
-                    "$ref": "#/definitions/presenters.StorageDetailOuput"
+                    "$ref": "#/definitions/response.StorageDetailOuput"
                 },
                 "tags": {
                     "type": "array",
@@ -2486,46 +1568,6 @@ const docTemplate = `{
                 },
                 "url_expiry": {
                     "type": "integer"
-                }
-            }
-        },
-        "presenters.FilePermission": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "addition_permissions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/presenters.AdditionFilePermission"
-                    }
-                },
-                "permission_type": {
-                    "$ref": "#/definitions/enums.FilePermissionType"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "presenters.FilePermissionOuput": {
-            "type": "object",
-            "properties": {
-                "access_secure_file": {
-                    "type": "boolean"
-                },
-                "can_share": {
-                    "type": "boolean"
-                },
-                "file_id": {
-                    "type": "string"
-                },
-                "permission_type": {
-                    "$ref": "#/definitions/enums.FileFilePermissionType"
-                },
-                "user_id": {
-                    "type": "string"
                 }
             }
         },
@@ -2559,7 +1601,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "permission_type": {
-                    "$ref": "#/definitions/enums.FileFilePermissionType"
+                    "$ref": "#/definitions/enums.FilePermissionType"
                 },
                 "user": {
                     "$ref": "#/definitions/presenters.FilePermissionUserInfo"
@@ -2599,23 +1641,17 @@ const docTemplate = `{
                 "path": {
                     "type": "string"
                 },
-                "path": {
-                    "type": "string"
-                },
                 "put_object_url": {
                     "type": "string"
                 },
                 "storage_detail": {
-                    "$ref": "#/definitions/presenters.StorageDetailOuput"
+                    "$ref": "#/definitions/response.StorageDetailOuput"
                 },
                 "tags": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
-                },
-                "total_size": {
-                    "type": "integer"
                 },
                 "total_size": {
                     "type": "integer"
@@ -2628,71 +1664,13 @@ const docTemplate = `{
                 }
             }
         },
-        "presenters.FileWithPermissionOutput": {
-        "presenters.FileWithPermissionOutput": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_folder": {
-                "id": {
-                    "type": "string"
-                },
-                "is_folder": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "opened_at": {
-                    "type": "string"
-                },
-                "owner_id": {
-                    "type": "string"
-                },
-                "parent_folder_id": {
-                    "type": "string"
-                },
-                "permission_type": {
-                    "$ref": "#/definitions/enums.FileFilePermissionType"
-                },
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/presenters.PermissionOfFileOuput"
-                    }
-                },
-                "storage_detail": {
-                    "$ref": "#/definitions/presenters.StorageDetailOuput"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "total_size": {
-                    "type": "integer"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "presenters.FindFileOfUserOuput": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/presenters.FileWithPermissionOutput"
+                        "$ref": "#/definitions/response.FileWithPermissionOutput"
                     }
                 },
                 "pagination": {
@@ -2748,7 +1726,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "storage_detail": {
-                    "$ref": "#/definitions/presenters.StorageDetailOuput"
+                    "$ref": "#/definitions/response.StorageDetailOuput"
                 },
                 "tags": {
                     "type": "array",
@@ -2759,23 +1737,17 @@ const docTemplate = `{
                 "total_size": {
                     "type": "integer"
                 },
-                "total_size": {
-                    "type": "integer"
-                },
                 "updated_at": {
                     "type": "string"
                 }
             }
         },
         "presenters.GetFilePermissionOuput": {
-        "presenters.GetFilePermissionOuput": {
             "type": "object",
             "properties": {
                 "permissions": {
-                "permissions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/presenters.FilePermssionWithUserOutput"
                         "$ref": "#/definitions/presenters.FilePermssionWithUserOutput"
                     }
                 }
@@ -2787,13 +1759,19 @@ const docTemplate = `{
                 "tags": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/presenters.TagOutput"
+                        "$ref": "#/definitions/response.TagOutput"
                     }
                 }
             }
         },
         "presenters.GetSubFileOfFolderInput": {
             "type": "object",
+            "required": [
+                "is_asc",
+                "limit",
+                "offset",
+                "sort_by"
+            ],
             "properties": {
                 "id": {
                     "type": "string"
@@ -2818,90 +1796,17 @@ const docTemplate = `{
                 }
             }
         },
-        "presenters.PermissionOfFileOuput": {
-            "type": "object",
-            "properties": {
-                "permission_type": {
-                    "$ref": "#/definitions/enums.FileFilePermissionType"
-                },
-                "user_id": {
-                    "type": "string"
-                },
-                "user_image": {
-                    "type": "string"
-                }
-            }
-        },
         "presenters.SearchUserOuput": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/presenters.UserOutput"
+                        "$ref": "#/definitions/response.UserOutput"
                     }
                 },
                 "pagination": {
                     "$ref": "#/definitions/response.PaginationResponse"
-                }
-            }
-        },
-        "presenters.StorageDetailOuput": {
-            "type": "object",
-            "properties": {
-                "file_size": {
-                    "type": "integer"
-                },
-                "mime_type": {
-                    "$ref": "#/definitions/enums.MimeType"
-                }
-            }
-        },
-        "presenters.TagOutput": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                "mime_type": {
-                    "$ref": "#/definitions/enums.MimeType"
-                }
-            }
-        },
-        "presenters.TagOutput": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "presenters.UploadFolderInput": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/presenters.CreateFileInput"
-                },
-                "sub_files": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/presenters.UploadFolderInput"
-                    }
-                }
-            }
-        },
-        "presenters.UploadFolderOutput": {
-            "type": "object",
-            "properties": {
-                "files": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/presenters.FileWithPathOutput"
-                    }
                 }
             }
         },
@@ -2958,7 +1863,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "storage_detail": {
-                    "$ref": "#/definitions/presenters.StorageDetailOuput"
+                    "$ref": "#/definitions/response.StorageDetailOuput"
                 },
                 "tags": {
                     "type": "array",
@@ -2969,50 +1874,25 @@ const docTemplate = `{
                 "total_size": {
                     "type": "integer"
                 },
-                "total_size": {
-                    "type": "integer"
-                },
                 "updated_at": {
                     "type": "string"
                 }
             }
         },
-        "presenters.UserOutput": {
+        "presenters.UserPermission": {
             "type": "object",
+            "required": [
+                "permission_type",
+                "user_id"
+            ],
             "properties": {
-                "email": {
+                "expire_at": {
                     "type": "string"
                 },
-                "first_name": {
-                    "type": "string"
+                "permission_type": {
+                    "$ref": "#/definitions/enums.FilePermissionType"
                 },
-                "id": {
-                    "type": "string"
-                },
-                "image": {
-                    "type": "string"
-                },
-                "last_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "presenters.UserOutput": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "image": {
-                    "type": "string"
-                },
-                "last_name": {
+                "user_id": {
                     "type": "string"
                 }
             }
@@ -3028,29 +1908,76 @@ const docTemplate = `{
                 }
             }
         },
-        "response.PaginationResponse": {
+        "response.FilePermissionOuput": {
             "type": "object",
             "properties": {
-                "has_next": {
+                "access_secure_file": {
                     "type": "boolean"
                 },
-                "has_prev": {
+                "can_share": {
                     "type": "boolean"
                 },
-                "limit": {
+                "file_id": {
+                    "type": "string"
+                },
+                "permission_type": {
+                    "$ref": "#/definitions/enums.FilePermissionType"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.FileWithPermissionOutput": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_folder": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "opened_at": {
+                    "type": "string"
+                },
+                "owner_id": {
+                    "type": "string"
+                },
+                "parent_folder_id": {
+                    "type": "string"
+                },
+                "permission_type": {
+                    "$ref": "#/definitions/enums.FilePermissionType"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.PermissionOfFileOuput"
+                    }
+                },
+                "storage_detail": {
+                    "$ref": "#/definitions/response.StorageDetailOuput"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "total_size": {
                     "type": "integer"
                 },
-                "next_offset": {
-                    "type": "integer"
-                },
-                "offset": {
-                    "type": "integer"
-                },
-                "prev_offset": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -3077,6 +2004,62 @@ const docTemplate = `{
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "response.PermissionOfFileOuput": {
+            "type": "object",
+            "properties": {
+                "permission_type": {
+                    "$ref": "#/definitions/enums.FilePermissionType"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "user_image": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.StorageDetailOuput": {
+            "type": "object",
+            "properties": {
+                "file_size": {
+                    "type": "integer"
+                },
+                "mime_type": {
+                    "$ref": "#/definitions/enums.MimeType"
+                }
+            }
+        },
+        "response.TagOutput": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.UserOutput": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
                 }
             }
         }

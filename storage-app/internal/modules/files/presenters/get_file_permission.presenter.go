@@ -10,7 +10,7 @@ type FilePermissionUserInfo struct {
 }
 
 type GetFilePermissionInput struct {
-	Id string `uri:"id" binding:"required"`
+	Id string `uri:"id" validate:"required"`
 }
 
 type FilePermssionWithUserOutput struct {

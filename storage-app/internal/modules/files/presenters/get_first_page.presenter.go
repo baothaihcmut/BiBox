@@ -7,8 +7,8 @@ import (
 )
 
 type GetFirstPageInput struct {
-	FileId    string         `uri:"id" binding:"required oneof=image/jpeg image/png"`
-	OuputType enums.MimeType `form:"out_type" binding:"required"`
+	FileId    string         `uri:"id" validate:"required"`
+	OuputType enums.MimeType `form:"out_type" validate:"required"`
 }
 
 type GetFirstPageOutput struct {

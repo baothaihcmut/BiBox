@@ -7,13 +7,13 @@ import (
 
 type CreateFileInput struct {
 	Name           string               `json:"name" validate:"required"`
-	IsFolder       bool                 `json:"is_folder"` // Use *bool to allow nil check
+	IsFolder       bool                 `json:"is_folder" validate:"required"` // Use *bool to allow nil check
 	ParentFolderID *primitive.ObjectID  `json:"parent_folder_id,omitempty"`
 	Description    string               `json:"description"`
-	TagIDs         []primitive.ObjectID `json:"tags,omitempty"`
+	TagIDs         []primitive.ObjectID `json:"tags,omitempty" validate:"required"`
 	StorageDetail  *struct {
-		Size     int    `json:"size" validate:"required"`      // Required field
-		MimeType string `json:"mime_type" validate:"required"` // Required field
+		Size     int    `json:"size"`      // Required field
+		MimeType string `json:"mime_type"` // Required field
 	} `json:"storage_detail,omitempty"`
 }
 

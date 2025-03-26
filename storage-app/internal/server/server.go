@@ -119,7 +119,7 @@ func (s *Server) initApp() {
 	authController := authController.NewAuthController(authInteractor, &s.config.Jwt, &s.config.Oauth2)
 	fileController := fileController.NewFileController(fileInteractor, userJwtService, logger)
 	userController := userController.NewUserController(userInteractor, userJwtService, logger)
-	tagController := tagController.NewTagController(tagInteractor)
+	tagController := tagController.NewTagController(tagInteractor, userJwtService, logger)
 
 	//register metrics monitor
 	httpRequestTotalMetric := prometheus.NewCounterVec(

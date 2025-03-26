@@ -3,7 +3,7 @@ package presenters
 import "github.com/baothaihcmut/Bibox/storage-app/internal/common/response"
 
 type GetSubFileMetaDataInput struct {
-	FileId string `uri:"id"`
+	FileId string `uri:"id" validate:"required"`
 }
 
 type GetSubFileMetaDataOutput struct {
