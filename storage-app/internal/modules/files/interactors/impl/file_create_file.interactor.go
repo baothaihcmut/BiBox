@@ -164,8 +164,6 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 	}
 	//wait for all check routine
 	checkWg.Wait()
-	// close(userCh)
-	// close(checkErr)
 	select {
 	case err = <-checkErr:
 		return nil, err
@@ -294,24 +292,30 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 				cancel()
 				errSave <- err
 			}
-			targetPermission := lo.Map(parentFilePermission, func(item *permissionModel.FilePermission, _ int) *permissionModel.FilePermission {
-				return permissionModel.NewFilePermission(
-					file.ID,
-					item.UserID,
-					item.FilePermissionType,
-					item.CanShare,
-					item.ExpireAt,
-				)
-			})
+			targetPermission := lo.Map(
+				lo.Filter(parentFilePermission, func(item *permissionModel.FilePermission, _ int) bool {
+					return item.UserID != userId
+				}),
+				func(item *permissionModel.FilePermission, _ int) *permissionModel.FilePermission {
+					return permissionModel.NewFilePermission(
+						file.ID,
+						item.UserID,
+						item.FilePermissionType,
+						item.CanShare,
+						item.ExpireAt,
+					)
+				})
 			permssions = append(permssions, targetPermission...)
 			//append owner edit of parent
-			permssions = append(permssions, permissionModel.NewFilePermission(
-				file.ID,
-				parentFolder.OwnerID,
-				enums.EditPermission,
-				true,
-				nil,
-			))
+			if userId != parentFolder.OwnerID {
+				permssions = append(permssions, permissionModel.NewFilePermission(
+					file.ID,
+					parentFolder.OwnerID,
+					enums.EditPermission,
+					true,
+					nil,
+				))
+			}
 		}
 		//else append edit permission for user
 		permssions = append(permssions, permissionModel.NewFilePermission(

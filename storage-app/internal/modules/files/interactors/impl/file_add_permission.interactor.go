@@ -178,13 +178,17 @@ func (f *FileInteractorImpl) AddFilePermission(ctx context.Context, input *prese
 		}()
 	}
 	go func() {
-		wg.Wait()
+		wgSave.Wait()
 		doneSave <- struct{}{}
 	}()
 	select {
 	case err := <-errCh:
 		return nil, err
 	case <-doneSave:
+	}
+	if err := f.mongoService.CommitTransaction(ctx, session); err != nil {
+		f.logger.Errorf(ctx, nil, "Error commit transaction: ", err)
+		return nil, err
 	}
 	return &presenters.AddFilePermissionOutput{
 		Permissions: lo.Map(append(createPermissions, updatePermissions...), func(item *permissionModel.FilePermission, _ int) *response.FilePermissionOuput {

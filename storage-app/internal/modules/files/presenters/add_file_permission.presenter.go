@@ -9,14 +9,14 @@ import (
 )
 
 type UserPermission struct {
-	UserId          primitive.ObjectID       `json:"user_id" binding:"required"`
-	PermissionsType enums.FilePermissionType `json:"permission_type" binding:"required,enum"`
+	UserId          primitive.ObjectID       `json:"user_id" validate:"required"`
+	PermissionsType enums.FilePermissionType `json:"permission_type" validate:"required,gte=1,lte=3"`
 	ExpireAt        *time.Time               `json:"expire_at"`
 }
 
 type AddFilePermissionInput struct {
-	FileId          string `uri:"id"`
-	UserPermissions []UserPermission
+	FileId          string           `uri:"id"`
+	UserPermissions []UserPermission `json:"permissions" validate:"required"`
 }
 
 type AddFilePermissionOutput struct {
