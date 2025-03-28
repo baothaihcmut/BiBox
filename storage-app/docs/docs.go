@@ -1269,8 +1269,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "boolean",
-                        "description": "file is in other folder, if null fetch all file",
-                        "name": "is_in_folder",
+                        "description": "if true file in bin, false is file in drive",
+                        "name": "is_deleted",
                         "in": "query"
                     },
                     {
@@ -1332,7 +1332,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/presenters.FindFileOfUserOuput"
+                                            "$ref": "#/definitions/presenters.GetAllFileOfUserOuput"
                                         }
                                     }
                                 }
@@ -1842,6 +1842,7 @@ const docTemplate = `{
             "properties": {
                 "permissions": {
                     "type": "array",
+                    "minItems": 1,
                     "items": {
                         "$ref": "#/definitions/presenters.UserPermission"
                     }
@@ -1862,7 +1863,6 @@ const docTemplate = `{
         "presenters.CreateFileInput": {
             "type": "object",
             "required": [
-                "is_folder",
                 "name",
                 "tags"
             ],
@@ -1871,7 +1871,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "is_folder": {
-                    "description": "Use *bool to allow nil check",
                     "type": "boolean"
                 },
                 "name": {
@@ -1884,11 +1883,9 @@ const docTemplate = `{
                     "type": "object",
                     "properties": {
                         "mime_type": {
-                            "description": "Required field",
                             "type": "string"
                         },
                         "size": {
-                            "description": "Required field",
                             "type": "integer"
                         }
                     }
@@ -1907,11 +1904,17 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "deleted_at": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
+                },
+                "is_deleted": {
+                    "type": "boolean"
                 },
                 "is_folder": {
                     "type": "boolean"
@@ -1997,11 +2000,17 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "deleted_at": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
+                },
+                "is_deleted": {
+                    "type": "boolean"
                 },
                 "is_folder": {
                     "type": "boolean"
@@ -2044,7 +2053,7 @@ const docTemplate = `{
                 }
             }
         },
-        "presenters.FindFileOfUserOuput": {
+        "presenters.GetAllFileOfTagOutput": {
             "type": "object",
             "properties": {
                 "data": {
@@ -2058,7 +2067,7 @@ const docTemplate = `{
                 }
             }
         },
-        "presenters.GetAllFileOfTagOutput": {
+        "presenters.GetAllFileOfUserOuput": {
             "type": "object",
             "properties": {
                 "data": {
@@ -2098,11 +2107,17 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "deleted_at": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
+                },
+                "is_deleted": {
+                    "type": "boolean"
                 },
                 "is_folder": {
                     "type": "boolean"
@@ -2161,9 +2176,6 @@ const docTemplate = `{
         "presenters.GetSubFileOfFolderInput": {
             "type": "object",
             "required": [
-                "is_asc",
-                "limit",
-                "offset",
                 "sort_by"
             ],
             "properties": {
@@ -2183,7 +2195,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "offset": {
-                    "type": "integer"
+                    "type": "integer",
+                    "minimum": 0
                 },
                 "sort_by": {
                     "type": "string"
@@ -2288,11 +2301,17 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "deleted_at": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
+                },
+                "is_deleted": {
+                    "type": "boolean"
                 },
                 "is_folder": {
                     "type": "boolean"
@@ -2337,7 +2356,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "permission_type": {
-                    "$ref": "#/definitions/enums.FilePermissionType"
+                    "maximum": 3,
+                    "minimum": 1,
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/enums.FilePermissionType"
+                        }
+                    ]
                 },
                 "user_id": {
                     "type": "string"
@@ -2381,11 +2406,17 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "deleted_at": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
+                },
+                "is_deleted": {
+                    "type": "boolean"
                 },
                 "is_folder": {
                     "type": "boolean"

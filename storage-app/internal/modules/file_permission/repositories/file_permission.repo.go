@@ -21,6 +21,7 @@ type FilePermissionRepository interface {
 	UpdatePermission(ctx context.Context, filePermission *models.FilePermission) error
 	DeletePermission(ctx context.Context, filePermission *models.FilePermission) error
 	BulkDeletePermission(ctx context.Context, filePermissions []*models.FilePermission) error
+	DeletePermissionByListFileId(ctx context.Context, fileIds []primitive.ObjectID) error
 
 	FindFilePermissionById(ctx context.Context, id FilePermissionId) (*models.FilePermission, error)
 	FindPermissionByListId(ctx context.Context, ids []FilePermissionId) ([]*models.FilePermission, error)

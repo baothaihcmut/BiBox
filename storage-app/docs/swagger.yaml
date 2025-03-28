@@ -149,6 +149,7 @@ definitions:
       permissions:
         items:
           $ref: '#/definitions/presenters.UserPermission'
+        minItems: 1
         type: array
     required:
     - permissions
@@ -165,7 +166,6 @@ definitions:
       description:
         type: string
       is_folder:
-        description: Use *bool to allow nil check
         type: boolean
       name:
         type: string
@@ -174,10 +174,8 @@ definitions:
       storage_detail:
         properties:
           mime_type:
-            description: Required field
             type: string
           size:
-            description: Required field
             type: integer
         type: object
       tags:
@@ -185,7 +183,6 @@ definitions:
           type: string
         type: array
     required:
-    - is_folder
     - name
     - tags
     type: object
@@ -193,10 +190,14 @@ definitions:
     properties:
       created_at:
         type: string
+      deleted_at:
+        type: string
       description:
         type: string
       id:
         type: string
+      is_deleted:
+        type: boolean
       is_folder:
         type: boolean
       name:
@@ -252,10 +253,14 @@ definitions:
     properties:
       created_at:
         type: string
+      deleted_at:
+        type: string
       description:
         type: string
       id:
         type: string
+      is_deleted:
+        type: boolean
       is_folder:
         type: boolean
       name:
@@ -283,7 +288,7 @@ definitions:
       url_expiry:
         type: integer
     type: object
-  presenters.FindFileOfUserOuput:
+  presenters.GetAllFileOfTagOutput:
     properties:
       data:
         items:
@@ -292,7 +297,7 @@ definitions:
       pagination:
         $ref: '#/definitions/response.PaginationResponse'
     type: object
-  presenters.GetAllFileOfTagOutput:
+  presenters.GetAllFileOfUserOuput:
     properties:
       data:
         items:
@@ -318,10 +323,14 @@ definitions:
     properties:
       created_at:
         type: string
+      deleted_at:
+        type: string
       description:
         type: string
       id:
         type: string
+      is_deleted:
+        type: boolean
       is_folder:
         type: boolean
       name:
@@ -370,13 +379,11 @@ definitions:
       mime_type:
         type: string
       offset:
+        minimum: 0
         type: integer
       sort_by:
         type: string
     required:
-    - is_asc
-    - limit
-    - offset
     - sort_by
     type: object
   presenters.SearchTagsOutput:
@@ -442,10 +449,14 @@ definitions:
     properties:
       created_at:
         type: string
+      deleted_at:
+        type: string
       description:
         type: string
       id:
         type: string
+      is_deleted:
+        type: boolean
       is_folder:
         type: boolean
       name:
@@ -472,7 +483,10 @@ definitions:
       expire_at:
         type: string
       permission_type:
-        $ref: '#/definitions/enums.FilePermissionType'
+        allOf:
+        - $ref: '#/definitions/enums.FilePermissionType'
+        maximum: 3
+        minimum: 1
       user_id:
         type: string
     required:
@@ -503,10 +517,14 @@ definitions:
     properties:
       created_at:
         type: string
+      deleted_at:
+        type: string
       description:
         type: string
       id:
         type: string
+      is_deleted:
+        type: boolean
       is_folder:
         type: boolean
       name:
@@ -1289,9 +1307,9 @@ paths:
       - application/json
       description: Find file of user
       parameters:
-      - description: file is in other folder, if null fetch all file
+      - description: if true file in bin, false is file in drive
         in: query
-        name: is_in_folder
+        name: is_deleted
         type: boolean
       - description: file is folder or not, if null fetch all file and folder
         in: query
@@ -1335,7 +1353,7 @@ paths:
             - $ref: '#/definitions/response.AppResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/presenters.FindFileOfUserOuput'
+                  $ref: '#/definitions/presenters.GetAllFileOfUserOuput'
               type: object
         "400":
           description: Un allow sort field, lack of query

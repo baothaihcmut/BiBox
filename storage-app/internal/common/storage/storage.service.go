@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/enums"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/config"
+	"github.com/samber/lo"
 )
 
 type PresignUrlMethod string
@@ -33,12 +35,33 @@ type StorageService interface {
 	GetStorageProviderName() string
 	GetStorageBucket() string
 	GetFile(context.Context, string) (io.ReadCloser, error)
+	BulkDelete(context.Context, []string) error
 }
 
 type S3StorageService struct {
 	client *s3.Client
 	logger logger.Logger
 	cfg    *config.S3Config
+}
+
+// BulkDelete implements StorageService.
+func (s *S3StorageService) BulkDelete(ctx context.Context, keys []string) error {
+	objectIds := lo.Map(keys, func(item string, _ int) types.ObjectIdentifier {
+		return types.ObjectIdentifier{Key: aws.String(item)}
+	})
+	deleteInput := &s3.DeleteObjectsInput{
+		Bucket: aws.String(s.cfg.Bucket),
+		Delete: &types.Delete{
+			Objects: objectIds,
+			Quiet:   aws.Bool(true),
+		},
+	}
+	_, err := s.client.DeleteObjects(context.TODO(), deleteInput)
+	if err != nil {
+		return err
+	}
+	return nil
+
 }
 
 func (s *S3StorageService) GetPresignUrl(ctx context.Context, args GetPresignUrlArg) (string, error) {

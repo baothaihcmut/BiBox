@@ -6,24 +6,34 @@ import (
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/users/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func (m *MongoUserRepository) FindUserRegexAndCount(ctx context.Context, query string, limit, offset *int) ([]*models.User, int, error) {
+func (m *MongoUserRepository) FindUserRegexAndCount(ctx context.Context, query string, limit, offset *int, exclude []primitive.ObjectID) ([]*models.User, int, error) {
 	filter := bson.M{
-		"$or": bson.A{
-			bson.M{"email": bson.M{
-				"$regex":   query,
-				"$options": "i",
-			}},
-			bson.M{"first_name": bson.M{
-				"$regex":   query,
-				"$options": "i",
-			}},
-			bson.M{"last_name": bson.M{
-				"$regex":   query,
-				"$options": "i",
-			}},
+		"$and": bson.A{
+			bson.M{
+				"$or": bson.A{
+					bson.M{"email": bson.M{
+						"$regex":   query,
+						"$options": "i",
+					}},
+					bson.M{"first_name": bson.M{
+						"$regex":   query,
+						"$options": "i",
+					}},
+					bson.M{"last_name": bson.M{
+						"$regex":   query,
+						"$options": "i",
+					}},
+				},
+			},
+			bson.M{
+				"_id": bson.M{
+					"$nin": exclude,
+				},
+			},
 		},
 	}
 	var res []*models.User

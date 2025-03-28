@@ -14,7 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func (f *FileInteractorImpl) FindAllFileOfUser(ctx context.Context, input *presenters.FindFileOfUserInput) (*presenters.FindFileOfUserOuput, error) {
+func (f *FileInteractorImpl) GetAllFileOfUser(ctx context.Context, input *presenters.GetAllFileOfUserInput) (*presenters.GetAllFileOfUserOuput, error) {
 	//get user context
 	userContext := ctx.Value(constant.UserContext).(*commonModel.UserContext)
 	//tranform id
@@ -25,12 +25,13 @@ func (f *FileInteractorImpl) FindAllFileOfUser(ctx context.Context, input *prese
 
 	//check if sort field is allowed
 	args := repositories.FindFileWithPermissionArg{
-		IsFolder: input.IsFolder,
-		Offset:   input.Offset,
-		Limit:    input.Limit,
-		IsAsc:    input.IsAsc,
-		OwnerId:  &userId,
-		UserId:   userId,
+		IsFolder:  input.IsFolder,
+		Offset:    input.Offset,
+		Limit:     input.Limit,
+		IsAsc:     input.IsAsc,
+		OwnerId:   &userId,
+		UserId:    userId,
+		IsDeleted: input.IsDeleted,
 	}
 	//check allow sort field
 	if !slices.Contains(ALLOW_FILE_SORT_FIELD, input.SortBy) {
@@ -64,7 +65,7 @@ func (f *FileInteractorImpl) FindAllFileOfUser(ctx context.Context, input *prese
 		}
 	}
 
-	return &presenters.FindFileOfUserOuput{
+	return &presenters.GetAllFileOfUserOuput{
 		Data:       fileOutputs,
 		Pagination: response.InitPaginationResponse(int(count), input.Limit, input.Offset),
 	}, nil

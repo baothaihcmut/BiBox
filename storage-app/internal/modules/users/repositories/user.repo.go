@@ -12,6 +12,6 @@ type UserRepository interface {
 	UpdateUserStorageSize(context.Context, *models.User) error
 	FindUserByEmail(context.Context, string) (*models.User, error)
 	FindUserById(ctx context.Context, id primitive.ObjectID) (*models.User, error)
-	FindUserRegexAndCount(ctx context.Context, email string, limit, offset *int) ([]*models.User, int, error)
+	FindUserRegexAndCount(ctx context.Context, email string, limit, offset *int, exclude []primitive.ObjectID) ([]*models.User, int, error)
 	FindUserIdIds(ctx context.Context, ids []primitive.ObjectID) ([]*models.User, error)
 }

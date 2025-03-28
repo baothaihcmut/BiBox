@@ -10,7 +10,7 @@ type FileInteractor interface {
 	CreatFile(context.Context, *presenters.CreateFileInput) (*presenters.CreateFileOutput, error)
 	UploadFolder(context.Context, *presenters.UploadFolderInput) (*presenters.UploadFolderOutput, error)
 	UploadedFile(context.Context, *presenters.UploadedFileInput) (*presenters.UploadedFileOutput, error)
-	FindAllFileOfUser(context.Context, *presenters.FindFileOfUserInput) (*presenters.FindFileOfUserOuput, error)
+	GetAllFileOfUser(context.Context, *presenters.GetAllFileOfUserInput) (*presenters.GetAllFileOfUserOuput, error)
 	AddFilePermission(context.Context, *presenters.AddFilePermissionInput) (*presenters.AddFilePermissionOutput, error)
 	GetFileMetaData(context.Context, *presenters.GetFileMetaDataInput) (*presenters.GetFileMetaDataOuput, error)
 	GetFileTags(context.Context, *presenters.GetFileTagsInput) (*presenters.GetFileTagsOutput, error)
@@ -22,4 +22,6 @@ type FileInteractor interface {
 	UpdateFilePermission(context.Context, *presenters.UpdateFilePermissionInput) (*presenters.UpdateFilePermissionOuput, error)
 	DeleteFilePermission(context.Context, *presenters.DeleteFilePermissionOfUserInput) (*presenters.DeleteFilePermissionOfUserOutput, error)
 	SoftDeleteFile(context.Context, *presenters.SoftDeleteFileInput) (*presenters.SoftDeleteFileOuput, error)
+	RecoverFile(context.Context, *presenters.RecoverFileInput) (*presenters.RecoverFileOutput, error)
+	HardDeleteFile(context.Context, *presenters.HardDeleteFileInput) (*presenters.HardDeleteFileOutput, error)
 }

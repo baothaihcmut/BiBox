@@ -7,5 +7,5 @@ type SoftDeleteFileInput struct {
 }
 
 type SoftDeleteFileOuput struct {
-	files []*response.FileOutput
+	Files []*response.FileOutput `json:"files"`
 }

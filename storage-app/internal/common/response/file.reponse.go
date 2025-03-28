@@ -28,7 +28,9 @@ type FileOutput struct {
 	CreatedAt      time.Time            `json:"created_at"`
 	UpdatedAt      time.Time            `json:"updated_at"`
 	OpenedAt       *time.Time           `json:"opened_at"`
+	DeletedAt      *time.Time           `json:"deleted_at"`
 	Description    string               `json:"description"`
+	IsDeleted      bool                 `json:"is_deleted"`
 	TagIDs         []primitive.ObjectID `json:"tags"`
 	StorageDetails *StorageDetailOuput  `json:"storage_detail"`
 }

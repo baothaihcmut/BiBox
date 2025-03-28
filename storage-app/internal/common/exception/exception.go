@@ -29,6 +29,8 @@ var (
 	ErrUnauthorized               = errors.New("unauthorized access")
 	ErrPermissionDenied           = errors.New("permission denied")
 	ErrMissPermission             = errors.New("miss permission type")
+	ErrFileIsNotInBin             = errors.New("file is not in bin")
+	ErrFileIsNotFolder            = errors.New("file is not folder")
 )
 var errMap = map[error]int{
 	ErrTokenExpire:                http.StatusUnauthorized,
@@ -50,6 +52,8 @@ var errMap = map[error]int{
 	ErrMismatchPassword:           http.StatusConflict,
 	ErrWrongPasswordOrEmail:       http.StatusUnauthorized,
 	ErrMissStorageDetail:          http.StatusBadRequest,
+	ErrFileIsNotInBin:             http.StatusConflict,
+	ErrFileIsNotFolder:            http.StatusConflict,
 }
 
 func ErrorStatusMapper(err error) int {

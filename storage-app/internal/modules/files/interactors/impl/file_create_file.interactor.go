@@ -240,7 +240,7 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 			for _, parentFolder := range parentFolders {
 				parentFolder.IncrementTotalSize(input.StorageDetail.Size)
 			}
-			if err := f.fileRepo.BulkUpdateTotalSize(ctx, parentFolders); err != nil {
+			if err := f.fileRepo.BulkUpdateFile(ctx, parentFolders); err != nil {
 				select {
 				case <-ctx.Done():
 					return

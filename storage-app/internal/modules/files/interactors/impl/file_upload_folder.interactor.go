@@ -178,7 +178,7 @@ func (f *FileInteractorImpl) UploadFolder(ctx context.Context, folder *presenter
 			for _, parentFolder := range allParentFolder {
 				parentFolder.IncrementTotalSize(totalSize)
 			}
-			err = f.fileRepo.BulkUpdateTotalSize(ctx, allParentFolder)
+			err = f.fileRepo.BulkUpdateFile(ctx, allParentFolder)
 			if err != nil {
 				select {
 				case <-ctx.Done():

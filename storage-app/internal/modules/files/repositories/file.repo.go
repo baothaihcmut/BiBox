@@ -25,8 +25,9 @@ type FindFileWithPermissionArg struct {
 type FileRepository interface {
 	CreateFile(context.Context, *models.File) error
 	BulkCreateFiles(context.Context, []*models.File) error
-	BulkUpdateTotalSize(context.Context, []*models.File) error
+	BulkUpdateFile(context.Context, []*models.File) error
 	UpdateFile(context.Context, *models.File) error
+	BulkDeleteFile(context.Context, []*models.File) error
 
 	FindFileById(context.Context, primitive.ObjectID) (*models.File, error)
 	FindSubFileRecursive(context.Context, primitive.ObjectID) ([]*models.File, error)

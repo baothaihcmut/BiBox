@@ -29,7 +29,7 @@ func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
 	internal.POST("/add", middleware.ValidateMiddleware[presenters.CreateFileInput](false, binding.JSON), f.handleCreateFile)
 	internal.POST("/upload-folder", middleware.ValidateMiddleware[presenters.UploadFolderInput](false, binding.JSON), f.handleUploadFolder)
 	internal.PATCH("/:id/uploaded", middleware.ValidateMiddleware[presenters.UploadedFileInput](true), f.handleUploadedFile)
-	internal.GET("/my-drive", middleware.ValidateMiddleware[presenters.FindFileOfUserInput](false, binding.Query), f.handleFindFileOfUser)
+	internal.GET("/my-drive", middleware.ValidateMiddleware[presenters.GetAllFileOfUserInput](false, binding.Query), f.handleFindFileOfUser)
 	internal.GET("/:id/tags", middleware.ValidateMiddleware[presenters.GetFileTagsInput](true), f.handleGetTagOfFile)
 	internal.GET("/:id/permissions", middleware.ValidateMiddleware[presenters.GetFilePermissionInput](true), f.handleGetPermissionOfFile)
 	internal.GET("/:id/metadata", middleware.ValidateMiddleware[presenters.GetFileMetaDataInput](true), f.handleGetFileMetadata)
@@ -39,6 +39,9 @@ func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
 	internal.GET("/:id/my-permission", middleware.ValidateMiddleware[presenters.GetFilePermissionOfUserInput](true), f.handleGetFilePermissionOfUser)
 	internal.PATCH("/:id/permissions/:userId/update", middleware.ValidateMiddleware[presenters.UpdateFilePermissionInput](true, binding.JSON), f.handleUpdateFilePermission)
 	internal.DELETE("/:id/permissions/:userId/delete", middleware.ValidateMiddleware[presenters.DeleteFilePermissionOfUserInput](true), f.handleDeleteFilePermission)
+	internal.PATCH("/:id/soft-delete", middleware.ValidateMiddleware[presenters.SoftDeleteFileInput](true), f.handleSoftDeleteFile)
+	internal.PATCH("/:id/recover", middleware.ValidateMiddleware[presenters.RecoverFileInput](true, binding.JSON), f.handleRecoverFile)
+	internal.DELETE("/:id/hard-delete", middleware.ValidateMiddleware[presenters.HardDeleteFileInput](true), f.handleHardDeleteFile)
 }
 
 // @Sumary Create new file 1
@@ -93,7 +96,7 @@ func (f *FileControllerImpl) handleUploadedFile(c *gin.Context) {
 // @Tags files
 // @Accept json
 // @Produce json
-// @Param is_in_folder query bool false "file is in other folder, if null fetch all file"
+// @Param is_deleted query bool false "if true file in bin, false is file in drive"
 // @Param is_folder query bool false "file is folder or not, if null fetch all file and folder"
 // @Param sort_by query string true "sort field, allow short field: created_at, updated_at, opened_at"
 // @Param is_asc query bool true "sort direction"
@@ -101,13 +104,13 @@ func (f *FileControllerImpl) handleUploadedFile(c *gin.Context) {
 // @Param limit query int true "for pagination"
 // @Param mime_type query string false "mime type of file, if is_folder is true not pass mime_type"
 // @Param mime_type query string false "mime type of file, if is_folder is true not pass mime_type"
-// @Success 200 {object} response.AppResponse{data=presenters.FindFileOfUserOuput} "Find file of user sucess"
+// @Success 200 {object} response.AppResponse{data=presenters.GetAllFileOfUserOuput} "Find file of user sucess"
 // @Failure 400 {object} response.AppResponse{data=nil} "Un allow sort field, lack of query"
 // @Router   /files/my-drive [get]
 // @Router   /files/my-drive [get]
 func (f *FileControllerImpl) handleFindFileOfUser(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
-	res, err := f.interactor.FindAllFileOfUser(c.Request.Context(), payload.(*presenters.FindFileOfUserInput))
+	res, err := f.interactor.GetAllFileOfUser(c.Request.Context(), payload.(*presenters.GetAllFileOfUserInput))
 	if err != nil {
 		c.Error(err)
 		c.Abort()
@@ -340,6 +343,38 @@ func (f *FileControllerImpl) handleDeleteFilePermission(c *gin.Context) {
 	c.JSON(http.StatusNoContent, response.InitResponse(true, "Delete file permission of user success", res))
 }
 
+func (f *FileControllerImpl) handleSoftDeleteFile(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := f.interactor.SoftDeleteFile(c.Request.Context(), payload.(*presenters.SoftDeleteFileInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusCreated, response.InitResponse(true, "Soft delete file  of user success", res))
+}
+
+func (f *FileControllerImpl) handleRecoverFile(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := f.interactor.RecoverFile(c.Request.Context(), payload.(*presenters.RecoverFileInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusCreated, response.InitResponse(true, "Recover file  of user success", res))
+}
+
+func (f *FileControllerImpl) handleHardDeleteFile(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := f.interactor.HardDeleteFile(c.Request.Context(), payload.(*presenters.HardDeleteFileInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusCreated, response.InitResponse(true, "Hard delete file  of user success", res))
+}
 func NewFileController(interactor interactors.FileInteractor, jwtService services.JwtService, logger logger.Logger) FileController {
 	return &FileControllerImpl{
 		interactor:  interactor,
