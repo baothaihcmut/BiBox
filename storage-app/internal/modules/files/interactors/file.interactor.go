@@ -18,4 +18,8 @@ type FileInteractor interface {
 	GetFileDownloadUrl(context.Context, *presenters.GetFileDownloadUrlInput) (*presenters.GetFileDownloadUrlOutput, error)
 	GetAllSubFileOfFolder(context.Context, *presenters.GetSubFileOfFolderInput) (*presenters.GetSubFileOfFolderOutput, error)
 	GetSubFileMetaData(context.Context, *presenters.GetSubFileMetaDataInput) (*presenters.GetSubFileMetaDataOutput, error)
+	GetFilePermissionOfUser(context.Context, *presenters.GetFilePermissionOfUserInput) (*presenters.GetFilePermissionOfUserOutput, error)
+	UpdateFilePermission(context.Context, *presenters.UpdateFilePermissionInput) (*presenters.UpdateFilePermissionOuput, error)
+	DeleteFilePermission(context.Context, *presenters.DeleteFilePermissionOfUserInput) (*presenters.DeleteFilePermissionOfUserOutput, error)
+	SoftDeleteFile(context.Context, *presenters.SoftDeleteFileInput) (*presenters.SoftDeleteFileOuput, error)
 }

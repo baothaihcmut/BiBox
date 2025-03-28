@@ -24,14 +24,13 @@ func (f *FileInteractorImpl) FindAllFileOfUser(ctx context.Context, input *prese
 	}
 
 	//check if sort field is allowed
-	args := repositories.FindFileOfUserArg{
-		IsFolder:       input.IsFolder,
-		Offset:         input.Offset,
-		Limit:          input.Limit,
-		IsAsc:          input.IsAsc,
-		PermssionLimit: 4,
-		OwnerId:        &userId,
-		UserId:         userId,
+	args := repositories.FindFileWithPermissionArg{
+		IsFolder: input.IsFolder,
+		Offset:   input.Offset,
+		Limit:    input.Limit,
+		IsAsc:    input.IsAsc,
+		OwnerId:  &userId,
+		UserId:   userId,
 	}
 	//check allow sort field
 	if !slices.Contains(ALLOW_FILE_SORT_FIELD, input.SortBy) {

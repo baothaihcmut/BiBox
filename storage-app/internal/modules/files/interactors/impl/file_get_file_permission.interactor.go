@@ -22,7 +22,7 @@ func (f *FileInteractorImpl) GetFilePermissions(ctx context.Context, input *pres
 	if err != nil {
 		return nil, err
 	}
-	permission, err := f.filePermissionRepo.GetPermissionOfFileWithUserInfo(ctx, file.ID)
+	permission, err := f.filePermissionRepo.FindFilePermissionWithUser(ctx, file.ID)
 	if err != nil {
 		return nil, err
 	}

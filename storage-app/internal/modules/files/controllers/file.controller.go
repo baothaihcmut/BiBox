@@ -36,6 +36,9 @@ func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
 	internal.GET("/:id/download-url", middleware.ValidateMiddleware[presenters.GetFileDownloadUrlInput](true, binding.Query), f.handleGetFileDownloadUrl)
 	internal.GET("/:id/sub-file", middleware.ValidateMiddleware[presenters.GetSubFileOfFolderInput](true, binding.Query), f.handleGetSubFileOfFolder)
 	internal.POST("/:id/permissions/add", middleware.ValidateMiddleware[presenters.AddFilePermissionInput](true, binding.JSON), f.handleAddFilePermission)
+	internal.GET("/:id/my-permission", middleware.ValidateMiddleware[presenters.GetFilePermissionOfUserInput](true), f.handleGetFilePermissionOfUser)
+	internal.PATCH("/:id/permissions/:userId/update", middleware.ValidateMiddleware[presenters.UpdateFilePermissionInput](true, binding.JSON), f.handleUpdateFilePermission)
+	internal.DELETE("/:id/permissions/:userId/delete", middleware.ValidateMiddleware[presenters.DeleteFilePermissionOfUserInput](true), f.handleDeleteFilePermission)
 }
 
 // @Sumary Create new file 1
@@ -273,16 +276,69 @@ func (f *FileControllerImpl) handleAddFilePermission(c *gin.Context) {
 	c.JSON(http.StatusCreated, response.InitResponse(true, "Add permission success", res))
 }
 
-// func (f *FileControllerImpl) handleGetSubFileMetaData(c *gin.Context) {
-// 	payload, _ := c.Get(string(constant.PayloadContext))
-// 	res, err := f.interactor.GetSubFileMetaData(c.Request.Context(), payload.(*presenters.GetSubFileMetaDataInput))
-// 	if err != nil {
-// 		c.Error(err)
-// 		c.Abort()
-// 		return
-// 	}
-// 	c.JSON(http.StatusOK, response.InitResponse(true, "Get sub file metadata success", res))
-// }
+// @Sumary Get file permission of user
+// @Description Get file permission of user
+// @Tags files
+// @Accept json
+// @Produce json
+// @Param id path string false "file id"
+// @Success 200 {object} response.AppResponse{data=presenters.GetSubFileOfFolderInput} "Find file of user sucess"
+// @Failure 403 {object} response.AppResponse{data=nil} "User don't have permission for this file operation"
+// @Failure 404 {object} response.AppResponse{data=nil} "Parent folder not found, Tag of file not found"
+// @Router   /files/:id/my-permission [get]
+func (f *FileControllerImpl) handleGetFilePermissionOfUser(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := f.interactor.GetFilePermissionOfUser(c.Request.Context(), payload.(*presenters.GetFilePermissionOfUserInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusOK, response.InitResponse(true, "Get file permission of user success", res))
+}
+
+// @Sumary Update permission
+// @Description Update permission
+// @Tags files
+// @Accept json
+// @Produce json
+// @Param id path string false "file id"
+// @Param userId path string false "user id"
+// @Param file body presenters.UpdateFilePermissionInput true "permission info"
+// @Success 201 {object} response.AppResponse{data=presenters.UpdateFilePermissionOuput} "Update permission success"
+// @Failure 400 {object} response.AppResponse{data=nil} "Unallow sort field, lack of query"
+// @Router   /files/:id/permissions/:userId/update [patch]
+func (f *FileControllerImpl) handleUpdateFilePermission(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := f.interactor.UpdateFilePermission(c.Request.Context(), payload.(*presenters.UpdateFilePermissionInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusCreated, response.InitResponse(true, "Update file permission of user success", res))
+}
+
+// @Sumary Delete permission
+// @Description Delete permission
+// @Tags files
+// @Accept json
+// @Produce json
+// @Param id path string false "file id"
+// @Param userId path string false "user id"
+// @Success 204 {object} response.AppResponse{data=nil} "Delete permission success"
+// @Failure 400 {object} response.AppResponse{data=nil} "Unallow sort field, lack of query"
+// @Router   /files/:id/permissions/:userId/delete [delete]
+func (f *FileControllerImpl) handleDeleteFilePermission(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := f.interactor.DeleteFilePermission(c.Request.Context(), payload.(*presenters.DeleteFilePermissionOfUserInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusNoContent, response.InitResponse(true, "Delete file permission of user success", res))
+}
 
 func NewFileController(interactor interactors.FileInteractor, jwtService services.JwtService, logger logger.Logger) FileController {
 	return &FileControllerImpl{

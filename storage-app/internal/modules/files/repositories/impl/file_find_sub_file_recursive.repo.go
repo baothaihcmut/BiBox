@@ -11,6 +11,7 @@ import (
 
 // GetSubFile implements FileRepository.
 func (f *MongoFileRepository) FindSubFileRecursive(ctx context.Context, fileId primitive.ObjectID) ([]*models.File, error) {
+
 	pipeline := mongo.Pipeline{
 		bson.D{
 			{Key: "$match", Value: bson.D{{Key: "_id", Value: fileId}}},
@@ -18,7 +19,7 @@ func (f *MongoFileRepository) FindSubFileRecursive(ctx context.Context, fileId p
 		bson.D{
 			{Key: "$graphLookup", Value: bson.D{
 				{Key: "from", Value: "files"},
-				{Key: "startWith", Value: "$_id"}, // Use actual ObjectID
+				{Key: "startWith", Value: "$_id"},
 				{Key: "connectFromField", Value: "_id"},
 				{Key: "connectToField", Value: "parent_folder_id"},
 				{Key: "as", Value: "sub_files"},

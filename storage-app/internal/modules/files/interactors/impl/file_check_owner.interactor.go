@@ -9,7 +9,7 @@ import (
 )
 
 func (f *FileInteractorImpl) checkOwnerOfFile(ctx context.Context, fileId primitive.ObjectID, userId primitive.ObjectID) (*models.File, error) {
-	file, err := f.fileRepo.FindFileById(ctx, fileId, false)
+	file, err := f.fileRepo.FindFileById(ctx, fileId)
 	if err != nil {
 		return nil, err
 	}

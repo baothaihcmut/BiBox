@@ -3,8 +3,8 @@ package presenters
 import "github.com/baothaihcmut/Bibox/storage-app/internal/common/enums"
 
 type GetFileDownloadUrlInput struct {
-	Id      string `uri:"id" validate:"required"`
-	Preview bool   `form:"preview" validate:"required"`
+	Id      string `uri:"id" validate:"required" swaggerignore:"true"`
+	Preview bool   `form:"preview" `
 }
 
 type GetFileDownloadUrlOutput struct {

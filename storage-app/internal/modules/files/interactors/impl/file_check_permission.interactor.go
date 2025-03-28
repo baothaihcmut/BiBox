@@ -21,7 +21,7 @@ func (f *FileInteractorImpl) checkFilePermission(ctx context.Context, fileId pri
 	//check file exist
 	go func() {
 		defer wg.Done()
-		file, err := f.fileRepo.FindFileById(ctx, fileId, false)
+		file, err := f.fileRepo.FindFileById(ctx, fileId)
 		if err != nil {
 			select {
 			case <-ctx.Done():

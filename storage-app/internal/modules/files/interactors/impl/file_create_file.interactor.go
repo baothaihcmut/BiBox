@@ -12,7 +12,7 @@ import (
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/storage"
 	permissionModel "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/models"
-	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/repositories"
+
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/models"
 	userModel "github.com/baothaihcmut/Bibox/storage-app/internal/modules/users/models"
 
@@ -103,7 +103,7 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 		checkWg.Add(1)
 		go func() {
 			defer checkWg.Done()
-			parentFile, err := f.fileRepo.FindFileById(ctx, *input.ParentFolderID, false)
+			parentFile, err := f.fileRepo.FindFileById(ctx, *input.ParentFolderID)
 			if err != nil {
 				select {
 				case <-ctx.Done():
@@ -279,10 +279,7 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 		if input.ParentFolderID != nil {
 			parentFolder := <-parentFolderCh
 			//if file is in folder extend all permision
-			parentFilePermission, err := f.filePermissionRepo.GetFilePermissions(ctx, repositories.GetPermissionArg{
-				FileId:             &parentFolder.ID,
-				FilePermissionType: enums.GetPermissionTypePointer(enums.FilePermissionType(enums.ViewPermission)),
-			})
+			parentFilePermission, err := f.filePermissionRepo.FindPermssionByFileId(ctx, parentFolder.ID)
 			if err != nil {
 				select {
 				case <-ctx.Done():

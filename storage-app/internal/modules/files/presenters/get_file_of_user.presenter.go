@@ -9,8 +9,8 @@ type FindFileOfUserInput struct {
 	FileType *string `form:"mime_type"`
 	SortBy   string  `form:"sort_by" validate:"required"`
 	IsAsc    bool    `form:"is_asc" validate:"required"`
-	Offset   int     `form:"offset" validate:"required"`
-	Limit    int     `form:"limit" validate:"required"`
+	Offset   int     `form:"offset" validate:"gte=0"`
+	Limit    int     `form:"limit" validate:"required,gt=0"`
 }
 
 type FindFileOfUserOuput struct {

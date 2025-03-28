@@ -10,10 +10,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func (f *MongoFileRepository) FindFileWithPermssionAndCount(ctx context.Context, args repositories.FindFileOfUserArg) ([]*models.FileWithPermission, int64, error) {
+func (f *MongoFileRepository) FindFileWithPermssionAndCount(ctx context.Context, args repositories.FindFileWithPermissionArg) ([]*models.FileWithPermission, int64, error) {
 	filter := bson.D{}
 	if args.OwnerId != nil {
-		filter = append(filter, bson.E{Key: "owner_id", Value: *args.OwnerId})
+		filter = append(filter, bson.E{Key: "owner_id", Value: args.OwnerId})
 	}
 	if args.IsFolder != nil {
 		filter = append(filter, bson.E{Key: "is_folder", Value: *args.IsFolder})
@@ -25,6 +25,16 @@ func (f *MongoFileRepository) FindFileWithPermssionAndCount(ctx context.Context,
 	}
 	if args.FileType != nil {
 		filter = append(filter, bson.E{Key: "storage_detail.mime_type", Value: *args.FileType})
+	}
+	if args.IsDeleted != nil {
+		filter = append(filter, bson.E{Key: "is_deleted", Value: *args.IsDeleted})
+	}
+	if args.TagId != nil {
+		filter = append(filter, bson.E{Key: "tag_ids", Value: bson.M{
+			"$elemMatch": bson.M{
+				"$eq": args.TagId,
+			},
+		}})
 	}
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -120,7 +130,7 @@ func (f *MongoFileRepository) FindFileWithPermssionAndCount(ctx context.Context,
 					{Key: "permissions", Value: bson.D{
 						{Key: "$map", Value: bson.D{
 							{Key: "input", Value: bson.D{
-								{Key: "$slice", Value: bson.A{"$permissions", 0, args.PermssionLimit}},
+								{Key: "$slice", Value: bson.A{"$permissions", 0, 3}},
 							}},
 							{Key: "as", Value: "perm"},
 							{Key: "in", Value: bson.D{

@@ -26,13 +26,12 @@ func (f *FileInteractorImpl) GetAllSubFileOfFolder(ctx context.Context, input *p
 		return nil, err
 	}
 	//check if sort field is allowed
-	args := repositories.FindFileOfUserArg{
+	args := repositories.FindFileWithPermissionArg{
 		ParentFolderId: &fileId,
 		IsFolder:       input.IsFolder,
 		Offset:         input.Offset,
 		Limit:          input.Limit,
 		IsAsc:          input.IsAsc,
-		PermssionLimit: 4,
 		UserId:         userId,
 	}
 	//check allow sort field

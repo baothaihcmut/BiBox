@@ -13,6 +13,7 @@ import (
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/response"
 	permissionModel "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/models"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/repositories"
+
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/models"
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/presenters"
@@ -116,7 +117,7 @@ func (f *FileInteractorImpl) AddFilePermission(ctx context.Context, input *prese
 		}
 	}
 	//file permission exist
-	filePermissionsExist, err := f.filePermissionRepo.FindPermissionByIds(ctx, permissionIds)
+	filePermissionsExist, err := f.filePermissionRepo.FindPermissionByListId(ctx, permissionIds)
 	if err != nil {
 		f.logger.Errorf(ctx, nil, "Error find permission by id list: ", err)
 		return nil, err

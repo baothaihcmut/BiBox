@@ -9,19 +9,19 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func (f *MongoFileRepository) FindFileById(ctx context.Context, id primitive.ObjectID, isDeleted bool) (*models.File, error) {
+func (f *MongoFileRepository) FindFileById(ctx context.Context, id primitive.ObjectID) (*models.File, error) {
 	var res models.File
-	err := f.collection.FindOne(ctx, bson.M{
-		"_id":        id,
-		"is_deleted": isDeleted,
-	}).Decode(&res)
+	filter := bson.M{
+		"_id": id,
+	}
+
+	err := f.collection.FindOne(ctx, filter).Decode(&res)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
 		}
 		f.logger.Errorf(ctx, map[string]any{
-			"file_id":    id,
-			"is_deleted": isDeleted,
+			"file_id": id,
 		}, "Error find file by id:", err)
 		return nil, err
 	}

@@ -17,7 +17,7 @@ func (f *FileInteractorImpl) UploadedFile(ctx context.Context, input *presenters
 	if err != nil {
 		return nil, exception.ErrInvalidObjectId
 	}
-	file, err := f.fileRepo.FindFileById(ctx, fileId, false)
+	file, err := f.fileRepo.FindFileById(ctx, fileId)
 	if err != nil {
 		return nil, err
 	}

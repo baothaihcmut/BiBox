@@ -24,7 +24,10 @@ func NewPermissionService(repo repositories.FilePermissionRepository) Permission
 }
 
 func (ps *PermissionServiceImpl) CheckPermission(ctx context.Context, fileID, userId primitive.ObjectID, permssion enums.FilePermissionType) (bool, error) {
-	filePermssion, err := ps.repo.GetFilePermissionById(ctx, fileID, userId)
+	filePermssion, err := ps.repo.FindFilePermissionById(ctx, repositories.FilePermissionId{
+		FileId: fileID,
+		UserId: userId,
+	})
 	if err != nil {
 		return false, err
 	}

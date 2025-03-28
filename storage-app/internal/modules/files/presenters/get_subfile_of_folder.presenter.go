@@ -7,9 +7,9 @@ type GetSubFileOfFolderInput struct {
 	IsFolder *bool   `form:"is_folder"`
 	FileType *string `form:"mime_type"`
 	SortBy   string  `form:"sort_by" validate:"required"`
-	IsAsc    bool    `form:"is_asc" validate:"required"`
-	Offset   int     `form:"offset" validate:"required"`
-	Limit    int     `form:"limit" validate:"required"`
+	IsAsc    bool    `form:"is_asc" `
+	Offset   int     `form:"offset" validate:"gte=0"`
+	Limit    int     `form:"limit" validate:"gt=1"`
 }
 
 type GetSubFileOfFolderOutput struct {

@@ -25,10 +25,10 @@ var (
 	ErrUserPedingSignUpConfirm    = errors.New("user is pending for sign up confirm")
 	ErrMismatchPassword           = errors.New("password mismatch")
 	ErrWrongPasswordOrEmail       = errors.New("wrong password or email")
-
-	ErrUnauthorized     = errors.New("unauthorized access")
-	ErrPermissionDenied = errors.New("permission denied")
-	ErrMissPermission   = errors.New("miss permission type")
+	ErrFilePermissionNotFound     = errors.New("file permission not found")
+	ErrUnauthorized               = errors.New("unauthorized access")
+	ErrPermissionDenied           = errors.New("permission denied")
+	ErrMissPermission             = errors.New("miss permission type")
 )
 var errMap = map[error]int{
 	ErrTokenExpire:                http.StatusUnauthorized,

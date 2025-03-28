@@ -1,6 +1,8 @@
 package response
 
 import (
+	"time"
+
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/enums"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -11,7 +13,7 @@ type FilePermissionOuput struct {
 	UserID             primitive.ObjectID       `json:"user_id"`
 	FilePermissionType enums.FilePermissionType `json:"permission_type"`
 	CanShare           bool                     `json:"can_share"`
-	AccessSecureFile   bool                     `json:"access_secure_file"`
+	ExpireAt           *time.Time               `json:"expire_at"`
 }
 
 func MapToFilePermissionOutput(f *models.FilePermission) *FilePermissionOuput {
@@ -20,5 +22,6 @@ func MapToFilePermissionOutput(f *models.FilePermission) *FilePermissionOuput {
 		UserID:             f.UserID,
 		FilePermissionType: f.FilePermissionType,
 		CanShare:           f.CanShare,
+		ExpireAt:           f.ExpireAt,
 	}
 }

@@ -78,3 +78,14 @@ func NewFile(
 func (f *File) IncrementTotalSize(size int) {
 	f.TotalSize += size
 }
+
+func (f *File) Delete() {
+	f.IsDeleted = true
+	now := time.Now()
+	f.DeletedAt = &now
+}
+
+func (f *File) Recover() {
+	f.IsDeleted = false
+	f.DeletedAt = nil
+}

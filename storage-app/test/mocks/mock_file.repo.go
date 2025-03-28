@@ -14,7 +14,6 @@ import (
 	reflect "reflect"
 
 	models "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/models"
-	repositories "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/repositories"
 	primitive "go.mongodb.org/mongo-driver/bson/primitive"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -58,9 +57,9 @@ func (mr *MockFileRepositoryMockRecorder) CreateFile(arg0, arg1 any) *gomock.Cal
 }
 
 // FindAllFileOfUser mocks base method.
-func (m *MockFileRepository) FindAllFileOfUser(ctx context.Context, userId primitive.ObjectID, args repositories.FindFileOfUserArg) ([]*models.File, error) {
+func (m *MockFileRepository) FindAllFileOfUser(ctx context.Context, userId primitive.ObjectID) ([]*models.File, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindAllFileOfUser", ctx, userId, args)
+	ret := m.ctrl.Call(m, "FindAllFileOfUser", ctx, userId)
 	ret0, _ := ret[0].([]*models.File)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1

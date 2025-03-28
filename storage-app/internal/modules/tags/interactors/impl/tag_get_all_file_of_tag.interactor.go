@@ -8,6 +8,7 @@ import (
 	commonModel "github.com/baothaihcmut/Bibox/storage-app/internal/common/models"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/response"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/models"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/repositories"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/tags/presenters"
 	"github.com/samber/lo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -24,9 +25,18 @@ func (t *TagInteractorImpl) GetAllFileOfTag(ctx context.Context, input *presente
 	if input.SortBy != "" {
 		sortBy = input.SortBy
 	}
-	data, count, err := t.fileRepo.FindAllFileByTagAndCount(
-		ctx, tagId, userId, input.Limit, input.Offset, sortBy, input.IsAsc,
+	data, count, err := t.fileRepo.FindFileWithPermssionAndCount(
+		ctx,
+		repositories.FindFileWithPermissionArg{
+			SortBy: sortBy,
+			IsAsc:  input.IsAsc,
+			Offset: input.Offset,
+			Limit:  input.Limit,
+			UserId: userId,
+			TagId:  &tagId,
+		},
 	)
+
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +56,7 @@ func (t *TagInteractorImpl) GetAllFileOfTag(ctx context.Context, input *presente
 			}
 		}),
 		Pagination: response.InitPaginationResponse(
-			count, input.Limit, input.Offset,
+			int(count), input.Limit, input.Offset,
 		),
 	}, nil
 

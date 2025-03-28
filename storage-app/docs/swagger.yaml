@@ -146,8 +146,6 @@ definitions:
     type: object
   presenters.AddFilePermissionInput:
     properties:
-      fileId:
-        type: string
       permissions:
         items:
           $ref: '#/definitions/presenters.UserPermission'
@@ -237,10 +235,10 @@ definitions:
     type: object
   presenters.FilePermssionWithUserOutput:
     properties:
-      access_secure_file:
-        type: boolean
       can_share:
         type: boolean
+      expire_at:
+        type: string
       file_id:
         type: string
       permission_type:
@@ -286,6 +284,15 @@ definitions:
         type: integer
     type: object
   presenters.FindFileOfUserOuput:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/response.FileWithPermissionOutput'
+        type: array
+      pagination:
+        $ref: '#/definitions/response.PaginationResponse'
+    type: object
+  presenters.GetAllFileOfTagOutput:
     properties:
       data:
         items:
@@ -372,6 +379,15 @@ definitions:
     - offset
     - sort_by
     type: object
+  presenters.SearchTagsOutput:
+    properties:
+      pagination:
+        $ref: '#/definitions/response.PaginationResponse'
+      tags:
+        items:
+          $ref: '#/definitions/response.TagOutput'
+        type: array
+    type: object
   presenters.SearchUserOuput:
     properties:
       data:
@@ -380,6 +396,31 @@ definitions:
         type: array
       pagination:
         $ref: '#/definitions/response.PaginationResponse'
+    type: object
+  presenters.UpdateFilePermissionInput:
+    properties:
+      expire_at:
+        type: string
+      fileId:
+        type: string
+      permission_type:
+        allOf:
+        - $ref: '#/definitions/enums.FilePermissionType'
+        maximum: 3
+        minimum: 1
+      userId:
+        type: string
+    required:
+    - fileId
+    - permission_type
+    - userId
+    type: object
+  presenters.UpdateFilePermissionOuput:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/response.FilePermissionOuput'
+        type: array
     type: object
   presenters.UploadFolderInput:
     properties:
@@ -447,10 +488,10 @@ definitions:
     type: object
   response.FilePermissionOuput:
     properties:
-      access_secure_file:
-        type: boolean
       can_share:
         type: boolean
+      expire_at:
+        type: string
       file_id:
         type: string
       permission_type:
@@ -811,6 +852,48 @@ paths:
               type: object
       tags:
       - files
+  /files/:id/my-permission:
+    get:
+      consumes:
+      - application/json
+      description: Get file permission of user
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Find file of user sucess
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.GetSubFileOfFolderInput'
+              type: object
+        "403":
+          description: User don't have permission for this file operation
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: Parent folder not found, Tag of file not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
   /files/:id/permissions:
     get:
       consumes:
@@ -854,6 +937,86 @@ paths:
               type: object
         "404":
           description: file not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/:id/permissions/:userId/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Delete permission
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        type: string
+      - description: user id
+        in: path
+        name: userId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Delete permission success
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Unallow sort field, lack of query
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/:id/permissions/:userId/update:
+    patch:
+      consumes:
+      - application/json
+      description: Update permission
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        type: string
+      - description: user id
+        in: path
+        name: userId
+        type: string
+      - description: permission info
+        in: body
+        name: file
+        required: true
+        schema:
+          $ref: '#/definitions/presenters.UpdateFilePermissionInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Update permission success
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.UpdateFilePermissionOuput'
+              type: object
+        "400":
+          description: Unallow sort field, lack of query
           schema:
             allOf:
             - $ref: '#/definitions/response.AppResponse'
@@ -1230,6 +1393,110 @@ paths:
               type: object
       tags:
       - files
+  /tags/:id/files:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Find all tags
+        Find all tags
+      parameters:
+      - description: limit
+        in: query
+        name: limit
+        required: true
+        type: integer
+      - description: offset
+        in: query
+        name: offset
+        required: true
+        type: integer
+      - description: query for search
+        in: query
+        name: query
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Create file sucess, storage_detail.put_object_url is presign
+            url for upload file
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.SearchTagsOutput'
+              type: object
+      tags:
+      - tags
+  /tags/search:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Find all file of tags
+        Find all file of tags
+      parameters:
+      - description: id of tag must be object id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        required: true
+        type: integer
+      - description: offset
+        in: query
+        name: offset
+        required: true
+        type: integer
+      - description: sort
+        in: query
+        name: sort_by
+        required: true
+        type: string
+      - description: direction sort
+        in: query
+        name: is_asc
+        required: true
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Create file sucess, storage_detail.put_object_url is presign
+            url for upload file
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.GetAllFileOfTagOutput'
+              type: object
+        "403":
+          description: User don't have permission for this file operation
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "404":
+          description: Tag of file not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - tags
   /users/search:
     get:
       consumes:

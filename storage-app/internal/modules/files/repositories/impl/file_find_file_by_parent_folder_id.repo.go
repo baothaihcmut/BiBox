@@ -10,9 +10,10 @@ import (
 
 // FindFileByParentFolderId implements FileRepository.
 func (f *MongoFileRepository) FindFileByParentFolderId(ctx context.Context, parentFolderId primitive.ObjectID) ([]*models.File, error) {
-	cursor, err := f.collection.Find(ctx, bson.M{
+	filter := bson.M{
 		"parent_folder_id": parentFolderId,
-	})
+	}
+	cursor, err := f.collection.Find(ctx, filter)
 	if err != nil {
 		f.logger.Errorf(ctx, nil, "Error find file by folder id: %v", err)
 		return nil, err

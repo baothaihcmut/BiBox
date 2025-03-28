@@ -23,7 +23,7 @@ import (
 	authController "github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/controllers"
 	authInteractors "github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/interactors"
 	authService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/services"
-	filePermssionRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/repositories"
+	filePermssionRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/repositories/impl"
 	filePermissionService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/services"
 	fileController "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/controllers"
 	fileInteractor "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/interactors/impl"
