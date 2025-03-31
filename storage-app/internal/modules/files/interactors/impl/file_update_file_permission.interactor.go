@@ -57,7 +57,11 @@ func (f *FileInteractorImpl) UpdateFilePermission(ctx context.Context, input *pr
 			"file_id": file.ID,
 			"user_id": targetUserId,
 		}, "Update file permission success")
-		return nil, err
+		return &presenters.UpdateFilePermissionOuput{
+			Permissions: []*response.FilePermissionOuput{
+				response.MapToFilePermissionOutput(filePermission),
+			},
+		}, nil
 	}
 	//get all subfoler
 	subFiles, err := f.fileRepo.FindSubFileRecursive(ctx, file.ID)

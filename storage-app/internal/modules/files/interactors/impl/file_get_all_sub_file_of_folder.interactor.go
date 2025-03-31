@@ -33,6 +33,7 @@ func (f *FileInteractorImpl) GetAllSubFileOfFolder(ctx context.Context, input *p
 		Limit:          input.Limit,
 		IsAsc:          input.IsAsc,
 		UserId:         userId,
+		IsDeleted:      input.IsDeleted,
 	}
 	//check allow sort field
 	if !slices.Contains(ALLOW_FILE_SORT_FIELD, input.SortBy) {

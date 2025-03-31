@@ -28,7 +28,7 @@ func (f *FileInteractorImpl) GetSubFileMetaData(ctx context.Context, input *pres
 	if err != nil {
 		return nil, err
 	}
-	subFiles, err := f.fileRepo.FindFileByParentFolderId(ctx, file.ID)
+	subFiles, err := f.fileRepo.FindFileByParentFolderIdAndIsDeleted(ctx, file.ID, input.IsDeleted)
 	if err != nil {
 		return nil, err
 	}

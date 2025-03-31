@@ -9,9 +9,12 @@ import (
 )
 
 // FindFileByParentFolderId implements FileRepository.
-func (f *MongoFileRepository) FindFileByParentFolderId(ctx context.Context, parentFolderId primitive.ObjectID) ([]*models.File, error) {
+func (f *MongoFileRepository) FindFileByParentFolderIdAndIsDeleted(ctx context.Context, parentFolderId primitive.ObjectID, isDeleted *bool) ([]*models.File, error) {
 	filter := bson.M{
 		"parent_folder_id": parentFolderId,
+	}
+	if isDeleted != nil {
+		filter["is_deleted"] = *isDeleted
 	}
 	cursor, err := f.collection.Find(ctx, filter)
 	if err != nil {

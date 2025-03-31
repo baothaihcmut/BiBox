@@ -372,6 +372,8 @@ definitions:
         type: string
       is_asc:
         type: boolean
+      is_deleted:
+        type: boolean
       is_folder:
         type: boolean
       limit:
@@ -818,6 +820,39 @@ paths:
               type: object
       tags:
       - files
+  /files/:id/hard-delete:
+    delete:
+      consumes:
+      - application/json
+      description: Hard Delete file
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Delete permission success
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "403":
+          description: Permission denied
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
   /files/:id/metadata:
     get:
       consumes:
@@ -964,86 +999,6 @@ paths:
               type: object
       tags:
       - files
-  /files/:id/permissions/:userId/delete:
-    delete:
-      consumes:
-      - application/json
-      description: Delete permission
-      parameters:
-      - description: file id
-        in: path
-        name: id
-        type: string
-      - description: user id
-        in: path
-        name: userId
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Delete permission success
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.AppResponse'
-            - properties:
-                data:
-                  type: object
-              type: object
-        "400":
-          description: Unallow sort field, lack of query
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.AppResponse'
-            - properties:
-                data:
-                  type: object
-              type: object
-      tags:
-      - files
-  /files/:id/permissions/:userId/update:
-    patch:
-      consumes:
-      - application/json
-      description: Update permission
-      parameters:
-      - description: file id
-        in: path
-        name: id
-        type: string
-      - description: user id
-        in: path
-        name: userId
-        type: string
-      - description: permission info
-        in: body
-        name: file
-        required: true
-        schema:
-          $ref: '#/definitions/presenters.UpdateFilePermissionInput'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Update permission success
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.AppResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/presenters.UpdateFilePermissionOuput'
-              type: object
-        "400":
-          description: Unallow sort field, lack of query
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.AppResponse'
-            - properties:
-                data:
-                  type: object
-              type: object
-      tags:
-      - files
   /files/:id/permissions/add:
     post:
       consumes:
@@ -1093,6 +1048,152 @@ paths:
               type: object
       tags:
       - files
+  /files/:id/permissions/user/:userId/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Delete permission
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        type: string
+      - description: user id
+        in: path
+        name: userId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Delete permission success
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Unallow sort field, lack of query
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/:id/permissions/user/:userId/update:
+    patch:
+      consumes:
+      - application/json
+      description: Update permission
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        type: string
+      - description: user id
+        in: path
+        name: userId
+        type: string
+      - description: permission info
+        in: body
+        name: file
+        required: true
+        schema:
+          $ref: '#/definitions/presenters.UpdateFilePermissionInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Update permission success
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/presenters.UpdateFilePermissionOuput'
+              type: object
+        "400":
+          description: Unallow sort field, lack of query
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/:id/recover:
+    patch:
+      consumes:
+      - application/json
+      description: Recover deleted file
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Delete permission success
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "403":
+          description: Permission denied
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
+  /files/:id/soft-delete:
+    patch:
+      consumes:
+      - application/json
+      description: Soft Delete file
+      parameters:
+      - description: file id
+        in: path
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Delete permission success
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "403":
+          description: Permission denied
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.AppResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+      tags:
+      - files
   /files/:id/sub-file:
     get:
       consumes:
@@ -1111,6 +1212,11 @@ paths:
       - description: sort direction
         in: query
         name: is_asc
+        required: true
+        type: boolean
+      - description: true if file is deleted
+        in: query
+        name: is_deleted
         required: true
         type: boolean
       - description: for pagination

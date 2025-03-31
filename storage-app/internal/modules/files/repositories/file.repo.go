@@ -14,7 +14,7 @@ type FindFileWithPermissionArg struct {
 	IsAsc          bool
 	Offset         int
 	Limit          int
-	UserId         primitive.ObjectID //user context
+	UserId         primitive.ObjectID
 	ParentFolderId *primitive.ObjectID
 	FileType       *enums.MimeType
 	OwnerId        *primitive.ObjectID
@@ -31,7 +31,7 @@ type FileRepository interface {
 
 	FindFileById(context.Context, primitive.ObjectID) (*models.File, error)
 	FindSubFileRecursive(context.Context, primitive.ObjectID) ([]*models.File, error)
-	FindFileByParentFolderId(context.Context, primitive.ObjectID) ([]*models.File, error)
+	FindFileByParentFolderIdAndIsDeleted(context.Context, primitive.ObjectID, *bool) ([]*models.File, error)
 	FindAllParentFolder(context.Context, primitive.ObjectID) ([]*models.File, error)
 
 	FindFileWithPermssionAndCount(context.Context, FindFileWithPermissionArg) ([]*models.FileWithPermission, int64, error)

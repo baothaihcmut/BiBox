@@ -37,8 +37,8 @@ func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
 	internal.GET("/:id/sub-file", middleware.ValidateMiddleware[presenters.GetSubFileOfFolderInput](true, binding.Query), f.handleGetSubFileOfFolder)
 	internal.POST("/:id/permissions/add", middleware.ValidateMiddleware[presenters.AddFilePermissionInput](true, binding.JSON), f.handleAddFilePermission)
 	internal.GET("/:id/my-permission", middleware.ValidateMiddleware[presenters.GetFilePermissionOfUserInput](true), f.handleGetFilePermissionOfUser)
-	internal.PATCH("/:id/permissions/:userId/update", middleware.ValidateMiddleware[presenters.UpdateFilePermissionInput](true, binding.JSON), f.handleUpdateFilePermission)
-	internal.DELETE("/:id/permissions/:userId/delete", middleware.ValidateMiddleware[presenters.DeleteFilePermissionOfUserInput](true), f.handleDeleteFilePermission)
+	internal.PATCH("/:id/permissions/user/:userId/update", middleware.ValidateMiddleware[presenters.UpdateFilePermissionInput](true, binding.JSON), f.handleUpdateFilePermission)
+	internal.DELETE("/:id/permissions/user/:userId/delete", middleware.ValidateMiddleware[presenters.DeleteFilePermissionOfUserInput](true), f.handleDeleteFilePermission)
 	internal.PATCH("/:id/soft-delete", middleware.ValidateMiddleware[presenters.SoftDeleteFileInput](true), f.handleSoftDeleteFile)
 	internal.PATCH("/:id/recover", middleware.ValidateMiddleware[presenters.RecoverFileInput](true, binding.JSON), f.handleRecoverFile)
 	internal.DELETE("/:id/hard-delete", middleware.ValidateMiddleware[presenters.HardDeleteFileInput](true), f.handleHardDeleteFile)
@@ -218,6 +218,7 @@ func (f *FileControllerImpl) handleGetFileDownloadUrl(c *gin.Context) {
 // @Param is_folder query bool false "file is folder or not, if null fetch all file and folder"
 // @Param sort_by query string true "sort field, allow short field: created_at, updated_at, opened_at"
 // @Param is_asc query bool true "sort direction"
+// @Param is_deleted query bool true "true if file is deleted"
 // @Param offset query int true "for pagination"
 // @Param limit query int true "for pagination"
 // @Param mime_type query string false "mime type of file, if is_folder is true not pass mime_type"
@@ -310,7 +311,7 @@ func (f *FileControllerImpl) handleGetFilePermissionOfUser(c *gin.Context) {
 // @Param file body presenters.UpdateFilePermissionInput true "permission info"
 // @Success 201 {object} response.AppResponse{data=presenters.UpdateFilePermissionOuput} "Update permission success"
 // @Failure 400 {object} response.AppResponse{data=nil} "Unallow sort field, lack of query"
-// @Router   /files/:id/permissions/:userId/update [patch]
+// @Router   /files/:id/permissions/user/:userId/update [patch]
 func (f *FileControllerImpl) handleUpdateFilePermission(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
 	res, err := f.interactor.UpdateFilePermission(c.Request.Context(), payload.(*presenters.UpdateFilePermissionInput))
@@ -331,7 +332,7 @@ func (f *FileControllerImpl) handleUpdateFilePermission(c *gin.Context) {
 // @Param userId path string false "user id"
 // @Success 204 {object} response.AppResponse{data=nil} "Delete permission success"
 // @Failure 400 {object} response.AppResponse{data=nil} "Unallow sort field, lack of query"
-// @Router   /files/:id/permissions/:userId/delete [delete]
+// @Router   /files/:id/permissions/user/:userId/delete [delete]
 func (f *FileControllerImpl) handleDeleteFilePermission(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
 	res, err := f.interactor.DeleteFilePermission(c.Request.Context(), payload.(*presenters.DeleteFilePermissionOfUserInput))
@@ -343,6 +344,15 @@ func (f *FileControllerImpl) handleDeleteFilePermission(c *gin.Context) {
 	c.JSON(http.StatusNoContent, response.InitResponse(true, "Delete file permission of user success", res))
 }
 
+// @Sumary Soft delete file
+// @Description Soft Delete file
+// @Tags files
+// @Accept json
+// @Produce json
+// @Param id path string false "file id"
+// @Success 201 {object} response.AppResponse{data=nil} "Delete permission success"
+// @Failure 403 {object} response.AppResponse{data=nil} "Permission denied"
+// @Router   /files/:id/soft-delete [patch]
 func (f *FileControllerImpl) handleSoftDeleteFile(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
 	res, err := f.interactor.SoftDeleteFile(c.Request.Context(), payload.(*presenters.SoftDeleteFileInput))
@@ -354,6 +364,15 @@ func (f *FileControllerImpl) handleSoftDeleteFile(c *gin.Context) {
 	c.JSON(http.StatusCreated, response.InitResponse(true, "Soft delete file  of user success", res))
 }
 
+// @Sumary Recover deleted file
+// @Description Recover deleted file
+// @Tags files
+// @Accept json
+// @Produce json
+// @Param id path string false "file id"
+// @Success 201 {object} response.AppResponse{data=nil} "Delete permission success"
+// @Failure 403 {object} response.AppResponse{data=nil} "Permission denied"
+// @Router   /files/:id/recover [patch]
 func (f *FileControllerImpl) handleRecoverFile(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
 	res, err := f.interactor.RecoverFile(c.Request.Context(), payload.(*presenters.RecoverFileInput))
@@ -365,6 +384,15 @@ func (f *FileControllerImpl) handleRecoverFile(c *gin.Context) {
 	c.JSON(http.StatusCreated, response.InitResponse(true, "Recover file  of user success", res))
 }
 
+// @Sumary Hard delete file
+// @Description Hard Delete file
+// @Tags files
+// @Accept json
+// @Produce json
+// @Param id path string false "file id"
+// @Success 201 {object} response.AppResponse{data=nil} "Delete permission success"
+// @Failure 403 {object} response.AppResponse{data=nil} "Permission denied"
+// @Router   /files/:id/hard-delete [delete]
 func (f *FileControllerImpl) handleHardDeleteFile(c *gin.Context) {
 	payload, _ := c.Get(string(constant.PayloadContext))
 	res, err := f.interactor.HardDeleteFile(c.Request.Context(), payload.(*presenters.HardDeleteFileInput))
