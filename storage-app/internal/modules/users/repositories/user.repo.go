@@ -14,4 +14,5 @@ type UserRepository interface {
 	FindUserById(ctx context.Context, id primitive.ObjectID) (*models.User, error)
 	FindUserRegexAndCount(ctx context.Context, email string, limit, offset *int, exclude []primitive.ObjectID) ([]*models.User, int, error)
 	FindUserIdIds(ctx context.Context, ids []primitive.ObjectID) ([]*models.User, error)
+	FindUsersByEmailList(ctx context.Context, emails []string) ([]*models.User, error)
 }

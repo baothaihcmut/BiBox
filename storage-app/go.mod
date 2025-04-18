@@ -25,6 +25,8 @@ require (
 	golang.org/x/crypto v0.35.0
 	golang.org/x/oauth2 v0.26.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
+	
+
 )
 
 require (
@@ -126,3 +128,4 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+replace github.com/baothaihcmut/Bibox/libs => ../libs

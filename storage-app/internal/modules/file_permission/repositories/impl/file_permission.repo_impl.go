@@ -1,7 +1,7 @@
 package impl
 
 import (
-	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
+	"github.com/baothaihcmut/BiBox/libs/pkg/logger"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 

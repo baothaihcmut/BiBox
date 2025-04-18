@@ -3,51 +3,52 @@ package controllers
 import (
 	"net/http"
 
+	"github.com/baothaihcmut/BiBox/libs/pkg/logger"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/common/constant"
+	middleware "github.com/baothaihcmut/Bibox/storage-app/internal/common/middlewares"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/common/response"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/services"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_comment/interactors"
-
+	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_comment/presenters"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 )
 
-type CommentController struct {
-	Interactor *interactors.CommentInteractor
+type FileCommentController interface {
+	Init(g *gin.RouterGroup)
 }
 
-func NewCommentController(interactor *interactors.CommentInteractor) *CommentController {
-	return &CommentController{
-		Interactor: interactor,
-	}
+type FileControllerImpl struct {
+	interactor  interactors.FileCommentInteractor
+	authHandler services.JwtService
+	logger      logger.Logger
 }
 
-func (cc *CommentController) GetComments(c *gin.Context) {
-	comments, err := cc.Interactor.GetAllComments()
+func (f *FileControllerImpl) handleCreateComment(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := f.interactor.CreateFileComment(c.Request.Context(), payload.(*presenters.CreateFileCommentInput))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch comments"})
+		c.Error(err)
+		c.Abort()
 		return
 	}
-	c.JSON(http.StatusOK, comments)
+	c.JSON(http.StatusCreated, response.InitResponse(true, "Create file comment success", res))
 }
 
-func (cc *CommentController) AddComment(c *gin.Context) {
-	var request struct {
-		FileID  string `json:"file_id"`
-		UserID  string `json:"user_id"`
-		Content string `json:"content"`
-	}
+func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
+	internal := g.Group("/files/:id/comments")
+	internal.Use(middleware.AuthMiddleware(f.authHandler, f.logger, false))
+	internal.POST("/add", middleware.ValidateMiddleware[presenters.CreateFileCommentInput](true, binding.JSON), f.handleCreateComment)
+}
 
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
-		return
+func NewFileCommentController(
+	interactor interactors.FileCommentInteractor,
+	authHandler services.JwtService,
+	logger logger.Logger,
+) *FileControllerImpl {
+	return &FileControllerImpl{
+		interactor:  interactor,
+		authHandler: authHandler,
+		logger:      logger,
 	}
-
-	err := cc.Interactor.AddComment(c.Request.Context(), request.FileID, request.Content)
-	if err != nil {
-		if err == interactors.ErrPermissionDenied {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Permission denied"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add comment"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Comment added successfully"})
 }

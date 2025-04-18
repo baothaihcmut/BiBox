@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"context"
 	"encoding/json"
 	"time"
 
@@ -11,7 +12,7 @@ type KafkaService struct {
 	producer sarama.SyncProducer
 }
 
-func (k *KafkaService) PublishMessage(topic string, value any, headers map[string]string) (int32, int64, error) {
+func (k *KafkaService) PublishMessage(ctx context.Context, topic string, value any, headers map[string]string) (int32, int64, error) {
 	//value
 	data, err := json.Marshal(value)
 	if err != nil {

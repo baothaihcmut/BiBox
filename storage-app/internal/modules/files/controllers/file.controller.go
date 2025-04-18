@@ -3,8 +3,8 @@ package controllers
 import (
 	"net/http"
 
+	"github.com/baothaihcmut/BiBox/libs/pkg/logger"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/constant"
-	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
 	middleware "github.com/baothaihcmut/Bibox/storage-app/internal/common/middlewares"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/response"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/services"

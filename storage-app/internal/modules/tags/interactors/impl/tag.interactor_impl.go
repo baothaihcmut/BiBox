@@ -1,7 +1,7 @@
 package impl
 
 import (
-	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
+	"github.com/baothaihcmut/BiBox/libs/pkg/logger"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/mongo"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/repositories"
 	tagRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/tags/repositories"

@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
+	"github.com/baothaihcmut/BiBox/libs/pkg/logger"
 	"golang.org/x/oauth2"
 )
 

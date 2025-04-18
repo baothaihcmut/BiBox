@@ -12,6 +12,7 @@ import (
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/storage"
 	permissionModel "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/models"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/notification/services"
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/models"
 	userModel "github.com/baothaihcmut/Bibox/storage-app/internal/modules/users/models"
@@ -248,6 +249,19 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 				}
 				cancel()
 				errSave <- err
+			}
+			//send nofication
+			err := f.notificationService.SendNotificationFileUploaded(
+				ctx,
+				lo.Map(parentFolders, func(item *models.File, _ int) services.SendNotificationFileUploadedArg {
+					return services.SendNotificationFileUploadedArg{
+						FileOwnerId:  file.OwnerID,
+						UserUploadId: userId,
+						FileId:       file.ID,
+					}
+				}))
+			if err != nil {
+				f.logger.Errorf(ctx, nil, "Error send notification:", err)
 			}
 		}()
 	}

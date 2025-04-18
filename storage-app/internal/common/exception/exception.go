@@ -31,6 +31,7 @@ var (
 	ErrMissPermission             = errors.New("miss permission type")
 	ErrFileIsNotInBin             = errors.New("file is not in bin")
 	ErrFileIsNotFolder            = errors.New("file is not folder")
+	ErrSessionNotFound            = errors.New("session not found")
 )
 var errMap = map[error]int{
 	ErrTokenExpire:                http.StatusUnauthorized,
@@ -54,6 +55,7 @@ var errMap = map[error]int{
 	ErrMissStorageDetail:          http.StatusBadRequest,
 	ErrFileIsNotInBin:             http.StatusConflict,
 	ErrFileIsNotFolder:            http.StatusConflict,
+	ErrSessionNotFound:            http.StatusUnauthorized,
 }
 
 func ErrorStatusMapper(err error) int {

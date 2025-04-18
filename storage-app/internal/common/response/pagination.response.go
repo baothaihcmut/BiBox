@@ -18,6 +18,7 @@ func InitPaginationResponse(count, limit, offset int) PaginationResponse {
 		HasNext: false,
 		HasPrev: false,
 	}
+
 	if offset+limit < int(count) {
 		nextOffset := offset + limit
 		pagination.HasNext = true

@@ -1,11 +1,12 @@
 package impl
 
 import (
-	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
+	"github.com/baothaihcmut/BiBox/libs/pkg/logger"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/mongo"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/storage"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/interactors"
-	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/services"
+	structureService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/services"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/notification/services"
 
 	filePermissionRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/repositories"
 	permissionService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/services"
@@ -25,7 +26,8 @@ type FileInteractorImpl struct {
 	mongoService         mongo.MongoService
 	filePermission       permissionService.PermissionService
 	filePermissionRepo   filePermissionRepo.FilePermissionRepository
-	fileStructureService services.FileStructureService
+	fileStructureService structureService.FileStructureService
+	notificationService  services.NotificationService
 }
 
 func NewFileInteractor(
@@ -34,7 +36,8 @@ func NewFileInteractor(
 	fileRepo fileRepo.FileRepository,
 	filePermission permissionService.PermissionService,
 	filePermissionRepo filePermissionRepo.FilePermissionRepository,
-	fileStructureService services.FileStructureService,
+	fileStructureService structureService.FileStructureService,
+	notificationService services.NotificationService,
 	logger logger.Logger,
 	storageService storage.StorageService,
 	mongoService mongo.MongoService,
@@ -50,5 +53,6 @@ func NewFileInteractor(
 		filePermission:       filePermission,
 		filePermissionRepo:   filePermissionRepo,
 		fileStructureService: fileStructureService,
+		notificationService:  notificationService,
 	}
 }

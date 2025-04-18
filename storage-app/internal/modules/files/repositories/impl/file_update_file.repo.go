@@ -8,7 +8,6 @@ import (
 )
 
 func (f *MongoFileRepository) UpdateFile(ctx context.Context, file *models.File) error {
-
 	_, err := f.collection.UpdateOne(ctx, bson.M{
 		"_id": file.ID,
 	}, bson.M{

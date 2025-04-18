@@ -1,6 +1,5 @@
 package config
 
-
 type LoggerConfig struct {
 	Level      string `mapstructure:"level"`
 	Format     string `mapstructure:"format"`
@@ -12,5 +11,4 @@ type LoggerConfig struct {
 		MaxAge     int    `mapstructure:"max_age"`
 		Compress   bool   `mapstructure:"compress"`
 	} `mapstructure:"file_config"`
-	
 }

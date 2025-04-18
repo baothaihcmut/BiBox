@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/baothaihcmut/BiBox/libs/pkg/logger"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/exception"
-	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/config"
 	"github.com/golang-jwt/jwt/v5"
 )

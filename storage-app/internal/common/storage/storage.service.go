@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/baothaihcmut/BiBox/libs/pkg/logger"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/enums"
-	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/config"
 	"github.com/samber/lo"
 )

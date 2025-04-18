@@ -65,6 +65,7 @@ func MapFileToFileOutput(file *models.File) *FileOutput {
 		TotalSize:      file.TotalSize,
 		OwnerID:        file.OwnerID,
 		IsFolder:       file.IsFolder,
+		IsDeleted:      file.IsDeleted,
 		ParentFolderID: file.ParentFolderID,
 		CreatedAt:      file.CreatedAt,
 		UpdatedAt:      file.UpdatedAt,

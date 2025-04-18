@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/baothaihcmut/BiBox/libs/pkg/logger"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/constant"
-	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )

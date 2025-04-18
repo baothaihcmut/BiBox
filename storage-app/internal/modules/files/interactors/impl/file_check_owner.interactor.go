@@ -13,6 +13,7 @@ func (f *FileInteractorImpl) checkOwnerOfFile(ctx context.Context, fileId primit
 	if err != nil {
 		return nil, err
 	}
+
 	if file == nil {
 		return nil, exception.ErrFileNotFound
 	}

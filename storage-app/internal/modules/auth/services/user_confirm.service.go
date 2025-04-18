@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/baothaihcmut/BiBox/libs/pkg/events/users"
+	"github.com/baothaihcmut/BiBox/libs/pkg/logger"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/cache"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/exception"
-	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/queue"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/users/models"
 	"github.com/google/uuid"
@@ -100,7 +100,7 @@ func (u *UserConfirmServiceImpl) SendMailConfirm(ctx context.Context, user *mode
 		LastName:         user.LastName,
 		ConfirmationLink: url,
 	}
-	_, _, err := u.queueService.PublishMessage("user.sign_up", e, map[string]string{
+	_, _, err := u.queueService.PublishMessage(ctx, "user.sign_up", e, map[string]string{
 		"event_id":     uuid.NewString(),
 		"event_type":   "UserSignUp",
 		"event_source": "storage_app",

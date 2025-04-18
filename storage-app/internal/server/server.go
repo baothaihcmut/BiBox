@@ -11,9 +11,12 @@ import (
 
 	"github.com/IBM/sarama"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/baothaihcmut/BiBox/libs/pkg/consumer"
+	"github.com/baothaihcmut/BiBox/libs/pkg/handler"
+	"github.com/baothaihcmut/BiBox/libs/pkg/logger"
+	"github.com/baothaihcmut/BiBox/libs/pkg/router"
 	"github.com/baothaihcmut/Bibox/storage-app/docs"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/cache"
-	"github.com/baothaihcmut/Bibox/storage-app/internal/common/logger"
 	middleware "github.com/baothaihcmut/Bibox/storage-app/internal/common/middlewares"
 	mongoLib "github.com/baothaihcmut/Bibox/storage-app/internal/common/mongo"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/monitor"
@@ -23,12 +26,18 @@ import (
 	authController "github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/controllers"
 	authInteractors "github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/interactors"
 	authService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/services"
+	commentController "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_comment/controllers"
+	commentInteractor "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_comment/interactors/impl"
+	commentRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_comment/repositories/impl"
 	filePermssionRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/repositories/impl"
 	filePermissionService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/services"
 	fileController "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/controllers"
 	fileInteractor "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/interactors/impl"
 	fileRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/repositories/impl"
 	fileService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/services"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/notification/handlers"
+	notificationRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/notification/repositories/impl"
+	notificationSvc "github.com/baothaihcmut/Bibox/storage-app/internal/modules/notification/services/impl"
 	tagController "github.com/baothaihcmut/Bibox/storage-app/internal/modules/tags/controllers"
 	tagInteractor "github.com/baothaihcmut/Bibox/storage-app/internal/modules/tags/interactors/impl"
 	tagRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/tags/repositories/impl"
@@ -49,15 +58,17 @@ import (
 )
 
 type Server struct {
-	g             *gin.Engine
-	logger        *logrus.Logger
-	config        *config.AppConfig
-	mongo         *mongo.Client
-	googleOauth2  *oauth2.Config
-	githubOauth2  *oauth2.Config
-	s3            *s3.Client
-	kafkaProducer sarama.SyncProducer
-	redis         *redis.Client
+	consumerErrHandler handler.ErrorHandler
+	msgRouter          router.MessageRouter
+	g                  *gin.Engine
+	logger             *logrus.Logger
+	config             *config.AppConfig
+	mongo              *mongo.Client
+	googleOauth2       *oauth2.Config
+	githubOauth2       *oauth2.Config
+	s3                 *s3.Client
+	kafkaProducer      sarama.SyncProducer
+	redis              *redis.Client
 }
 
 func NewServer(
@@ -70,16 +81,20 @@ func NewServer(
 	redis *redis.Client,
 	logger *logrus.Logger,
 	cfg *config.AppConfig) *Server {
+	errHandler := handler.NewErrorHandler(logger)
+	msgRouter := router.NewMessageRouter(errHandler)
 	return &Server{
-		g:             g,
-		logger:        logger,
-		config:        cfg,
-		mongo:         mongo,
-		googleOauth2:  googleoauth2,
-		githubOauth2:  githubOauth2,
-		kafkaProducer: kafkaProducer,
-		redis:         redis,
-		s3:            s3,
+		consumerErrHandler: errHandler,
+		msgRouter:          msgRouter,
+		g:                  g,
+		logger:             logger,
+		config:             cfg,
+		mongo:              mongo,
+		googleOauth2:       googleoauth2,
+		githubOauth2:       githubOauth2,
+		kafkaProducer:      kafkaProducer,
+		redis:              redis,
+		s3:                 s3,
 	}
 }
 func (s *Server) initApp() {
@@ -95,7 +110,8 @@ func (s *Server) initApp() {
 	fileRepo := fileRepo.NewMongoFileRepo(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("files"), logger)
 	tagRepo := tagRepo.NewMongoTagRepository(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("tags"), logger)
 	filePermssionRepo := filePermssionRepo.NewPermissionRepository(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("file_permissions"), logger)
-
+	fileCommentRepo := commentRepo.NewMongoFileCommentRepo(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("file_comments"))
+	notificationRepo := notificationRepo.NewNotificationRepo(s.mongo.Database(s.config.Mongo.DatabaseName).Collection("notifications"))
 	//init service
 	userJwtService := authService.NewUserJwtService(s.config.Jwt, logger)
 	googleOauth2Service := authService.NewGoogleOauth2Service(s.googleOauth2, logger)
@@ -108,18 +124,33 @@ func (s *Server) initApp() {
 	passwordService := authService.NewPasswordService()
 	filePermssionService := filePermissionService.NewPermissionService(filePermssionRepo)
 	fileStructureService := fileService.NewFileStructureService()
-
+	notificationService := notificationSvc.NewNotificationService(notificationRepo, kafkaService, logger)
+	notificationSSEManagerService := notificationSvc.NewNotificationSSEManagerService(
+		notificationRepo,
+		redisService,
+		logger,
+	)
 	//init interactor
 	userInteractor := userInteractor.NewUserInteractor(userRepo)
 	authInteractor := authInteractors.NewAuthInteractor(oauth2SerivceFactory, userRepo, userJwtService, logger, userConfirmService, mongoService, passwordService)
-	fileInteractor := fileInteractor.NewFileInteractor(userRepo, tagRepo, fileRepo, filePermssionService, filePermssionRepo, fileStructureService, logger, storageService, mongoService)
+	fileInteractor := fileInteractor.NewFileInteractor(userRepo, tagRepo, fileRepo, filePermssionService, filePermssionRepo, fileStructureService, notificationService, logger, storageService, mongoService)
 	tagInteractor := tagInteractor.NewTagInteractor(tagRepo, fileRepo, logger, mongoService)
+	fileCommentInteractor := commentInteractor.NewFileCommentInteractor(fileCommentRepo, fileRepo, userRepo, filePermssionService, mongoService, logger)
 
 	//init controllers
 	authController := authController.NewAuthController(authInteractor, &s.config.Jwt, &s.config.Oauth2)
 	fileController := fileController.NewFileController(fileInteractor, userJwtService, logger)
 	userController := userController.NewUserController(userInteractor, userJwtService, logger)
 	tagController := tagController.NewTagController(tagInteractor, userJwtService, logger)
+	fileCommentController := commentController.NewFileCommentController(fileCommentInteractor, userJwtService, logger)
+
+	//init event handler
+	notifictionEventHandler := handlers.NewNotificationEventHandler(
+		notificationSSEManagerService,
+	)
+
+	//register message router
+	notifictionEventHandler.Init(s.msgRouter)
 
 	//register metrics monitor
 	httpRequestTotalMetric := prometheus.NewCounterVec(
@@ -144,12 +175,12 @@ func (s *Server) initApp() {
 
 	//init global middleware
 	s.g.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://storage-app-web.spsohcmut.xyz", "http://localhost:3000"}, // Explicitly allow frontend origin
+		AllowOrigins:     []string{"https://storage-app-web.spsohcmut.xyz", "http://localhost:3000"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
-		MaxAge:           24 * 3600, // Preflight cache duration
+		MaxAge:           24 * 3600,
 	}))
 
 	// Global middleware
@@ -169,6 +200,7 @@ func (s *Server) initApp() {
 		fileController.Init(globalGroup)
 		userController.Init(globalGroup)
 		tagController.Init(globalGroup)
+		fileCommentController.Init(globalGroup)
 	}
 }
 
@@ -184,9 +216,43 @@ func (s *Server) Run() {
 			s.logger.Panic("Error run gin engine:", err)
 		}
 	}()
+	//for consumer
+
+	consumer := consumer.NewConsumer(s.msgRouter, &s.config.Consumer)
+	consumerCfg := sarama.NewConfig()
+	consumerCfg.Consumer.Return.Errors = true
+	consumerCfg.Version = sarama.V3_3_1_0
+	consumerGroup, err := sarama.NewConsumerGroup(s.config.Consumer.Brokers, s.config.Consumer.ConsumberGroupId, consumerCfg)
+	if err != nil {
+		s.logger.Error(context.Background(), nil, "Error running consumer")
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	consumerRun := make(chan struct{}, 1)
+	gracefullShutDown := make(chan struct{}, 1)
+	go func() {
+		s.msgRouter.Run(ctx, consumerRun)
+		gracefullShutDown <- struct{}{}
+	}()
+	go func() {
+		<-consumerRun
+		for {
+			if err := consumerGroup.Consume(ctx, s.config.Consumer.Topics, consumer); err != nil {
+				fmt.Printf("Error consume message: %v\n", err)
+			}
+		}
+	}()
+	go func() {
+		s.consumerErrHandler.Run(ctx)
+	}()
+
+	s.logger.Info("Consumer run...")
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	<-quit
+	//cancel consumer
+	cancel()
 
 	ctx, shutdown := context.WithTimeout(context.Background(), 1*time.Second)
 	defer shutdown()
