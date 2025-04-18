@@ -1,10 +1,15 @@
 package config
 
-import "github.com/spf13/viper"
+import (
+	"github.com/baothaihcmut/BiBox/libs/pkg/consumer"
+	"github.com/baothaihcmut/BiBox/libs/pkg/logger"
+	"github.com/spf13/viper"
+)
 
 type CoreConfig struct {
-	Consumer ConsumerConfig `mapstructure:"consumer"`
-	Mail     EmailConfig    `mapstructure:"mail"`
+	Consumer consumer.ConsumerConfig `mapstructure:"consumer"`
+	Mail     EmailConfig             `mapstructure:"mail"`
+	Logger   logger.LoggerConfig     `mapstructure:"logger"`
 }
 
 func LoadConfig() (*CoreConfig, error) {

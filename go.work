@@ -1,0 +1,8 @@
+go 1.23.7
+
+use (
+	./file-process
+	./libs
+	./storage-app
+	./storage-app-email
+)

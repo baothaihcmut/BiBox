@@ -8,11 +8,15 @@ import (
 	"syscall"
 
 	"github.com/IBM/sarama"
+	"github.com/baothaihcmut/BiBox/libs/pkg/consumer"
+	"github.com/baothaihcmut/BiBox/libs/pkg/handler"
+	"github.com/baothaihcmut/BiBox/libs/pkg/logger"
+	"github.com/baothaihcmut/BiBox/libs/pkg/middlewares"
+	"github.com/baothaihcmut/BiBox/libs/pkg/router"
 	"github.com/baothaihcmut/BiBox/storage-app-email/internal/config"
-	"github.com/baothaihcmut/BiBox/storage-app-email/internal/consumer"
 	"github.com/baothaihcmut/BiBox/storage-app-email/internal/handlers"
-	"github.com/baothaihcmut/BiBox/storage-app-email/internal/middlewares"
-	"github.com/baothaihcmut/BiBox/storage-app-email/internal/router"
+	"github.com/sirupsen/logrus"
+
 	"github.com/baothaihcmut/BiBox/storage-app-email/internal/services"
 	"gopkg.in/gomail.v2"
 )
@@ -20,20 +24,25 @@ import (
 type Server struct {
 	consumer   *consumer.Consumer
 	router     router.MessageRouter
+	errHandler handler.ErrorHandler
 	cfg        *config.CoreConfig
 	mailDialer *gomail.Dialer
+	logger     logger.Logger
 }
 
 func NewServer(
-	consumer *consumer.Consumer,
-	router router.MessageRouter,
 	mailDialer *gomail.Dialer,
-	cfg *config.CoreConfig) *Server {
+	cfg *config.CoreConfig,
+	logrus *logrus.Logger,
+) *Server {
+	errHandler := handler.NewErrorHandler(logrus)
+	router := router.NewMessageRouter(errHandler)
 	return &Server{
-		consumer:   consumer,
 		router:     router,
 		cfg:        cfg,
 		mailDialer: mailDialer,
+		errHandler: errHandler,
+		consumer:   consumer.NewConsumer(router, &cfg.Consumer),
 	}
 }
 
@@ -55,7 +64,7 @@ func (s *Server) Run() {
 	consumerCfg.Version = sarama.V3_3_1_0
 	consumerGroup, err := sarama.NewConsumerGroup(s.cfg.Consumer.Brokers, s.cfg.Consumer.ConsumberGroupId, consumerCfg)
 	if err != nil {
-		fmt.Println("Error init consumer group")
+		s.logger.Error(context.Background(), nil, "Error running consumer")
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -66,20 +75,26 @@ func (s *Server) Run() {
 		fmt.Println("Shutdown signal received. Closing consumer...")
 		cancel()
 	}()
+	consumerRun := make(chan struct{}, 1)
+	gracefullShutDown := make(chan struct{}, 1)
 	go func() {
+		s.router.Run(ctx, consumerRun)
+		gracefullShutDown <- struct{}{}
+	}()
+	go func() {
+		<-consumerRun
 		for {
 			if err := consumerGroup.Consume(ctx, s.cfg.Consumer.Topics, s.consumer); err != nil {
 				fmt.Printf("Error consume message: %v\n", err)
 			}
-			if ctx.Err() != nil {
-				break
-			}
 		}
 	}()
-	fmt.Println("Consumer started")
+	go func() {
+		s.errHandler.Run(ctx)
+	}()
+
+	s.logger.Info(context.Background(), nil, "Consumer run...")
 	<-ctx.Done()
-	fmt.Println("Shutting down consumer...")
-	close(s.consumer.MsgChan)
-	s.consumer.Wg.Wait()
-	fmt.Println("Consumer shut down gracefully.")
+	<-gracefullShutDown
+	s.logger.Info(context.Background(), nil, "Consumer shutdown...")
 }

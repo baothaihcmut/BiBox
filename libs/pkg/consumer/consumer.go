@@ -3,31 +3,29 @@ package consumer
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/IBM/sarama"
 	"github.com/baothaihcmut/BiBox/libs/pkg/router"
 )
 
-// Consumer implements sarama.ConsumerGroupHandler
 type Consumer struct {
-	MsgChan        chan *sarama.ConsumerMessage
-	Wg             *sync.WaitGroup
-	msgRouter      router.MessageRouter
-	workerPoolSize int
+	MsgChan   chan *sarama.ConsumerMessage
+	Wg        *sync.WaitGroup
+	msgRouter router.MessageRouter
+	cfg       *ConsumerConfig
 }
 
-// Setup runs when the consumer group session starts
 func (c *Consumer) Setup(sarama.ConsumerGroupSession) error {
 	fmt.Println("Consumer setup...")
-	for i := 0; i < c.workerPoolSize; i++ {
+	for i := 0; i < c.cfg.WorkerPoolSize; i++ {
 		c.Wg.Add(1)
 		go c.worker()
 	}
 	return nil
 }
 
-// Cleanup runs when the consumer group session ends
 func (c *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
 	fmt.Println("Consumer cleanup...")
 	c.Wg.Wait()
@@ -37,6 +35,7 @@ func (c *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
 // ConsumeClaim processes messages from Kafka
 func (c *Consumer) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for msg := range claim.Messages() {
+		log.Println("Incomming message")
 		c.MsgChan <- msg
 		sess.MarkMessage(msg, "gmail-service")
 	}
@@ -50,15 +49,14 @@ func (c *Consumer) worker() {
 		c.Wg.Done()
 	}()
 	for msg := range c.MsgChan {
-		ctx := context.Background()
-		_ = c.msgRouter.Route(ctx, msg)
+		c.msgRouter.Route(context.Background(), msg)
 	}
 }
-func NewConsumer(msgRouter router.MessageRouter, wokerPool int) *Consumer {
+func NewConsumer(msgRouter router.MessageRouter, cfg *ConsumerConfig) *Consumer {
 	return &Consumer{
-		MsgChan:        make(chan *sarama.ConsumerMessage, wokerPool), // Buffered channel for workers
-		Wg:             &sync.WaitGroup{},
-		msgRouter:      msgRouter,
-		workerPoolSize: wokerPool,
+		MsgChan:   make(chan *sarama.ConsumerMessage, cfg.WorkerPoolSize),
+		Wg:        &sync.WaitGroup{},
+		msgRouter: msgRouter,
+		cfg:       cfg,
 	}
 }
