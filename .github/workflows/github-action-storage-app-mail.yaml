@@ -3,7 +3,7 @@ name: Storage app service CI/CD
 on:
   push:
     paths:
-      - "storage-app/**"
+      - "storage-app-mail/**"
       - ".github/workflows/github-action-storage-app.yaml"
     branches:
       - main
@@ -39,29 +39,17 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.23.2
-
-      - name: Install Swag
-        run: |
-          go install github.com/swaggo/swag/cmd/swag@latest
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-
-      - name: Generate Swagger docs
-        run: |
-          cd storage-app
-          swag init -g ./cmd/storage-app/main.go --output ./docs
-
-
       - name: Build bin
         run: |
-          cd storage-app
+          cd storage-app-mail
           export CGO_ENABLED=0 GOOS=linux GOARCH=amd64
-          go build -o bin/storage-app cmd/storage-app/main.go
+          go build -o bin/storage-app-mail cmd/storage-app-mail/main.go
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: storage-app
-          path: storage-app/bin/storage-app
+          name: storage-app-mail
+          path: storage-app-mail/bin/storage-app-mail
 
   test:
     runs-on: ubuntu-latest
@@ -76,7 +64,7 @@ jobs:
 
       - name: Run tests
         run: |
-          cd storage-app/test
+          cd storage-app-mail/test
           go test ./... -v -coverprofile=coverage.out
 
   build-image:
@@ -89,8 +77,8 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: storage-app
-          path: storage-app/bin/
+          name: storage-app-mail
+          path: storage-app-mail/bin/
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -104,11 +92,11 @@ jobs:
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
-          context: ./storage-app
-          file: ./storage-app/Dockerfile
+          context: ./storage-app-mail
+          file: ./storage-app-mail/Dockerfile
           push: true
           tags: |
-            baothaihcmut/storage-app:latest
+            baothaihcmut/storage-app-mail:latest
   
   deploy:
     needs: build-image
@@ -118,16 +106,6 @@ jobs:
         uses: actions/checkout@v4
       - name: Copy config file to server
         run: |
-          export MONGO_URI="${{ secrets.MONGO_URI }}"
-          export JWT_ACCESS_TOKEN_SECRET="${{ secrets.JWT_ACCESS_TOKEN_SECRET }}"
-          export JWT_REFRESH_TOKEN_SECRET="${{ secrets.JWT_REFRESH_TOKEN_SECRET }}"
-          export GOOGLE_OAUTH2_CLIENT_ID="${{ secrets.GOOGLE_OAUTH2_CLIENT_ID }}"
-          export GOOGLE_OAUTH2_SECRET="${{ secrets.GOOGLE_OAUTH2_SECRET }}"
-          export OAUTH2_CLIENT_ID="${{ secrets.OAUTH2_CLIENT_ID }}"
-          export OAUTH2_SECRET="${{ secrets.OAUTH2_SECRET }}"
-          export S3_ACCESS_KEY="${{ secrets.S3_ACCESS_KEY }}"
-          export S3_SECRET_KEY="${{ secrets.S3_SECRET_KEY }}"
-          export GOOGLE_OAUTH2_REDIRECT_URI="$GOOGLE_OAUTH2_REDIRECT_URI"
           export GMAIL_APP_PASSWORD="${{ secrets.GMAIL_APP_PASSWORD }}"
           envsubst < environments/helm/storage-app/values.yaml > environments/helm/storage-app/values.env.yaml
       - name: 'Deploy'
@@ -135,11 +113,11 @@ jobs:
         with:
           release: 'storage-app'
           namespace: 'storage-app'
-          chart: 'environments/helm/apps/storage-app'
+          chart: 'environments/helm/apps/storage-app-mail'
           token: '${{ github.token }}'
           value-files: >-
           [
-            "environments/helm/apps/storage-app/values.env.yaml"
+            "environments/helm/apps/storage-app-mail/values.env.yaml"
           ]
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
