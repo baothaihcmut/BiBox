@@ -12,6 +12,24 @@ type RedisService struct {
 	client *redis.Client
 }
 
+// ExistByKey implements CacheService.
+func (r *RedisService) ExistByKey(ctx context.Context, key string) (bool, error) {
+	exist, err := r.client.Exists(ctx, key).Result()
+	if err != nil {
+		return false, err
+	}
+	return exist == 1, nil
+}
+
+// PublishMessage implements CacheService.
+func (r *RedisService) PublishMessage(ctx context.Context, key string, msg interface{}) error {
+	jsonData, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	return r.client.Publish(ctx, key, jsonData).Err()
+}
+
 // Remove implements CacheService.
 func (r *RedisService) Remove(ctx context.Context, key string) error {
 	err := r.client.Del(ctx, key).Err()

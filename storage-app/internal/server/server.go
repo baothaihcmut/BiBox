@@ -35,6 +35,7 @@ import (
 	fileInteractor "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/interactors/impl"
 	fileRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/repositories/impl"
 	fileService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/services"
+	fileServie "github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/services/impl"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/notification/handlers"
 	notificationRepo "github.com/baothaihcmut/Bibox/storage-app/internal/modules/notification/repositories/impl"
 	notificationSvc "github.com/baothaihcmut/Bibox/storage-app/internal/modules/notification/services/impl"
@@ -125,21 +126,22 @@ func (s *Server) initApp() {
 	filePermssionService := filePermissionService.NewPermissionService(filePermssionRepo)
 	fileStructureService := fileService.NewFileStructureService()
 	notificationService := notificationSvc.NewNotificationService(notificationRepo, kafkaService, logger)
+	fileProgressService := fileServie.NewFileUploadProgressService(redisService, logger)
 	notificationSSEManagerService := notificationSvc.NewNotificationSSEManagerService(
-		notificationRepo,
 		redisService,
 		logger,
 	)
+	fileUploadProgressSSEManager := fileServie.NewFileUploadProgressSSEManagerService(fileProgressService, redisService, logger)
 	//init interactor
 	userInteractor := userInteractor.NewUserInteractor(userRepo)
 	authInteractor := authInteractors.NewAuthInteractor(oauth2SerivceFactory, userRepo, userJwtService, logger, userConfirmService, mongoService, passwordService)
-	fileInteractor := fileInteractor.NewFileInteractor(userRepo, tagRepo, fileRepo, filePermssionService, filePermssionRepo, fileStructureService, notificationService, logger, storageService, mongoService)
+	fileInteractor := fileInteractor.NewFileInteractor(userRepo, tagRepo, fileRepo, filePermssionService, filePermssionRepo, fileStructureService, notificationService, fileProgressService, logger, storageService, mongoService)
 	tagInteractor := tagInteractor.NewTagInteractor(tagRepo, fileRepo, logger, mongoService)
 	fileCommentInteractor := commentInteractor.NewFileCommentInteractor(fileCommentRepo, fileRepo, userRepo, filePermssionService, mongoService, logger)
 
 	//init controllers
 	authController := authController.NewAuthController(authInteractor, &s.config.Jwt, &s.config.Oauth2)
-	fileController := fileController.NewFileController(fileInteractor, userJwtService, logger)
+	fileController := fileController.NewFileController(fileInteractor, userJwtService, logger, fileUploadProgressSSEManager)
 	userController := userController.NewUserController(userInteractor, userJwtService, logger)
 	tagController := tagController.NewTagController(tagInteractor, userJwtService, logger)
 	fileCommentController := commentController.NewFileCommentController(fileCommentInteractor, userJwtService, logger)

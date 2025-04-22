@@ -1,15 +1,17 @@
 package controllers
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/baothaihcmut/BiBox/libs/pkg/logger"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/constant"
 	middleware "github.com/baothaihcmut/Bibox/storage-app/internal/common/middlewares"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/response"
-	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/services"
+	authService "github.com/baothaihcmut/Bibox/storage-app/internal/modules/auth/services"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/interactors"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/presenters"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/services"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 )
@@ -18,9 +20,10 @@ type FileController interface {
 	Init(g *gin.RouterGroup)
 }
 type FileControllerImpl struct {
-	interactor  interactors.FileInteractor
-	authHandler services.JwtService
-	logger      logger.Logger
+	interactor               interactors.FileInteractor
+	authHandler              authService.JwtService
+	logger                   logger.Logger
+	uploadProgressSSEManager services.FileUploadProgressSSEManagerService
 }
 
 func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
@@ -42,6 +45,7 @@ func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
 	internal.PATCH("/:id/soft-delete", middleware.ValidateMiddleware[presenters.SoftDeleteFileInput](true), f.handleSoftDeleteFile)
 	internal.PATCH("/:id/recover", middleware.ValidateMiddleware[presenters.RecoverFileInput](true, binding.JSON), f.handleRecoverFile)
 	internal.DELETE("/:id/hard-delete", middleware.ValidateMiddleware[presenters.HardDeleteFileInput](true), f.handleHardDeleteFile)
+	internal.GET("/:id/sse/upload-progress", f.handleSSEFileUploadProgress)
 }
 
 // @Sumary Create new file 1
@@ -403,10 +407,51 @@ func (f *FileControllerImpl) handleHardDeleteFile(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, response.InitResponse(true, "Hard delete file  of user success", res))
 }
-func NewFileController(interactor interactors.FileInteractor, jwtService services.JwtService, logger logger.Logger) FileController {
+
+func (f *FileControllerImpl) handleSSEFileUploadProgress(c *gin.Context) {
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+	c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	c.Writer.Header().Set("Access-Control-Allow-Methods", "GET")
+	c.Writer.Header().Set("Content-Type", "text/event-stream")
+	c.Writer.Header().Set("Cache-Control", "no-cache")
+	c.Writer.Header().Set("Connection", "keep-alive")
+	c.Writer.Header().Set("Transfer-Encoding", "chunked")
+	flusher, _ := c.Writer.(http.Flusher)
+	sessionId := c.Query("session_id")
+	msgCh, userId, err := f.uploadProgressSSEManager.Connect(c.Request.Context(), sessionId)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	for msg := range msgCh {
+		select {
+		case <-c.Request.Context().Done():
+			f.uploadProgressSSEManager.Disconnect(c.Request.Context(), userId, sessionId)
+			return
+		default:
+			jsonData, err := json.Marshal(msg)
+			if err != nil {
+				c.Error(err)
+				c.Abort()
+				return
+			}
+			c.Writer.Write(jsonData)
+			flusher.Flush()
+		}
+	}
+
+}
+
+func NewFileController(interactor interactors.FileInteractor,
+	jwtService authService.JwtService,
+	logger logger.Logger,
+	sseManagerService services.FileUploadProgressSSEManagerService) FileController {
 	return &FileControllerImpl{
-		interactor:  interactor,
-		authHandler: jwtService,
-		logger:      logger,
+		interactor:               interactor,
+		authHandler:              jwtService,
+		logger:                   logger,
+		uploadProgressSSEManager: sseManagerService,
 	}
 }

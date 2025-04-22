@@ -365,8 +365,12 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 	output := &presenters.CreateFileOutput{
 		FileOutput: response.MapFileToFileOutput(file),
 	}
-	//get presign url for put object
+	//get presign url for put object and store to cache
+
 	if !file.IsFolder {
+		if err := f.fileUploadProgressService.StartUpload(ctx, file.ID.Hex(), file.TotalSize); err != nil {
+			return nil, err
+		}
 		url, err := f.storageService.GetPresignUrl(ctx, storage.GetPresignUrlArg{
 			Method: storage.PresignUrlPutMethod,
 			Key:    file.StorageDetail.StorageKey,

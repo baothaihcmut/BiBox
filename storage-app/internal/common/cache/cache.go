@@ -11,4 +11,6 @@ type CacheService interface {
 	SetString(ctx context.Context, key string, val string, ttl time.Duration) error
 	GetString(ctx context.Context, key string) (*string, error)
 	Remove(ctx context.Context, key string) error
+	PublishMessage(ctx context.Context, key string, msg interface{}) error
+	ExistByKey(ctx context.Context, key string) (bool, error)
 }

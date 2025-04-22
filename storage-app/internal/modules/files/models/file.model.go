@@ -53,6 +53,7 @@ func NewFile(
 			storageDetail.Size,
 			storageDetail.MimeType,
 			false,
+			true,
 			storageDetail.StorageProvider,
 			key, storageDetail.StorageBucket)
 	}
