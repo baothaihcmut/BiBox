@@ -18,11 +18,5 @@ spec:
           namespace: "storage-app"
     {{- end }}
   tls:
-    certResolver: letsencrypt
-    domains:
-      {{- range .Values.ingressRoutes }}
-      {{ if .tls -}}
-      - main: "{{ .host }}"
-      {{- end }}
-      {{- end }}
+    secretName: {{ .Values.cert.secretName }}
 {{- end}}

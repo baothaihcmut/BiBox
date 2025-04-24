@@ -37,6 +37,12 @@ ingressRoutes:
     service: api 
     port: 80
     tls: true
+cert:
+  hosts:
+    - "storage-app.spsohcmut.xyz"
+  secretName: "storage-app-cert-secret"
+  issuer: "letsencrypt-cluster-issuer"
+
 
 initContainers:
   - name: wait-for-dependencies
