@@ -1,17 +1,22 @@
-commonLabels:
-    app: storage-app-dependency
-architecture: standalone
+architecture: replication
 auth:
   enabled: true
+  sentinel: true
   password: "redispassword"
 master:
+  count: 1
   persistence:
     storageClass: "local-path"
-<<<<<<< HEAD
     size: "500Mi"
-service:
-  type: ClusterIP
 
-=======
+replica:
+  replicaCount: 3
+  persistence:
+    storageClass: "local-path"
     size: "500Mi"
->>>>>>> 6026cc644775c7612e9a53f3d70dabba8995d917
+sentinel:
+  enabled: true
+  quorum: 2
+  persistence:
+    storageClass: "local-path"
+    size: "500Mi"

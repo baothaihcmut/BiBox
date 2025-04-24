@@ -13,13 +13,10 @@ FROM alpine:latest
 
 WORKDIR /app/
 
-# Copy binary from the builder
 COPY --from=builder /app/bin/main .
 
-# Copy templates folder from builder
 COPY --from=builder /app/templates ./templates
 
-# Make binary executable
 RUN chmod +x /app/main
 
 EXPOSE 8080

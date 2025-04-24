@@ -1,7 +1,7 @@
 ENV_FILE=.env
-
+CONFIG_FILE=config/config.yaml
 run: env
-	go run main.go
+	go run cmd/storage-app/main.go
 
 env:
 	@echo "Generating .env from template..."
