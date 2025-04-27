@@ -3,12 +3,14 @@ package impl
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/constant"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/enums"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/exception"
 	commonModel "github.com/baothaihcmut/Bibox/storage-app/internal/common/models"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/response"
+	"github.com/google/uuid"
 
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/storage"
 	permissionModel "github.com/baothaihcmut/Bibox/storage-app/internal/modules/file_permission/models"
@@ -22,7 +24,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.CreateFileInput) (*presenters.CreateFileOutput, error) {
+const lockKey = "file:upload:lock"
+
+func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.CreateFileInput) (_ *presenters.CreateFileOutput, err error) {
 	//get user context
 	userContext := ctx.Value(constant.UserContext).(*commonModel.UserContext)
 	//tranform id
@@ -192,6 +196,27 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 		input.TagIDs,
 		storageArg,
 	)
+
+	//acquire lock
+	var fileLockValue string
+	if !file.IsFolder {
+		fileLockKey := lockKey + file.ID.Hex()
+		fileLockValue = uuid.New().String()
+		ok, err := f.distrutedLockService.AcquireLock(ctx, fileLockKey, fileLockValue, 3, time.Second*3, time.Minute*30)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			return nil, exception.ErrFileIsUploading
+		}
+		defer func(err error) {
+			if err != nil {
+				if err := f.distrutedLockService.ReleaseLock(ctx, fileLockKey, fileLockValue); err != nil {
+					f.logger.Errorf(ctx, nil, "Error release lock: ", err)
+				}
+			}
+		}(err)
+	}
 
 	//save phase
 	//save to db
@@ -386,6 +411,7 @@ func (f *FileInteractorImpl) CreatFile(ctx context.Context, input *presenters.Cr
 		}, "Presign url for put generated")
 		output.PutObjectUrl = url
 		output.UrlExpiry = 3
+		output.UploadLockValue = fileLockValue
 	}
 
 	return output, nil

@@ -2,6 +2,7 @@ package impl
 
 import (
 	"github.com/baothaihcmut/BiBox/libs/pkg/logger"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/common/lock"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/mongo"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/storage"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/modules/files/interactors"
@@ -30,6 +31,7 @@ type FileInteractorImpl struct {
 	fileStructureService      structureService.FileStructureService
 	notificationService       notificationService.NotificationService
 	fileUploadProgressService services.FileUploadProgressService
+	distrutedLockService      lock.DistributedLockService
 }
 
 func NewFileInteractor(
@@ -44,7 +46,7 @@ func NewFileInteractor(
 	logger logger.Logger,
 	storageService storage.StorageService,
 	mongoService mongo.MongoService,
-
+	distributedLockService lock.DistributedLockService,
 ) interactors.FileInteractor {
 	return &FileInteractorImpl{
 		userRepo:                  userRepo,
@@ -58,5 +60,6 @@ func NewFileInteractor(
 		fileStructureService:      fileStructureService,
 		notificationService:       notificationService,
 		fileUploadProgressService: fileUploadProgressService,
+		distrutedLockService:      distributedLockService,
 	}
 }

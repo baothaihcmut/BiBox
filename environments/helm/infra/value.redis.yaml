@@ -10,13 +10,13 @@ master:
     size: "500Mi"
 
 replica:
-  replicaCount: 3
+  replicaCount: 1
   persistence:
     storageClass: "local-path"
     size: "500Mi"
 sentinel:
   enabled: true
-  quorum: 2
+  quorum: 1
   persistence:
     storageClass: "local-path"
     size: "500Mi"

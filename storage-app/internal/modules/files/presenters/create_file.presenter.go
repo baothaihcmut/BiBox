@@ -19,7 +19,7 @@ type CreateFileInput struct {
 
 type CreateFileOutput struct {
 	*response.FileOutput
-
-	PutObjectUrl string `json:"put_object_url"`
-	UrlExpiry    int    `json:"url_expiry"`
+	PutObjectUrl    string `json:"put_object_url"`
+	UrlExpiry       int    `json:"url_expiry"`
+	UploadLockValue string `json:"upload_lock_value"`
 }

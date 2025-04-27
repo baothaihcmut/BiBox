@@ -17,6 +17,7 @@ import (
 	"github.com/baothaihcmut/BiBox/libs/pkg/router"
 	"github.com/baothaihcmut/Bibox/storage-app/docs"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/cache"
+	"github.com/baothaihcmut/Bibox/storage-app/internal/common/lock"
 	middleware "github.com/baothaihcmut/Bibox/storage-app/internal/common/middlewares"
 	mongoLib "github.com/baothaihcmut/Bibox/storage-app/internal/common/mongo"
 	"github.com/baothaihcmut/Bibox/storage-app/internal/common/monitor"
@@ -132,10 +133,11 @@ func (s *Server) initApp() {
 		logger,
 	)
 	fileUploadProgressSSEManager := fileServie.NewFileUploadProgressSSEManagerService(fileProgressService, redisService, logger)
+	distributedLockService := lock.NewRedisDistributedLockService(s.redis)
 	//init interactor
 	userInteractor := userInteractor.NewUserInteractor(userRepo)
 	authInteractor := authInteractors.NewAuthInteractor(oauth2SerivceFactory, userRepo, userJwtService, logger, userConfirmService, mongoService, passwordService)
-	fileInteractor := fileInteractor.NewFileInteractor(userRepo, tagRepo, fileRepo, filePermssionService, filePermssionRepo, fileStructureService, notificationService, fileProgressService, logger, storageService, mongoService)
+	fileInteractor := fileInteractor.NewFileInteractor(userRepo, tagRepo, fileRepo, filePermssionService, filePermssionRepo, fileStructureService, notificationService, fileProgressService, logger, storageService, mongoService, distributedLockService)
 	tagInteractor := tagInteractor.NewTagInteractor(tagRepo, fileRepo, logger, mongoService)
 	fileCommentInteractor := commentInteractor.NewFileCommentInteractor(fileCommentRepo, fileRepo, userRepo, filePermssionService, mongoService, logger)
 
@@ -223,7 +225,7 @@ func (s *Server) Run() {
 	consumer := consumer.NewConsumer(s.msgRouter, &s.config.Consumer)
 	consumerCfg := sarama.NewConfig()
 	consumerCfg.Consumer.Return.Errors = true
-	consumerCfg.Version = sarama.V3_3_1_0
+	consumerCfg.Version = sarama.V2_7_0_0
 	consumerGroup, err := sarama.NewConsumerGroup(s.config.Consumer.Brokers, s.config.Consumer.ConsumberGroupId, consumerCfg)
 	if err != nil {
 		s.logger.Error(context.Background(), nil, "Error running consumer")

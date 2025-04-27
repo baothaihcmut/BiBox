@@ -1,13 +1,19 @@
-FROM golang:1.21 AS builder
+FROM golang:1.23 AS builder
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
-RUN go mod download
+COPY libs/go.mod libs/go.sum ./libs/
+
+COPY storage-app/go.mod storage-app/go.sum ./storage-app/
+
+
+RUN go work init ./storage-app ./libs
+
+RUN go mod download -C ./storage-app
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/storage-app ./...
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./bin/storage-app storage-app/cmd/storage-app/main.go
 
 FROM alpine:latest
 

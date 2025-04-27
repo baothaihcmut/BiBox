@@ -45,6 +45,7 @@ func (f *FileControllerImpl) Init(g *gin.RouterGroup) {
 	internal.PATCH("/:id/soft-delete", middleware.ValidateMiddleware[presenters.SoftDeleteFileInput](true), f.handleSoftDeleteFile)
 	internal.PATCH("/:id/recover", middleware.ValidateMiddleware[presenters.RecoverFileInput](true, binding.JSON), f.handleRecoverFile)
 	internal.DELETE("/:id/hard-delete", middleware.ValidateMiddleware[presenters.HardDeleteFileInput](true), f.handleHardDeleteFile)
+	internal.PATCH(("/:id/update-content"), middleware.ValidateMiddleware[presenters.UpdateFileContentInput](true, binding.JSON), f.handleUpdateFileContent)
 	internal.GET("/:id/sse/upload-progress", f.handleSSEFileUploadProgress)
 }
 
@@ -442,6 +443,26 @@ func (f *FileControllerImpl) handleSSEFileUploadProgress(c *gin.Context) {
 		}
 	}
 
+}
+
+// @Sumary Update file content
+// @Description Update file content
+// @Tags files
+// @Accept json
+// @Produce json
+// @Param id path string false "file id"
+// @Success 201 {object} response.AppResponse{data=nil} "Delete permission success"
+// @Failure 403 {object} response.AppResponse{data=nil} "Permission denied"
+// @Router   /files/:id/update-content [patch]
+func (f *FileControllerImpl) handleUpdateFileContent(c *gin.Context) {
+	payload, _ := c.Get(string(constant.PayloadContext))
+	res, err := f.interactor.UpdateFileContent(c.Request.Context(), payload.(*presenters.UpdateFileContentInput))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusCreated, response.InitResponse(true, "Update file content success", res))
 }
 
 func NewFileController(interactor interactors.FileInteractor,

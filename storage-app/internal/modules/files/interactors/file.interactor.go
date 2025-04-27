@@ -24,4 +24,5 @@ type FileInteractor interface {
 	SoftDeleteFile(context.Context, *presenters.SoftDeleteFileInput) (*presenters.SoftDeleteFileOuput, error)
 	RecoverFile(context.Context, *presenters.RecoverFileInput) (*presenters.RecoverFileOutput, error)
 	HardDeleteFile(context.Context, *presenters.HardDeleteFileInput) (*presenters.HardDeleteFileOutput, error)
+	UpdateFileContent(ctx context.Context, input *presenters.UpdateFileContentInput) (*presenters.UpdateFileContentOutput, error)
 }

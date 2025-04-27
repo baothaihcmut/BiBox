@@ -1,3 +1,5 @@
+listeners:
+  securityProtocolMap: "CONTROLLER:SASL_PLAINTEXT,CLIENT:SASL_PLAINTEXT,INTERNAL:SASL_PLAINTEXT"
 sasl:
   interbroker:
     user: "kafka-interbroker"
@@ -11,7 +13,18 @@ sasl:
     password:
       - "kafka-client-1-password"
 
+clusterId: "X9cTw1P0QfGpULyY4lT-tg"
 controller:
-  replicaCount: 2
+  replicaCount: 1
   persistence:
     storageClass: "local-path"
+
+broker:
+  replicaCount: 1
+  persistence:
+    storageClass: "local-path"
+  extraEnvVars:
+    - name: BITNAMI_DEBUG
+      value: "true"
+
+

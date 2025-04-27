@@ -32,27 +32,23 @@ serviceAccount:
     - apiGroups: [""]
       resources: ["pods"]
       verbs: ["get", "list", "watch"]
-ingressRoutes:
-  - host: "storage-app.spsohcmut.xyz"
-    service: api 
-    port: 80
-    tls: true
-cert:
-  hosts:
-    - "storage-app.spsohcmut.xyz"
-  secretName: "storage-app-cert-secret"
-  issuer: "letsencrypt-cluster-issuer"
+ingress:
+  name: api
+  className: "traefik"
+  annotations: {}
+  rules:
+    - host: storage-app.spsohcmut.xyz
+      path: /
+      service: api
+      port: 80
+certs:
+  - hosts:
+      - "storage-app.spsohcmut.xyz"
+    secretName: "storage-app-cert-secret"
+    issuer: "letsencrypt-cluster-issuer"
 
 
-initContainers:
-  - name: wait-for-dependencies
-    image: bitnami/kubectl:latest
-    command:
-      - /bin/sh
-      - -c
-      - |
-        echo "Waiting for Redis and Kafka to be ready..."
-        kubectl wait --for=condition=Ready pod -l app=storage-app-dependency --timeout=300s
+initContainers: []
 configFrom:
   fileConfigMap:
     - volumeName: config-volume
@@ -92,21 +88,22 @@ configMap:
         secret: ${GITHUT_OAUTH2_SECRET}
         redirect_uri: "http://localhost:8080/api/v1/auth/callback"
     s3:
-      access_key: ${S3_ACCESSKEY}
-      secret_key: ${S3_SECRET_KEY}
-
+      access_key: "${AWS_ACCESS_KEY}"
+      secret_key: "${AWS_SECRET_KEY}"
       region: "us-east-1"
       storage_provider: "s3"
       bucket: "storage-app-go-bucket-baothai"
     redis:
-      endpoint: "storage-app-redis-master-0.storage-app-redis-headless.storage-app.svc.cluster.local:6379"
+      endpoint: "storage-app-redis-node-0.storage-app-redis-headless.storage-app.svc.cluster.local:6379"
       password: "redispassword"
       user_name: "default"
       database: 0
     kafka:
+      user: "kafka-client-1"
+      password: "kafka-client-1-password"
       brokers:
       - "storage-app-kafka-broker-0.storage-app-kafka-broker-headless.storage-app.svc.cluster.local:9092"
-      max_retry: 5
+      max_retry: 10
 
 
 

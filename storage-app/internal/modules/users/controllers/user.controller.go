@@ -52,6 +52,7 @@ func (u *UserControllerImpl) handleSearchUserByEmail(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, response.InitResponse(true, "Search user by email success", res))
 }
+
 func NewUserController(
 	userInteractor interactors.UserInteractor,
 	authHandler services.JwtService,
